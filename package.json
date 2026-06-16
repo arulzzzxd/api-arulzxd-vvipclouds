@@ -1,13 +1,14 @@
 {
   "name": "e-pi-ay-doang",
   "version": "1.0.0",
-  "type": "module",
+  "type": "commonjs",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
   },
   "dependencies": {
     "@google/genai": "^0.13.0",
+    "@napi-rs/canvas": "^0.1.66",
     "@vreden/youtube_scraper": "^1.2.9",
     "axios": "^1.10.0",
     "cheerio": "github:iyayn-ajah/cheerio",

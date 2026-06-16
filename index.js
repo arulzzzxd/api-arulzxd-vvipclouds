@@ -1,12 +1,10 @@
-import { createRequire } from "module";
-const require = createRequire(import.meta.url);
-import express from 'express';
-import path from 'path';
-import fs from 'fs';
+const express = require('express');
+const path = require('path');
+const fs = require('fs');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-app.use(express.static(path.join(new URL(".", import.meta.url).pathname)));
+app.use(express.static(path.join(__dirname)));
 app.use(express.json());
 
 /*
@@ -54,7 +52,7 @@ const playlist = [
 ];
 
 const router = express.Router();
-const apiPath = path.join(new URL(".", import.meta.url).pathname, 'api');
+const apiPath = path.join(__dirname, 'api');
 const endpointDirs = fs.readdirSync(apiPath).filter(f => fs.statSync(path.join(apiPath, f)).isDirectory());
 
 for (const category of endpointDirs) {
@@ -62,16 +60,15 @@ for (const category of endpointDirs) {
   const files = fs.readdirSync(categoryPath).filter(f => f.endsWith('.js'));
   for (const file of files) {
     const routeName = path.basename(file, '.js');
-    const routeModule = await import(`file://${path.join(categoryPath, file)}`);
-    const route = routeModule.default || routeModule;
+    const route = require(path.join(categoryPath, file));
     router.use(`/${category}/${routeName}`, route);
   }
 }
 
 function getEndpointsFromRouter(category, file) {
   const endpoints = [];
-  return []; // disabled introspection for ESM
-  const subRouter = null;
+  const route = require(path.join(apiPath, category, file));
+  const subRouter = route.stack ? route : route.router || route;
   if (!subRouter || !subRouter.stack) return endpoints;
   subRouter.stack.forEach(layer => {
     if (layer.route) {
@@ -138,10 +135,10 @@ router.get('/apilist', (req, res) => {
 app.use('/api', router);
 
 app.get('/script.js', (req, res) => {
-  res.sendFile(path.join(new URL(".", import.meta.url).pathname, 'script.js'));
+  res.sendFile(path.join(__dirname, 'script.js'));
 });
 app.get('/styles.css', (req, res) => {
-  res.sendFile(path.join(new URL(".", import.meta.url).pathname, 'styles.css'));
+  res.sendFile(path.join(__dirname, 'styles.css'));
 });
 
 app.get('/', (req, res) => {
@@ -486,4 +483,4 @@ if (require.main === module) {
   });
 }
 
-export default app;
+module.exports = app;
