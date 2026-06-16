@@ -18,6 +18,9 @@ const headertitle = `<img src="https://readme-typing-svg.demolab.com?font=Poppin
 const headerdescription = "Browse, inspect & fire requests against live endpoints._";
 const footer = "© Arulz-XD";
 
+// API KEY CONFIGURATION
+const VALID_API_KEY = "arulzxd-keys";
+
 // === KONFIGURASI PLAYLIST BANYAK MUSIK ===
 const playlist = [
   {
@@ -54,6 +57,36 @@ const playlist = [
 
 const router = express.Router();
 const apiPath = path.join(__dirname, 'api');
+
+// Middleware untuk memvalidasi API Key (Kecuali endpoint /apilist)
+const validateApiKey = (req, res, next) => {
+  if (req.path === '/apilist') {
+    return next();
+  }
+  
+  const userKey = req.query.apikey;
+  if (!userKey) {
+    return res.status(403).json({
+      status: false,
+      creator: "Arulz-XD",
+      message: "API Key mana? masukkan parameter ?apikey=MasukkanApiKey"
+    });
+  }
+  
+  if (userKey !== VALID_API_KEY) {
+    return res.status(403).json({
+      status: false,
+      creator: "Arulz-XD",
+      message: "API Key salah / tidak valid! Silakan cek menu informasi untuk melihat key yang benar."
+    });
+  }
+  
+  next();
+};
+
+// Pasang middleware validasi ke router API
+router.use(validateApiKey);
+
 const endpointDirs = fs.readdirSync(apiPath).filter(f => fs.statSync(path.join(apiPath, f)).isDirectory());
 
 for (const category of endpointDirs) {
@@ -74,12 +107,15 @@ function getEndpointsFromRouter(category, file) {
   subRouter.stack.forEach(layer => {
     if (layer.route) {
       const methods = Object.keys(layer.route.methods).map(m => m.toUpperCase());
-      let params = {};
+      
+      // Otomatis daftarkan parameter apikey di paling awal agar muncul di UI dokumentasi
+      let params = { apikey: "" }; 
+      
       if (layer.route.stack && layer.route.stack.length) {
         layer.route.stack.forEach(mw => {
           const fnString = mw.handle.toString();
           [...fnString.matchAll(/req\.query\.([a-zA-Z0-9_]+)/g)].forEach(match => {
-            params[match[1]] = "";
+            if (match[1] !== 'apikey') params[match[1]] = "";
           });
           [...fnString.matchAll(/req\.body\.([a-zA-Z0-9_]+)/g)].forEach(match => {
             params[match[1]] = "";
@@ -287,7 +323,7 @@ app.get('/', (req, res) => {
     </div>
 
     <div id="bioDropdown" class="fixed top-0 right-0 h-full w-72 bg-[#08111e]/95 backdrop-blur-lg border-l border-white/10 transform translate-x-full transition-transform duration-300 ease-in-out z-50 shadow-2xl flex flex-col p-6 font-['Space_Grotesk'] light-mode:bg-white/95 light-mode:border-slate-200">
-        <div class="flex items-center justify-between mb-8">
+        <div class="flex items-center justify-between mb-6">
             <div class="flex gap-0 border border-black p-0.5 bg-[#111]">
                 <button id="lang-id" class="lang-btn active" onclick="setLanguage('id')">ID</button>
                 <button id="lang-en" class="lang-btn" onclick="setLanguage('en')">EN</button>
@@ -311,7 +347,15 @@ app.get('/', (req, res) => {
             </div>
         </div>
 
-        <nav class="flex flex-col gap-5 text-sm font-bold tracking-wider uppercase text-gray-300 light-mode:text-slate-700">
+        <div class="mb-6 p-3 bg-cyan-950/40 border border-cyan-500/30 rounded-xl light-mode:bg-cyan-50 light-mode:border-cyan-200">
+            <span class="text-[10px] font-bold text-cyan-400 light-mode:text-cyan-700 uppercase tracking-widest block mb-1">🔑 Current API Key</span>
+            <div class="flex items-center justify-between bg-black/40 rounded px-2 py-1.5 font-mono text-xs text-slate-200 border border-white/5 light-mode:bg-white light-mode:text-slate-800 light-mode:border-slate-200">
+                <span class="select-all">${VALID_API_KEY}</span>
+                <span class="text-[9px] bg-cyan-500/20 text-cyan-300 px-1 rounded light-mode:bg-cyan-100 light-mode:text-cyan-700 font-sans font-bold">FREE</span>
+            </div>
+        </div>
+
+        <nav class="flex flex-col gap-5 text-sm font-bold tracking-wider uppercase text-gray-300 light-mode:text-slate-700 flex-1 overflow-y-auto scrollbar-hide">
             <a href="#api" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-2">HOME</a>
             <a href="#apiList" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-2">DOCUMENTATION</a>
             <a href="#" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-2">FILE UPLOADER</a>
