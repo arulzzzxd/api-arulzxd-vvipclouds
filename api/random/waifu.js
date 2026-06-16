@@ -1,5 +1,5 @@
-import axios from 'axios';
-import express from 'express';
+const axios = require('axios');
+const express = require('express');
 const router = express.Router();
 
 // Fungsi untuk mengambil gambar anime Waifu secara acak
@@ -67,4 +67,4 @@ router.get('/', async (req, res) => {
     }
 });
 
-export default router;
+module.exports = router;
