@@ -62,15 +62,16 @@ for (const category of endpointDirs) {
   const files = fs.readdirSync(categoryPath).filter(f => f.endsWith('.js'));
   for (const file of files) {
     const routeName = path.basename(file, '.js');
-    const route = require(path.join(categoryPath, file));
+    const routeModule = await import(`file://${path.join(categoryPath, file)}`);
+    const route = routeModule.default || routeModule;
     router.use(`/${category}/${routeName}`, route);
   }
 }
 
 function getEndpointsFromRouter(category, file) {
   const endpoints = [];
-  const route = require(path.join(apiPath, category, file));
-  const subRouter = route.stack ? route : route.router || route;
+  return []; // disabled introspection for ESM
+  const subRouter = null;
   if (!subRouter || !subRouter.stack) return endpoints;
   subRouter.stack.forEach(layer => {
     if (layer.route) {
