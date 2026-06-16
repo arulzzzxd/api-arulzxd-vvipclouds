@@ -1,7 +1,7 @@
 import express from "express";
 import axios from "axios";
 import yts from "yt-search";
-const { createDecipheriv } = require('crypto');
+import { createDecipheriv } from "crypto";
 
 const router = express.Router();
 
@@ -13,24 +13,32 @@ function get_id(url) {
     return match ? match[1] : null;
 }
 
-// Fungsi konversi detik langsung dari API SaveTube ke format "Menit:Detik"
 function format_duration(seconds) {
     if (!seconds) return "00:00";
+
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+
+    return `${mins.toString().padStart(2, "0")}:${secs
+        .toString()
+        .padStart(2, "0")}`;
 }
 
 const decode = (enc) => {
     try {
-        const secret_key = 'C5D58EF67A7584E4A29F6C35BBC4EB12';
-        const data = Buffer.from(enc, 'base64');
+        const secret_key = "C5D58EF67A7584E4A29F6C35BBC4EB12";
+
+        const data = Buffer.from(enc, "base64");
         const iv = data.slice(0, 16);
         const content = data.slice(16);
-        const key = Buffer.from(secret_key, 'hex');
+        const key = Buffer.from(secret_key, "hex");
 
-        const decipher = createDecipheriv('aes-128-cbc', key, iv);
-        let decrypted = Buffer.concat([decipher.update(content), decipher.final()]);
+        const decipher = createDecipheriv("aes-128-cbc", key, iv);
+
+        let decrypted = Buffer.concat([
+            decipher.update(content),
+            decipher.final(),
+        ]);
 
         return JSON.parse(decrypted.toString());
     } catch (error) {
@@ -38,45 +46,62 @@ const decode = (enc) => {
     }
 };
 
-// Modifikasi fungsi savetube agar ikut mengembalikan info metadata asli dari link
 async function savetube(link, quality, value) {
     try {
-        const cdn = (await axios.get("https://media.savetube.vip/api/random-cdn")).data.cdn;
-        const infoget = (await axios.post('https://' + cdn + '/v2/info', {
-            'url': link
-        }, {
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Mobile Safari/537.36',
-                'Referer': 'https://save-tube.com/'
-            }
-        })).data;
+        const cdn = (
+            await axios.get("https://media.savetube.vip/api/random-cdn")
+        ).data.cdn;
+
+        const infoget = (
+            await axios.post(
+                `https://${cdn}/v2/info`,
+                {
+                    url: link,
+                },
+                {
+                    headers: {
+                        "User-Agent":
+                            "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Mobile Safari/537.36",
+                        Referer: "https://save-tube.com/",
+                    },
+                }
+            )
+        ).data;
 
         const info = decode(infoget.data);
 
-        const response = (await axios.post('https://' + cdn + '/download', {
-            'downloadType': value,
-            'quality': `${quality}`,
-            'key': info.key
-        }, {
-            headers: {
-                'Content-Type': 'application/json',
-                'User-Agent': 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Mobile Safari/537.36',
-                'Referer': 'https://save-tube.com/'
-            }
-        })).data;
+        const response = (
+            await axios.post(
+                `https://${cdn}/download`,
+                {
+                    downloadType: value,
+                    quality: String(quality),
+                    key: info.key,
+                },
+                {
+                    headers: {
+                        "Content-Type": "application/json",
+                        "User-Agent":
+                            "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Mobile Safari/537.36",
+                        Referer: "https://save-tube.com/",
+                    },
+                }
+            )
+        ).data;
 
         return {
             status: true,
             title: info.title || "YouTube Audio",
             url: response.data.downloadUrl,
             filename: `${info.title || "audio"} (${quality}kbps).mp3`,
-            durationRaw: info.duration 
+            durationRaw: info.duration,
         };
     } catch (error) {
         console.error("Converting error:", error);
+
         return {
             status: false,
-            message: "Converting error"
+            message: "Converting error",
         };
     }
 }
@@ -92,72 +117,95 @@ router.get("/", async (req, res) => {
                 status: false,
                 creator: "Arulzxd",
                 message: "Parameter ?url= wajib diisi",
-                example: "/api/download/ytmp3?url=https://www.youtube.com/watch?v=J1TFFzbCIiM"
+                example:
+                    "/api/download/ytmp3?url=https://www.youtube.com/watch?v=J1TFFzbCIiM",
             });
         }
 
         const id = get_id(url);
+
         if (!id) {
             return res.status(400).json({
                 status: false,
                 creator: "Arulzxd",
-                message: "Parameter link tidak valid!"
+                message: "Parameter link tidak valid!",
             });
         }
 
-        const cleanUrl = "https://youtube.com/watch?v=" + id;
+        const cleanUrl = `https://youtube.com/watch?v=${id}`;
 
-        // 1. Jalankan Engine Converter SaveTube berdasarkan link murni
         const formatSaves = 128;
-        const responseSaveTube = await savetube(cleanUrl, formatSaves, "audio");
+        const responseSaveTube = await savetube(
+            cleanUrl,
+            formatSaves,
+            "audio"
+        );
 
-        if (!responseSaveTube || !responseSaveTube.status || !responseSaveTube.url) {
+        if (
+            !responseSaveTube ||
+            !responseSaveTube.status ||
+            !responseSaveTube.url
+        ) {
             return res.status(500).json({
                 status: false,
                 creator: "Arulzxd",
-                message: "Gagal memproses konversi audio dari server pihak ketiga"
+                message:
+                    "Gagal memproses konversi audio dari server pihak ketiga",
             });
         }
 
-        // 2. PERBAIKAN UTAMA: Mencari metadata spesifik berdasarkan objek videoId
         let videoMeta = null;
+
         try {
             videoMeta = await yts({ videoId: id });
         } catch (e) {
             console.error("yt-search videoId error:", e.message);
         }
 
-        // 3. --- PROSES PERAPIAN DATA (DISAMAKAN DENGAN KODE YTPLAY) ---
-        const durationResult = format_duration(responseSaveTube.durationRaw);
-        const finalTitle = (videoMeta?.title || responseSaveTube.title || "YouTube Audio").trim();
-        const cleanTitle = finalTitle.replace(/[/\\?%*:|"<>]/g, '');
-        const formattedViews = videoMeta?.views ? videoMeta.views.toLocaleString('id-ID') : "0";
+        const durationResult = format_duration(
+            responseSaveTube.durationRaw
+        );
 
-        // 4. Kembalikan Response Sukses dengan Tampilan Struktur Sesuai Kode YTPLAY
+        const finalTitle = (
+            videoMeta?.title ||
+            responseSaveTube.title ||
+            "YouTube Audio"
+        ).trim();
+
+        const cleanTitle = finalTitle.replace(
+            /[/\\?%*:|"<>]/g,
+            ""
+        );
+
+        const formattedViews = videoMeta?.views
+            ? videoMeta.views.toLocaleString("id-ID")
+            : "0";
+
         return res.status(200).json({
             status: true,
             creator: "Arulzxd",
             result: {
                 video: {
-                    id: id,
+                    id,
                     title: finalTitle,
                     author: videoMeta?.author?.name || "Unknown Channel",
                     duration: durationResult,
                     views: formattedViews,
                     uploaded: videoMeta?.ago || "Unknown Date",
-                    thumbnail: videoMeta?.thumbnail || `https://i.ytimg.com/vi/${id}/hqdefault.jpg`,
-                    url: cleanUrl
+                    thumbnail:
+                        videoMeta?.thumbnail ||
+                        `https://i.ytimg.com/vi/${id}/hqdefault.jpg`,
+                    url: cleanUrl,
                 },
                 download: {
                     url: responseSaveTube.url,
                     filename: `${cleanTitle} (${formatSaves}kbps).mp3`,
                     quality: `${formatSaves}kbps`,
                     type: "audio/mp3",
-                    seconds_total: responseSaveTube.durationRaw || 0
-                }
-            }
+                    seconds_total: responseSaveTube.durationRaw || 0,
+                },
+            },
         });
-
     } catch (err) {
         console.error(err);
 
@@ -165,7 +213,7 @@ router.get("/", async (req, res) => {
             status: false,
             creator: "Arulzxd",
             message: "Internal Server Error",
-            error: err.message
+            error: err.message,
         });
     }
 });
