@@ -1,68 +1,42 @@
-# Preview:
-<a href="https://simple-epiay.vercel.app/">https://simple-epiay.vercel.app/</a>
+# 🚀 ArulzXD API
 
-# SIMPLE BASE API USING EXPRESS JS
----------
-### 📃 T&Cs
-1. Not For Sale!!!
-2. Don't forget to star this repo!
-3. If you have any issues, please create an issue in this repo.
+<div align="center">
 
----------
+<img src="https://readme-typing-svg.demolab.com?font=Poppins&weight=700&size=28&pause=1000&color=00D4FF&center=true&vCenter=true&width=600&lines=Welcome+To+ArulzzD+API;Fast+%F0%9F%9A%80+Reliable+%E2%9A%A1;Free+REST+API+Services;Developer+Friendly+API" alt="Typing SVG" />
 
----------
-### 📃 NOTE
-There may be a module missing for the scraper. If yes, add it to package.json and index.js.
----------
+<p>
+  <img src="https://img.shields.io/badge/API-ONLINE-success?style=for-the-badge">
+  <img src="https://img.shields.io/badge/Version-v1-blue?style=for-the-badge">
+  <img src="https://img.shields.io/badge/Status-Active-green?style=for-the-badge">
+</p>
+
+</div>
 
 ---
-# Example setting API name etc in index.js
-```javascript
-/*
-For setting API name etc
-*/
-const title = "EH PI AY DOANG";
-const favicon = "https://raw.githubusercontent.com/upload-file-lab/fileupload7/main/uploads/1764494355026.jpeg?format=png&name=900x900";
-const logo = "https://raw.githubusercontent.com/upload-file-lab/fileupload7/main/uploads/1770044887516.png";
-const headertitle = "REST EH PI AY";
-const headerdescription = "Kumpulan API Endpoint yang mungkin berguna.";
-const footer = "© SHIKAKU IYAYN AJAH";
-```
+
+## ✨ Tentang API
+
+ArulzzD API adalah layanan REST API yang menyediakan berbagai endpoint untuk kebutuhan developer seperti:
+
+- 🤖 AI Tools
+- 📥 Downloader
+- 🔍 Search Engine
+- 🖼️ Image Generator
+- 🎵 Media Tools
+- 📊 Utilities
+- ⚡ Fast Response
 
 ---
-# 🛠️ How to Add Features to api
-Just follow this code structure:
-# json result
-```javascript
-const express = require('express'); // must be used
-const router = express.Router(); // must be used
 
-router.get('/', async (req, res) => {
-  const text = req.query.text; // for https://example.com/api?text=
-  if (!text) return res.status(400).json({ error: "Missing 'text' parameter" });
-  try {
-// Your code
-const data = {
-      result: code result
-    };
-    return res.json(data); 
-} catch (e) {
-    return res.status(500).json({ error: e.message });
-  }
-});
+## 🎯 Features
 
-module.exports = router; // must be used
-````
-## Example
-```javascript
-// in api/downloader/videy.js
-const express = require('express');
-const router = express.Router();
-
-router.get('/', async (req, res) => {
-  const url = req.query.url;
-  if (!url) return res.status(400).json({ error: "Missing 'url' parameter" });
-  try {
+```yaml
+✓ Gratis Digunakan
+✓ Response JSON
+✓ Mudah Diintegrasikan
+✓ Endpoint Lengkap
+✓ Server Stabil
+✓ Dokumentasi Jelas  try {
     const videoId = url.split("=")[1];
     if (!videoId) return res.status(400).json({ error: "Invalid 'url' parameter" });
     const anunyah = `https://cdn.videy.co/${videoId}.mp4`;
