@@ -1,6 +1,6 @@
-import express from 'express';
+const express = require('express');
 const router = express.Router();
-import axios from 'axios';
+const axios = require('axios');
 
 // ======================================================
 // CORE SCRAPER FUNCTION (YOUTUBE TRANSCRIPT - INDONESIA ONLY)
@@ -95,4 +95,4 @@ router.get('/', async (req, res) => {
 });
 
 // Ekspor router untuk digunakan di index.js kamu
-export default router;
+module.exports = router;

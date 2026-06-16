@@ -1,6 +1,6 @@
-import express from 'express';
+const express = require('express');
 const router = express.Router();
-import axios from 'axios';
+const axios = require('axios');
 
 // Fungsi scraper emojimix yang mengembalikan data berupa arraybuffer
 const emojimixBuffer = async (emoji1, emoji2) => {
@@ -66,4 +66,4 @@ router.get('/', async (req, res) => {
     }
 });
 
-export default router;
+module.exports = router;

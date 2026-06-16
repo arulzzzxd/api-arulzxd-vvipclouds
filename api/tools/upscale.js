@@ -1,7 +1,7 @@
-import express from 'express';
-import axios from 'axios';
-import FormData from 'form-data';
-import crypto from 'crypto';
+const express = require('express');
+const axios = require('axios');
+const FormData = require('form-data');
+const crypto = require('crypto');
 
 const router = express.Router();
 const config = ['2', '4'];
@@ -116,4 +116,4 @@ router.get('/', async (req, res) => {
     }
 });
 
-export default router;
+module.exports = router;

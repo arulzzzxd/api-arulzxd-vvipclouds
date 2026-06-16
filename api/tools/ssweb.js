@@ -1,6 +1,6 @@
-import express from 'express';
+const express = require('express');
 const router = express.Router();
-import axios from 'axios';
+const axios = require('axios');
 
 // Fungsi scraper yang mengembalikan data berupa arraybuffer (gambar mentah)
 const sswebDesktopBuffer = (url) => {
@@ -76,4 +76,4 @@ router.get('/', async (req, res) => {
     }
 });
 
-export default router;
+module.exports = router;
