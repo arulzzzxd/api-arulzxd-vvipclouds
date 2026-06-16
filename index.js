@@ -13,7 +13,8 @@ For setting API name etc
 const title = "API-ARULZXD - REST";
 const favicon = "https://arulz-uploader.vercel.app/files/C5VYmq.jpg";
 const logo = "https://arulz-uploader.vercel.app/files/SnhJe3.png";
-const headertitle = "API Arulz-XD";
+// Mengubah headertitle menjadi tag img SVG
+const headertitle = `<img src="https://readme-typing-svg.demolab.com?font=Poppins&weight=700&size=28&pause=1000&color=00D4FF&center=true&vCenter=true&width=600&lines=Welcome+To+ArulzXD+API;Fast+%F0%9F%9A%80+Reliable+%E2%9A%A1;Free+REST+API+Services;Developer+Friendly+API" alt="Typing SVG" class="mx-auto" />`;
 const headerdescription = "Browse, inspect & fire requests against live endpoints._";
 const footer = "© Arulz-XD";
 
@@ -155,25 +156,21 @@ app.get('/', (req, res) => {
     <link rel="stylesheet" href="styles.css" />
     
     <style>
-    /* Pola Bintik-Bintik Mode Terang (Background Putih, Bintik Abu-abu Lembut) */
     .bg-dots-light {
         background-color: #ffffff;
         background-image: radial-gradient(#e2e8f0 1.5px, transparent 1.5px);
         background-size: 24px 24px;
     }
 
-    /* Pola Bintik-Bintik Mode Gelap (Background Gelap, Bintik Putih Transparan) */
     .bg-dots-dark {
         background-color: #0f172a;
         background-image: radial-gradient(rgba(255, 255, 255, 0.15) 1.5px, transparent 1.5px);
         background-size: 24px 24px;
     }
     
-    /* Memastikan perpindahan theme terasa mulus */
     #themeBg {
         transition: background-color 0.3s ease, background-image 0.3s ease;
     }
-    /* Menggunakan background solid & tipis blur agar super ringan */
     body {
         transition: background 0.25s ease, color 0.25s ease;
     }
@@ -192,7 +189,6 @@ app.get('/', (req, res) => {
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03);
     }
 
-    /* Perbaikan Kontras Tulisan & Komponen Mode Terang */
     .light-mode {
         color: #0f172a !important;
     }
@@ -222,7 +218,6 @@ app.get('/', (req, res) => {
         color: #0f172a !important;
     }
     
-    /* Brutalist Toggle Language Switcher */
     .lang-btn {
         font-family: 'JetBrains Mono', monospace;
         font-size: 11px;
@@ -239,7 +234,6 @@ app.get('/', (req, res) => {
         box-shadow: 2px 2px 0px #000000;
     }
 
-    /* Filter Buttons Style */
     .filter-btn {
         font-family: 'JetBrains Mono', monospace;
         font-size: 11px;
@@ -336,7 +330,7 @@ app.get('/', (req, res) => {
             <div class="flex items-center justify-center gap-3 mb-2">
                 <span class="bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest animate-pulse light-mode:bg-cyan-100 light-mode:text-cyan-700">● ONLINE</span>
             </div>
-            <h1 id="mainTitle" class="text-5xl md:text-6xl font-black mb-4 tracking-tight font-['Space_Grotesk'] text-white">${headertitle}</h1>
+            <div id="mainTitle" class="flex justify-center mb-4 min-h-[50px] items-center">${headertitle}</div>
             <p id="mainDescription" class="text-md md:text-lg font-medium tracking-wide text-slate-300 max-w-xl mx-auto">${headerdescription}</p>
             
             <div class="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl mx-auto">
