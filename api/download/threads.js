@@ -1,5 +1,5 @@
 const axios = require('axios')
-import express from 'express';
+const express = require('express');
 const router = express.Router();
 
 async function threads(url) {
@@ -46,6 +46,6 @@ return res.json(anu);
     return res.status(500).json({ error: e.message });
   }
 });
-export default router;
+module.exports = router;
 
 

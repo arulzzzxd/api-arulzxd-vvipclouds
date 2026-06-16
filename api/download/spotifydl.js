@@ -1,6 +1,6 @@
-import axios from 'axios';
-import cheerio from 'cheerio';
-import express from 'express';
+const axios = require('axios');
+const cheerio = require('cheerio');
+const express = require('express');
 const router = express.Router();
 
 const HEADERS = {
@@ -166,4 +166,4 @@ router.get('/', async (req, res) => {
     }
 });
 
-export default router;
+module.exports = router;

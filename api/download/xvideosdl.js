@@ -1,7 +1,7 @@
-import express from 'express';
+const express = require('express');
 const router = express.Router();
-import cheerio from 'cheerio';
-import fetch from 'node-fetch';
+const cheerio = require('cheerio');
+const fetch = require('node-fetch');
 
 // ======================================================
 // UTILITY / HELPER FUNCTIONS (MENGGUNAKAN FETCH)
@@ -203,4 +203,4 @@ router.get('/', async (req, res) => {
     }
 });
 
-export default router;
+module.exports = router;

@@ -1,5 +1,5 @@
-import axios from 'axios';
-import express from 'express';
+const axios = require('axios');
+const express = require('express');
 const router = express.Router();
 
 const UA = "Mozilla/5.0 (Linux; Android 13; 23021RAA2Y Build/TKQ1.221114.001) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.7727.137 Mobile Safari/537.36";
@@ -128,4 +128,4 @@ router.get('/', async (req, res) => {
     }
 });
 
-export default router;
+module.exports = router;

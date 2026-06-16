@@ -1,6 +1,6 @@
-import express from 'express';
+const express = require('express');
 const router = express.Router();
-import axios from 'axios';
+const axios = require('axios');
 
 // ======================================================
 // HELPER: PARSE & GET PACKAGE INFO FROM REGISTRY
@@ -81,4 +81,4 @@ router.get('/', async (req, res) => {
     }
 });
 
-export default router;
+module.exports = router;

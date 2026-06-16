@@ -4,8 +4,8 @@
  * [•] BASIS        :: snapvideotools.com
  */
 
-import axios from 'axios';
-import express from 'express';
+const axios = require('axios');
+const express = require('express');
 const router = express.Router();
 
 // Fungsi Scraper CapCut Snap Video Tools
@@ -61,4 +61,4 @@ router.get('/', async (req, res) => {
   }
 });
 
-export default router;
+module.exports = router;

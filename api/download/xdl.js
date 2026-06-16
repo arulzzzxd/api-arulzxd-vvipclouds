@@ -1,5 +1,5 @@
-import axios from 'axios';
-import express from 'express';
+const axios = require('axios');
+const express = require('express');
 const router = express.Router();
 
 const TWEET_QUERY_HASH = "tmhPpO5sDermwYmq3h034A";
@@ -295,4 +295,4 @@ router.get('/', async (req, res) => {
     }
 });
 
-export default router;
+module.exports = router;

@@ -4,8 +4,8 @@
  * [•] BASIS        :: ssstik.io
  */
 
-import axios from 'axios';
-import express from 'express';
+const axios = require('axios');
+const express = require('express');
 const router = express.Router();
 
 // Fungsi untuk membuat token acak tt
@@ -93,4 +93,4 @@ router.get('/', async (req, res) => {
   }
 });
 
-export default router;
+module.exports = router;
