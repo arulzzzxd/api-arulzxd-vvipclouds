@@ -1,5 +1,5 @@
-import express from "express";
-import yts from "yt-search";
+const express = require("express");
+const yts = require("yt-search");
 
 const router = express.Router();
 
@@ -77,4 +77,4 @@ router.get("/", async (req, res) => {
     }
 });
 
-export default router;
+module.exports = router;

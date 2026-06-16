@@ -1,6 +1,6 @@
-import express from "express";
-import axios from "axios";
-import yts from "yt-search";
+const express = require("express");
+const axios = require("axios");
+const yts = require("yt-search");
 const { createDecipheriv } = require('crypto');
 
 const router = express.Router();
@@ -174,4 +174,4 @@ router.get("/", async (req, res) => {
     }
 });
 
-export default router;
+module.exports = router;

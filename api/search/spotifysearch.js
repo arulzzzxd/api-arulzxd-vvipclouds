@@ -1,5 +1,5 @@
-import express from "express";
-import crypto from "crypto";
+const express = require("express");
+const crypto = require("crypto");
 
 const router = express.Router();
 
@@ -197,4 +197,4 @@ router.get("/", async (req, res) => {
     }
 });
 
-export default router;
+module.exports = router;

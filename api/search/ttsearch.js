@@ -1,6 +1,6 @@
-import express from "express";
-import axios from "axios";
-import FormData from "form-data";
+const express = require("express");
+const axios = require("axios");
+const FormData = require("form-data");
 
 const router = express.Router();
 
@@ -75,4 +75,4 @@ router.get("/", async (req, res) => {
     }
 });
 
-export default router;
+module.exports = router;
