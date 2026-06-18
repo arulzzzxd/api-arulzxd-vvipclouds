@@ -12,20 +12,20 @@ const CANVAS = {
     height: 1254
 };
 
+// AREA KERTAS
 const SAFE_ZONE = {
-    a: 660,
-    b: 1180,
-    c: 270,
-    d: 990
+    top: 700,
+    bottom: 920,
+    left: 350,
+    right: 910
 };
 
 const TEXT_STYLE = {
     fontFamily: "PoppinsBratGojo",
-    maxFontSize: 90,
-    minFontSize: 22,
-    lineHeight: 1.18,
-    color: "#111111",
-    align: "center"
+    maxFontSize: 95,
+    minFontSize: 20,
+    lineHeight: 1.15,
+    color: "#111111"
 };
 
 async function downloadBuffer(url) {
@@ -46,50 +46,43 @@ function normalizeText(text) {
         .trim();
 }
 
-function getSafeRect(zone) {
-    return {
-        x: zone.c,
-        y: zone.a,
-        w: zone.d - zone.c,
-        h: zone.b - zone.a,
-        centerX: (zone.c + zone.d) / 2,
-        centerY: (zone.a + zone.b) / 2
-    };
-}
-
 function setFont(ctx, size) {
     ctx.font = `${size}px ${TEXT_STYLE.fontFamily}`;
 }
 
 function splitLongWord(ctx, word, maxWidth) {
     const chars = [...word];
-    const parts = [];
+    const result = [];
     let current = "";
 
     for (const char of chars) {
         const test = current + char;
 
-        if (ctx.measureText(test).width <= maxWidth || !current) {
+        if (
+            ctx.measureText(test).width <= maxWidth ||
+            current.length === 0
+        ) {
             current = test;
         } else {
-            parts.push(current);
+            result.push(current);
             current = char;
         }
     }
 
-    if (current) parts.push(current);
-    return parts;
+    if (current) result.push(current);
+
+    return result;
 }
 
-function wrapParagraph(ctx, paragraph, maxWidth) {
-    const words = paragraph.split(" ").filter(Boolean);
-    const lines = [];
+function wrapParagraph(ctx, text, maxWidth) {
+    const words = text.split(" ").filter(Boolean);
 
+    const lines = [];
     let current = "";
 
     for (const word of words) {
         const test = current
-            ? `${current} ${word}`
+            ? current + " " + word
             : word;
 
         if (ctx.measureText(test).width <= maxWidth) {
@@ -102,21 +95,25 @@ function wrapParagraph(ctx, paragraph, maxWidth) {
             current = "";
         }
 
-        if (ctx.measureText(word).width <= maxWidth) {
+        if (
+            ctx.measureText(word).width <= maxWidth
+        ) {
             current = word;
         } else {
-            const parts = splitLongWord(
+            const pieces = splitLongWord(
                 ctx,
                 word,
                 maxWidth
             );
 
-            lines.push(...parts.slice(0, -1));
-            current = parts[parts.length - 1] || "";
+            lines.push(...pieces.slice(0, -1));
+            current = pieces[pieces.length - 1];
         }
     }
 
-    if (current) lines.push(current);
+    if (current) {
+        lines.push(current);
+    }
 
     return lines;
 }
@@ -137,7 +134,7 @@ function wrapText(ctx, text, maxWidth) {
         });
 }
 
-function fitText(ctx, text, rect) {
+function fitText(ctx, text, width, height) {
     for (
         let size = TEXT_STYLE.maxFontSize;
         size >= TEXT_STYLE.minFontSize;
@@ -145,20 +142,28 @@ function fitText(ctx, text, rect) {
     ) {
         setFont(ctx, size);
 
-        const lineHeight = Math.ceil(
-            size * TEXT_STYLE.lineHeight
-        );
-
         const lines = wrapText(
             ctx,
             text,
-            rect.w
+            width
         );
+
+        const lineHeight =
+            size * TEXT_STYLE.lineHeight;
 
         const totalHeight =
             lines.length * lineHeight;
 
-        if (totalHeight <= rect.h) {
+        const widestLine = Math.max(
+            ...lines.map(line =>
+                ctx.measureText(line).width
+            )
+        );
+
+        if (
+            widestLine <= width &&
+            totalHeight <= height
+        ) {
             return {
                 size,
                 lines,
@@ -168,69 +173,66 @@ function fitText(ctx, text, rect) {
         }
     }
 
-    const size = TEXT_STYLE.minFontSize;
-
-    setFont(ctx, size);
-
-    const lineHeight = Math.ceil(
-        size * TEXT_STYLE.lineHeight
-    );
-
-    const lines = wrapText(
-        ctx,
-        text,
-        rect.w
-    );
+    setFont(ctx, TEXT_STYLE.minFontSize);
 
     return {
-        size,
-        lines,
-        lineHeight,
-        totalHeight:
-            lines.length * lineHeight
+        size: TEXT_STYLE.minFontSize,
+        lines: wrapText(
+            ctx,
+            text,
+            width
+        ),
+        lineHeight:
+            TEXT_STYLE.minFontSize *
+            TEXT_STYLE.lineHeight,
+        totalHeight: 0
     };
 }
 
-function drawCenteredText(ctx, text, zone) {
-    const rect = getSafeRect(zone);
+function drawCenteredText(ctx, text) {
+    const width =
+        SAFE_ZONE.right - SAFE_ZONE.left;
+
+    const height =
+        SAFE_ZONE.bottom - SAFE_ZONE.top;
 
     const fitted = fitText(
         ctx,
         text,
-        rect
+        width,
+        height
     );
 
-    const startY =
-        rect.y +
-        (rect.h - fitted.totalHeight) / 2;
+    setFont(ctx, fitted.size);
 
     ctx.save();
 
     ctx.beginPath();
     ctx.rect(
-        rect.x,
-        rect.y,
-        rect.w,
-        rect.h
+        SAFE_ZONE.left,
+        SAFE_ZONE.top,
+        width,
+        height
     );
-
     ctx.clip();
 
-    setFont(ctx, fitted.size);
-
     ctx.fillStyle = TEXT_STYLE.color;
-    ctx.textAlign = TEXT_STYLE.align;
+    ctx.textAlign = "center";
     ctx.textBaseline = "top";
 
-    fitted.lines.forEach((line, index) => {
-        const y =
-            startY +
-            index * fitted.lineHeight;
+    const startY =
+        SAFE_ZONE.top +
+        (height -
+            fitted.lines.length *
+                fitted.lineHeight) /
+            2;
 
+    fitted.lines.forEach((line, i) => {
         ctx.fillText(
             line,
-            rect.centerX,
-            y
+            SAFE_ZONE.left + width / 2,
+            startY +
+                i * fitted.lineHeight
         );
     });
 
@@ -280,8 +282,7 @@ async function bratGojo(text) {
 
     drawCenteredText(
         ctx,
-        normalizeText(text),
-        SAFE_ZONE
+        normalizeText(text)
     );
 
     return await canvas.encode("png");
@@ -289,17 +290,18 @@ async function bratGojo(text) {
 
 router.get("/", async (req, res) => {
     try {
-        const text = req.query.text;
+        const { text } = req.query;
 
         if (!text) {
             return res.status(400).json({
                 status: false,
                 creator: "ArulzXD",
-                message: "Masukkan parameter text"
+                message:
+                    "Masukkan parameter text"
             });
         }
 
-        const buffer =
+        const image =
             await bratGojo(text);
 
         res.setHeader(
@@ -307,7 +309,7 @@ router.get("/", async (req, res) => {
             "image/png"
         );
 
-        res.send(buffer);
+        res.send(image);
 
     } catch (err) {
         res.status(500).json({
