@@ -1,41 +1,11 @@
 const express = require("express");
-const { createCanvas, loadImage } = require("@napi-rs/canvas");
 const axios = require("axios");
+const { createCanvas, loadImage } = require("@napi-rs/canvas");
 
 const router = express.Router();
 
 const BG_URL = "https://files.catbox.moe/3gwr1l.jpg";
 const DEFAULT_PP = "https://img1.pixhost.to/images/5831/600387261_biyu-offc.jpg";
-
-function wrapTextCenter(ctx, text, x, y, maxWidth, lineHeight) {
-    const words = text.split(" ");
-    let line = "";
-    const lines = [];
-
-    for (const word of words) {
-        const testLine = line + word + " ";
-
-        if (
-            ctx.measureText(testLine).width > maxWidth &&
-            line.length > 0
-        ) {
-            lines.push(line);
-            line = word + " ";
-        } else {
-            line = testLine;
-        }
-    }
-
-    lines.push(line);
-
-    lines.forEach((txt, i) => {
-        ctx.fillText(
-            txt.trim(),
-            x,
-            y + (i * lineHeight)
-        );
-    });
-}
 
 async function getBuffer(url) {
     const { data } = await axios.get(url, {
@@ -45,19 +15,61 @@ async function getBuffer(url) {
     return Buffer.from(data);
 }
 
+function wrapTextCenter(ctx, text, x, y, maxWidth, lineHeight) {
+    const words = text.split(" ");
+    const lines = [];
+    let line = "";
+
+    for (const word of words) {
+        const testLine = line + word + " ";
+
+        if (
+            ctx.measureText(testLine).width > maxWidth &&
+            line.length > 0
+        ) {
+            lines.push(line.trim());
+            line = word + " ";
+        } else {
+            line = testLine;
+        }
+    }
+
+    if (line) {
+        lines.push(line.trim());
+    }
+
+    lines.forEach((txt, i) => {
+        ctx.fillText(
+            txt,
+            x,
+            y + (i * lineHeight)
+        );
+    });
+}
+
 router.get("/", async (req, res) => {
     try {
-        const {
-            username,
-            caption,
-            pp
-        } = req.query;
+        const username =
+            req.query.username?.trim();
 
-        if (!username || !caption) {
+        const caption =
+            req.query.caption?.trim();
+
+        const pp =
+            req.query.pp?.trim() ||
+            DEFAULT_PP;
+
+        if (!username) {
             return res.status(400).json({
                 status: false,
-                message:
-                    "Parameter username & caption wajib"
+                message: "Parameter username wajib"
+            });
+        }
+
+        if (!caption) {
+            return res.status(400).json({
+                status: false,
+                message: "Parameter caption wajib"
             });
         }
 
@@ -66,7 +78,7 @@ router.get("/", async (req, res) => {
         );
 
         const avatar = await loadImage(
-            await getBuffer(pp || DEFAULT_PP)
+            await getBuffer(pp)
         );
 
         const canvas = createCanvas(
@@ -90,6 +102,7 @@ router.get("/", async (req, res) => {
         const ppSize = 70;
 
         ctx.save();
+
         ctx.beginPath();
         ctx.arc(
             ppX + ppSize / 2,
@@ -98,6 +111,7 @@ router.get("/", async (req, res) => {
             0,
             Math.PI * 2
         );
+
         ctx.closePath();
         ctx.clip();
 
@@ -119,7 +133,7 @@ router.get("/", async (req, res) => {
         ctx.fillText(
             username,
             ppX + ppSize + 15,
-            ppY + ppSize / 2
+            ppY + (ppSize / 2)
         );
 
         ctx.font = "bold 30px Arial";
