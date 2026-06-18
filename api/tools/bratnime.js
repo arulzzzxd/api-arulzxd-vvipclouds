@@ -3,7 +3,7 @@ const axios = require('axios');
 const { createCanvas, loadImage } = require('@napi-rs/canvas');
 const router = express.Router();
 
-// Fungsi mengambil data buffer dari gambar latar belakang (Bebas Error 403)
+// Fungsi mengambil data buffer dari gambar latar belakang (Aman dari 403)
 async function getBaseBg() {
     try {
         const response = await axios.get('https://arulz-uploader.vercel.app/files/LhDOTg.png', {
@@ -28,12 +28,11 @@ router.get('/', async (req, res) => {
         const baseImageBuffer = await getBaseBg();
         const bgImage = await loadImage(baseImageBuffer);
 
-        // 1. Inisialisasi Canvas Persegi 512x512
         const canvasSize = 512;
         const canvas = createCanvas(canvasSize, canvasSize);
         const ctx = canvas.getContext('2d');
 
-        // 2. Gambar background utama
+        // 1. Gambar background utama persegi
         ctx.drawImage(bgImage, 0, 0, canvasSize, canvasSize);
 
         // Jika tidak ada parameter text, kirim gambar polos langsung
@@ -45,29 +44,27 @@ router.get('/', async (req, res) => {
             return res.end(baseImageBuffer);
         }
 
-        // 3. Simpan state canvas sebelum melakukan rotasi posisi
+        // 2. Simpan state awal canvas sebelum rotasi
         ctx.save();
 
-        // 4. Tentukan titik pusat rotasi (Titik tengah area kertas putih)
-        // Koordinat ini disesuaikan dengan posisi kertas pada gambar LhDOTg.png
-        const centerX = canvasSize / 2 - 2; 
-        const centerY = canvasSize * 0.67; 
+        // 3. Tentukan koordinat titik pusat kertas putih
+        const centerX = canvasSize / 2; 
+        const centerY = canvasSize * 0.64; // Set posisi tepat di tengah kertas putih
 
-        // 5. Pindahkan poros koordinat ke tengah kertas dan miringkan canvas
-        // Kertas agak miring ke kiri, kita gunakan sudut sekitar -5 derajat (-0.085 Radian)
+        // 4. Pindahkan poros ke tengah kertas dan miringkan sejajar kertas (-5 derajat)
         ctx.translate(centerX, centerY);
         ctx.rotate(-0.085);
 
-        // 6. Konfigurasi Teks Gaya Brat (Warna Hitam, Tebal, Rata Tengah)
+        // 5. Atur gaya font Brat (Warna Hitam, Tebal)
         ctx.fillStyle = '#000000'; 
-        ctx.font = 'bold 34px Arial, sans-serif'; // Ukuran font disesuaikan agar pas di kertas
+        ctx.font = 'bold 32px Arial, sans-serif'; 
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
 
-        const maxWidth = 290;  // Batas lebar teks agar tidak menabrak jari karakter
-        const lineHeight = 40; // Jarak spasi antar baris kalimat
+        const maxWidth = 280;  // Batas lebar teks di dalam kertas papan
+        const lineHeight = 38; // Jarak renggang antar baris
 
-        // 7. Logika Word-Wrap otomatis (Patah Baris)
+        // 6. Logika Word-Wrap otomatis (Patah Baris)
         const words = text.split(' ');
         let lines = [];
         let currentLine = '';
@@ -85,16 +82,18 @@ router.get('/', async (req, res) => {
         }
         lines.push(currentLine.trim());
 
-        // 8. Cetak teks baris demi baris (Posisi X dan Y relatif terhadap titik translate 0,0)
+        // 7. FIX: Tulis teks relatif terhadap titik (0,0) baru setelah di-translate
+        // startY dihitung mulai dari minus setengah tinggi total baris agar teks presisi di tengah-tengah
         let startY = 0 - ((lines.length - 1) * lineHeight) / 2;
         for (let i = 0; i < lines.length; i++) {
+            // Posisi X diatur ke 0 karena poros utama sudah digeser ke centerX oleh ctx.translate
             ctx.fillText(lines[i], 0, startY + (i * lineHeight));
         }
 
-        // 9. Kembalikan state canvas ke awal
+        // 8. Kembalikan orientasi canvas ke normal
         ctx.restore();
 
-        // 10. Render hasil akhir ke dalam format PNG dan kirim responsnya
+        // 9. Kirim hasil gambar PNG ke client
         const bratBuffer = canvas.toBuffer('image/png');
         res.writeHead(200, {
             'Content-Type': 'image/png',
