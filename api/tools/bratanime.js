@@ -2,11 +2,12 @@ const express = require('express');
 const axios = require('axios');
 const path = require('path');
 const fs = require('fs');
-// PERBAIKAN: Menggunakan @napi-rs/canvas yang sepenuhnya didukung di Vercel
+// Menggunakan @napi-rs/canvas yang sepenuhnya didukung di Vercel
 const { createCanvas, loadImage, GlobalFonts } = require('@napi-rs/canvas');
 
 const router = express.Router();
 
+// PERBAIKAN JALUR FILE: Diarahkan ke folder '/tmp/session' yang aman untuk Vercel
 const fontDir = path.join('/tmp', 'session');
 const fontPath = path.join(fontDir, "NotoColorEmoji.ttf");
 
@@ -15,29 +16,32 @@ let isFontRegistered = false;
 async function ensureFontExists() {
     if (isFontRegistered) return;
 
+    // Membuat folder /tmp/session jika belum ada
     if (!fs.existsSync(fontDir)) {
         fs.mkdirSync(fontDir, { recursive: true });
     }
 
+    // Unduh font jika belum ada di direktori /tmp/session
     if (!fs.existsSync(fontPath)) {
         console.log("Downloading NotoColorEmoji Font...");
         const fontUrl = "https://github.com/googlefonts/noto-emoji/raw/main/fonts/NotoColorEmoji.ttf";
         
         const fontData = await axios.get(fontUrl, { 
             responseType: "arraybuffer",
-            timeout: 15000 
+            timeout: 25000 // Beri timeout agak panjang karena font emoji berukuran besar
         });
         
         fs.writeFileSync(fontPath, Buffer.from(fontData.data));
-        console.log("Font saved successfully to /tmp/session.");
+        console.log("Font saved successfully to /tmp/session/NotoColorEmoji.ttf");
     }
 
-    // Cara mendaftarkan font di @napi-rs/canvas menggunakan GlobalFonts
+    // Daftarkan font ke @napi-rs/canvas menggunakan GlobalFonts
     try {
         GlobalFonts.registerFromPath(fontPath, "EmojiFont");
         isFontRegistered = true;
     } catch (e) {
         console.error("Gagal meregistrasi font:", e.message);
+        throw e; // Lemparkan error agar ditangkap oleh blok catch endpoint utama
     }
 }
 
@@ -54,6 +58,7 @@ router.get('/', async (req, res) => {
     }
 
     try {
+        // Pastikan font sudah terunduh & teregistrasi tanpa error
         await ensureFontExists();
 
         let imageUrl = "https://files.catbox.moe/wlvb0g.png";
