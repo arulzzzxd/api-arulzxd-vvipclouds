@@ -35,7 +35,7 @@ async function generateImage(text) {
         // Pastikan font sudah siap sebelum lanjut
         await ensureFont();
 
-        const imageUrl = "https://cloudkuimages.com/uploads/images/67ddbbcb065a6.jpg";
+        const imageUrl = "https://files.catbox.moe/wlvb0g.png";
 
         // Unduh gambar dasar langsung ke buffer
         const imageRes = await axios.get(imageUrl, { responseType: "arraybuffer" });
