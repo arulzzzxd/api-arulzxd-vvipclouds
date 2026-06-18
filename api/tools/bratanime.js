@@ -2,19 +2,17 @@ const express = require('express');
 const axios = require('axios');
 const path = require('path');
 const fs = require('fs');
-const { createCanvas, loadImage, registerFont } = require('skia-canvas');
+// PERBAIKAN: Menggunakan @napi-rs/canvas yang sepenuhnya didukung di Vercel
+const { createCanvas, loadImage, GlobalFonts } = require('@napi-rs/canvas');
 
 const router = express.Router();
 
-// PERBAIKAN UTAMA: Gunakan direktori '/tmp' yang diizinkan oleh Vercel
 const fontDir = path.join('/tmp', 'session');
 const fontPath = path.join(fontDir, "NotoColorEmoji.ttf");
 
-// Variabel flag untuk memastikan pendaftaran font global hanya terjadi sekali
 let isFontRegistered = false;
 
 async function ensureFontExists() {
-    // Jika font sudah terdaftar di runtime, lewati proses pengecekan file
     if (isFontRegistered) return;
 
     if (!fs.existsSync(fontDir)) {
@@ -25,7 +23,6 @@ async function ensureFontExists() {
         console.log("Downloading NotoColorEmoji Font...");
         const fontUrl = "https://github.com/googlefonts/noto-emoji/raw/main/fonts/NotoColorEmoji.ttf";
         
-        // Gunakan timeout pada axios agar fungsi tidak stuck/gantung saat download
         const fontData = await axios.get(fontUrl, { 
             responseType: "arraybuffer",
             timeout: 15000 
@@ -35,9 +32,9 @@ async function ensureFontExists() {
         console.log("Font saved successfully to /tmp/session.");
     }
 
-    // Daftarkan font ke skia-canvas global runtime jika belum
+    // Cara mendaftarkan font di @napi-rs/canvas menggunakan GlobalFonts
     try {
-        registerFont(fontPath, { family: "EmojiFont" });
+        GlobalFonts.registerFromPath(fontPath, "EmojiFont");
         isFontRegistered = true;
     } catch (e) {
         console.error("Gagal meregistrasi font:", e.message);
@@ -57,7 +54,6 @@ router.get('/', async (req, res) => {
     }
 
     try {
-        // Jalankan fungsi pengecekan font (menggunakan /tmp)
         await ensureFontExists();
 
         let imageUrl = "https://files.catbox.moe/wlvb0g.png";
@@ -68,11 +64,11 @@ router.get('/', async (req, res) => {
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
             },
-            timeout: 10000 // Batasan timeout 10 detik agar tidak terkena vercel timeout
+            timeout: 10000
         });
         const imageBuffer = Buffer.from(response.data);
 
-        // 2. Load gambar ke dalam skia-canvas menggunakan Buffer
+        // 2. Load gambar ke dalam canvas menggunakan Buffer
         const baseImage = await loadImage(imageBuffer);
         const canvas = createCanvas(baseImage.width, baseImage.height);
         const ctx = canvas.getContext("2d");
@@ -80,7 +76,7 @@ router.get('/', async (req, res) => {
         // 3. Gambar background utama
         ctx.drawImage(baseImage, 0, 0, canvas.width, canvas.height);
 
-        // --- LOGIKAL CANVAS ASLI ---
+        // --- LOGIKAL CANVAS ASLI KAMU ---
         let boardX = canvas.width * 0.22;
         let boardY = canvas.height * 0.5;
         let boardWidth = canvas.width * 0.56;
@@ -143,16 +139,16 @@ router.get('/', async (req, res) => {
         lines.forEach((line, i) => {
             ctx.fillText(line, boardX + boardWidth / 2, startY + i * lineHeight);
         });
-        // --- AKHIR LOGIKAL CANVAS ASLI ---
+        // --- AKHIR LOGIKAL CANVAS ASLI KAMU ---
 
         // 4. Ekstrak canvas langsung ke format buffer png di dalam memori
         const pngBuffer = await canvas.toBuffer("image/png");
 
-        // 5. Kirim respons langsung ke client berbentuk file image/png utuh
+        // 5. Kirim respons gambar PNG langsung ke client
         res.writeHead(200, {
             'Content-Type': 'image/png',
             'Content-Length': pngBuffer.length,
-            'Cache-Control': 'public, max-age=86400' // Menyimpan cache di browser/CDN selama 1 hari agar respons berikutnya instan
+            'Cache-Control': 'public, max-age=86400' 
         });
         res.end(pngBuffer);
 
