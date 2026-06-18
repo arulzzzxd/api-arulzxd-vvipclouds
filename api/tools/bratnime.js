@@ -1,35 +1,26 @@
 const axios = require('axios');
 const express = require('express');
 const { createCanvas, loadImage, registerFont } = require('skia-canvas');
-const fs = require('fs');
-const path = require('path');
 const router = express.Router();
 
-// Fungsi memproses gambar dan mengembalikan buffer JPEG
+// Fungsi memproses gambar langsung di memori
 async function generateImage(text = "") {
     try {
         const imageUrl = "https://cloudkuimages.com/uploads/images/67ddbbcb065a6.jpg";
         const fontUrl = "https://github.com/googlefonts/noto-emoji/raw/main/fonts/NotoColorEmoji.ttf";
-        const sessionDir = path.join(__dirname, "session");
 
-        if (!fs.existsSync(sessionDir)) fs.mkdirSync(sessionDir, { recursive: true });
-        const fontPath = path.join(sessionDir, "NotoColorEmoji.ttf");
+        // Unduh font langsung ke buffer
+        const fontRes = await axios.get(fontUrl, { responseType: "arraybuffer" });
+        const fontBuffer = Buffer.from(fontRes.data);
+        registerFont(fontBuffer, { family: "EmojiFont" });
 
-        // Unduh font jika belum ada
-        if (!fs.existsSync(fontPath)) {
-            const fontRes = await axios.get(fontUrl, { responseType: "arraybuffer" });
-            fs.writeFileSync(fontPath, Buffer.from(fontRes.data));
-        }
-
-        // Unduh gambar dasar
+        // Unduh gambar dasar langsung ke buffer
         const imageRes = await axios.get(imageUrl, { responseType: "arraybuffer" });
         const baseImage = await loadImage(Buffer.from(imageRes.data));
 
         const canvas = createCanvas(baseImage.width, baseImage.height);
         const ctx = canvas.getContext("2d");
         ctx.drawImage(baseImage, 0, 0, canvas.width, canvas.height);
-
-        registerFont(fontPath, { family: "EmojiFont" });
 
         // Area tempat tulisan
         const boardX = canvas.width * 0.22;
@@ -98,7 +89,7 @@ async function generateImage(text = "") {
             });
         }
 
-        // Langsung kembalikan buffer JPEG
+        // Langsung kembalikan buffer gambar JPEG
         return await canvas.toBuffer("image/jpeg");
 
     } catch (error) {
