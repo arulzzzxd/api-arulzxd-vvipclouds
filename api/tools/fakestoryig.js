@@ -1,6 +1,6 @@
 const express = require("express");
 const axios = require("axios");
-const { createCanvas, loadImage } = require("@napi-rs/canvas");
+const { createCanvas, loadImage } = require("canvas");
 
 const router = express.Router();
 
