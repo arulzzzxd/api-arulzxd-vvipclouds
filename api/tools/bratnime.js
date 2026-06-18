@@ -4,7 +4,7 @@ const { createCanvas, loadImage, registerFont } = require('skia-canvas');
 const router = express.Router();
 
 // Fungsi memproses gambar langsung di memori
-async function generateImage(text = "") {
+async function generateImage(text) {
     try {
         const imageUrl = "https://cloudkuimages.com/uploads/images/67ddbbcb065a6.jpg";
         const fontUrl = "https://github.com/googlefonts/noto-emoji/raw/main/fonts/NotoColorEmoji.ttf";
@@ -100,7 +100,7 @@ async function generateImage(text = "") {
 // Endpoint
 router.get('/', async (req, res) => {
     try {
-        const text = req.query.text || "";
+        const text = req.query.text;
         const imageBuffer = await generateImage(text);
         
         res.writeHead(200, {
