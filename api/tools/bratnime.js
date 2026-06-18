@@ -3,13 +3,14 @@ const axios = require('axios');
 const { createCanvas, loadImage } = require('@napi-rs/canvas');
 const router = express.Router();
 
-// Fungsi untuk mengunduh gambar background spesifik dari Catbox
-async function getCatboxBg() {
+// Fungsi mengambil gambar latar belakang
+async function getBgImage() {
     try {
+        // Menggunakan URL gambar utama kamu
         const response = await axios.get('https://files.catbox.moe/pgnxr0.jpeg', { responseType: 'arraybuffer' });
         return Buffer.from(response.data);
     } catch (error) {
-        throw new Error("Gagal memuat gambar latar belakang dari Catbox");
+        throw new Error("Gagal memuat gambar latar belakang");
     }
 }
 
@@ -18,64 +19,86 @@ router.get('/', async (req, res) => {
     const text = req.query.text || "";
 
     try {
-        // 1. Ambil data buffer gambar dari link catbox yang kamu berikan
-        const baseImageBuffer = await getCatboxBg();
-
-        // Jika user tidak mengisi parameter ?text=, kirim gambar polosannya langsung
-        if (!text) {
-            res.writeHead(200, {
-                'Content-Type': 'image/jpeg',
-                'Content-Length': baseImageBuffer.length,
-            });
-            return res.end(baseImageBuffer);
-        }
-
-        // 2. Load buffer gambar ke dalam objek Canvas Image
+        const baseImageBuffer = await getBgImage();
         const bgImage = await loadImage(baseImageBuffer);
 
-        // 3. Inisialisasi Canvas Kotak standar Brat/Stiker (512x512 piksel)
-        const canvas = createCanvas(512, 512);
+        // 1. MEMBUAT CANVAS PERSEGI (1:1 Ratio) - Standar Stiker/Brat 512x512
+        const canvasSize = 512;
+        const canvas = createCanvas(canvasSize, canvasSize);
         const ctx = canvas.getContext('2d');
 
-        // 4. Gambar background secara proporsional mengisi area kotak 512x512
-        ctx.drawImage(bgImage, 0, 0, 512, 512);
+        // 2. LOGIKA CENTER CROP (Memotong gambar asli menjadi persegi pas di tengah)
+        let sourceX = 0;
+        let sourceY = 0;
+        let sourceWidth = bgImage.width;
+        let sourceHeight = bgImage.height;
 
-        // 5. Tambahkan lapisan overlay gelap transparan (45%) agar teks Brat putih kontras dan terbaca jelas
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
-        ctx.fillRect(0, 0, 512, 512);
+        if (bgImage.width > bgImage.height) {
+            // Jika gambar melebar, potong bagian samping kanan-kiri
+            sourceWidth = bgImage.height;
+            sourceX = (bgImage.width - bgImage.height) / 2;
+        } else if (bgImage.height > bgImage.width) {
+            // Jika gambar memanjang ke bawah, potong bagian atas-bawah
+            sourceHeight = bgImage.width;
+            sourceY = (bgImage.height - bgImage.width) / 2;
+        }
 
-        // 6. Konfigurasi font teks tebal khas Brat Style
-        ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 46px Arial, sans-serif'; 
-        ctx.textAlign = 'left';
-        ctx.textBaseline = 'top';
+        // Gambar background hasil crop persegi ke canvas 512x512
+        ctx.drawImage(
+            bgImage, 
+            sourceX, sourceY, sourceWidth, sourceHeight, // Koordinat & ukuran potong dari file asli
+            0, 0, canvasSize, canvasSize                // Digambar penuh ke area canvas baru
+        );
 
-        // 7. Logika otomatis Word-Wrap (turun baris jika teks melebihi lebar maksimal canvas)
+        // JIKA TIDAK ADA TEKS, langsung kirimkan hasil gambar yang sudah persegi polosan
+        if (!text) {
+            const pureBuffer = canvas.toBuffer('image/png');
+            res.writeHead(200, {
+                'Content-Type': 'image/png',
+                'Content-Length': pureBuffer.length,
+            });
+            return res.end(pureBuffer);
+        }
+
+        // 3. SETTING FONT TEKS (Hitam, Tebal, Rata Tengah menyesuaikan Gambar 2)
+        ctx.fillStyle = '#000000'; 
+        ctx.font = 'bold 36px Arial, sans-serif'; 
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
+        // 4. KOORDINAT TITIK TENGAH KERTAS PUTIH (Setelah dicrop persegi)
+        // Koordinat ini diset presisi di tengah kertas putih yang dipegang karakter
+        const centerX = canvasSize / 2;
+        const centerY = canvasSize * 0.65; // Jatuh di sekitar area tengah bawah kertas (65% dari atas)
+        const maxWidth = 320;              // Batas lebar teks agar tidak keluar dari tepi kertas putih
+        const lineHeight = 42;             // Jarak antar baris kalimat jika teks panjang
+
+        // 5. LOGIKA AUTOMATIC WORD-WRAP (Turun Baris Otomatis Rata Tengah)
         const words = text.split(' ');
-        let line = '';
-        let x = 45;       // Jarak margin kiri teks
-        let y = 45;       // Jarak margin atas teks
-        const maxWidth = 422;   // Lebar maksimal area teks sebelum patah baris
-        const lineHeight = 55;  // Jarak renggang antar baris kalimat
+        let lines = [];
+        let currentLine = '';
 
         for (let n = 0; n < words.length; n++) {
-            let testLine = line + words[n] + ' ';
+            let testLine = currentLine + words[n] + ' ';
             let metrics = ctx.measureText(testLine);
             let testWidth = metrics.width;
             if (testWidth > maxWidth && n > 0) {
-                ctx.fillText(line, x, y);
-                line = words[n] + ' ';
-                y += lineHeight;
+                lines.push(currentLine.trim());
+                currentLine = words[n] + ' ';
             } else {
-                line = testLine;
+                currentLine = testLine;
             }
         }
-        ctx.fillText(line, x, y);
+        lines.push(currentLine.trim());
 
-        // 8. Export hasil akhir canvas menjadi buffer gambar PNG
+        // 6. RENDERING TEKS KE ATAS KERTAS
+        let startY = centerY - ((lines.length - 1) * lineHeight) / 2;
+        for (let i = 0; i < lines.length; i++) {
+            ctx.fillText(lines[i], centerX, startY + (i * lineHeight));
+        }
+
+        // 7. EXPORT BUFFER DAN KIRIM RESPONS GAMBAR
         const bratBuffer = canvas.toBuffer('image/png');
-
-        // 9. Kirim response gambar Brat ke client
         res.writeHead(200, {
             'Content-Type': 'image/png',
             'Content-Length': bratBuffer.length,
