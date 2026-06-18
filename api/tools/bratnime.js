@@ -7,11 +7,11 @@ const { createCanvas, loadImage, registerFont } = require('skia-canvas');
 
 const router = express.Router();
 
-// Setup path unduhan font emoji agar tersimpan aman di server
-const fontDir = path.join(__dirname, "session");
+// Menentukan folder session di root project agar aman dari pembatasan sub-folder Vercel
+const fontDir = path.join(process.cwd(), "session");
 const fontPath = path.join(fontDir, "NotoColorEmoji.ttf");
 
-// Fungsi pembantu untuk mengunduh Font Emoji sekali saja saat server dinyalakan
+// Fungsi pembantu untuk mengunduh Font Emoji jika belum ada
 async function ensureFontExists() {
     if (!fs.existsSync(fontDir)) {
         fs.mkdirSync(fontDir, { recursive: true });
@@ -23,11 +23,11 @@ async function ensureFontExists() {
         fs.writeFileSync(fontPath, Buffer.from(fontData.data));
         console.log("Font saved successfully.");
     }
-    // Daftarkan font ke skia-canvas global runtime
+    // Daftarkan font ke runtime skia-canvas secara global
     registerFont(fontPath, { family: "EmojiFont" });
 }
 
-// Jalankan fungsi pengecekan font
+// Jalankan fungsi pengecekan font saat file dimuat
 ensureFontExists().catch(err => console.error("Gagal inisialisasi font:", err));
 
 // Endpoint Utama Scrape API Brat
@@ -38,12 +38,12 @@ router.get('/', async (req, res) => {
         return res.status(400).json({
             status: false,
             creator: "Arulzxd",
-            message: "Masukkan teks untuk stiker pada parameter '?text='."
+            message: "Masukkan teks pada parameter '?text='."
         });
     }
 
     try {
-        // Menggunakan gambar beresolusi persegi dari uploader kamu
+        // Gambar beresolusi persegi dari uploader kamu
         let imageUrl = "https://arulz-uploader.vercel.app/files/LhDOTg.png";
 
         // Ambil data buffer gambar latar belakang
@@ -63,7 +63,7 @@ router.get('/', async (req, res) => {
         // Gambar background utama
         ctx.drawImage(baseImage, 0, 0, canvas.width, canvas.height);
 
-        // --- LOGIKAL CANVAS ---
+        // --- LOGIKAL CANVAS (SUDAH AMAN DARI TYPO WORDS[N]) ---
         let boardX = canvas.width * 0.20;
         let boardY = canvas.height * 0.52;
         let boardWidth = canvas.width * 0.60;
@@ -128,15 +128,15 @@ router.get('/', async (req, res) => {
         });
         // --- AKHIR LOGIKAL CANVAS ---
 
-        // 1. Ambil data mentah buffer JPEG dari canvas
+        // 1. Ambil data mentah buffer JPEG dari skia-canvas
         const canvasBuffer = await canvas.toBuffer("image/jpeg");
 
-        // 2. Gunakan sharp untuk memproses & mengoptimasi output sebagai format JPEG gambar biasa
+        // 2. Optimasi output buffer menjadi gambar biasa (.jpeg) berkualitas tinggi
         const jpegImageBuffer = await sharp(canvasBuffer)
-            .toFormat("jpeg", { quality: 90 })
+            .toFormat("jpeg", { quality: 95 })
             .toBuffer();
 
-        // 3. UBAH RESPON: Kirim sebagai image/jpeg agar terbaca sebagai gambar biasa, bukan stiker webp
+        // 3. Kirim respons sebagai file jpeg murni agar langsung tampil sebagai gambar biasa
         res.writeHead(200, {
             'Content-Type': 'image/jpeg',
             'Content-Length': jpegImageBuffer.length,
