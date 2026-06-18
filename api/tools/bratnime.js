@@ -8,7 +8,7 @@ const { createCanvas, loadImage, registerFont } = require('skia-canvas');
 const router = express.Router();
 
 // Setup path unduhan font emoji agar tersimpan aman di server
-const fontDir = path.join(__dirname, "..", "session");
+const fontDir = path.join(__dirname, "session");
 const fontPath = path.join(fontDir, "NotoColorEmoji.ttf");
 
 // Fungsi pembantu untuk mengunduh Font Emoji sekali saja saat server dinyalakan
@@ -32,7 +32,6 @@ ensureFontExists().catch(err => console.error("Gagal inisialisasi font:", err));
 
 // Endpoint Utama Scrape API Brat
 router.get('/', async (req, res) => {
-    // Mengambil parameter query '?text=' dari URL endpoint
     const text = req.query.text || "";
 
     if (!text) {
@@ -44,9 +43,10 @@ router.get('/', async (req, res) => {
     }
 
     try {
-        let imageUrl = "https://cloudkuimages.com/uploads/images/67ddbbcb065a6.jpg";
+        // Menggunakan gambar beresolusi persegi yang stabil dari uploader kamu
+        let imageUrl = "https://arulz-uploader.vercel.app/files/LhDOTg.png";
 
-        // 1. Ambil data buffer gambar latar belakang (Aman dari block 403)
+        // Ambil data buffer gambar latar belakang (Aman dari block 403)
         const response = await axios.get(imageUrl, {
             responseType: "arraybuffer",
             headers: {
@@ -55,21 +55,22 @@ router.get('/', async (req, res) => {
         });
         const imageBuffer = Buffer.from(response.data);
 
-        // 2. Load gambar ke dalam skia-canvas menggunakan Buffer
+        // Load gambar ke dalam skia-canvas menggunakan Buffer
         const baseImage = await loadImage(imageBuffer);
         const canvas = createCanvas(baseImage.width, baseImage.height);
         const ctx = canvas.getContext("2d");
 
-        // 3. Gambar background utama
+        // Gambar background utama
         ctx.drawImage(baseImage, 0, 0, canvas.width, canvas.height);
 
-        // --- MULAI LOGIKAL CANVAS ASLI KAMU (TIDAK DIUBAH) ---
-        let boardX = canvas.width * 0.22;
-        let boardY = canvas.height * 0.5;
-        let boardWidth = canvas.width * 0.56;
-        let boardHeight = canvas.height * 0.25;
+        // --- LOGIKAL CANVAS ASLI KAMU (FIXED TYPO) ---
+        // Penyesuaian koordinat boks agar teks jatuh pas di tengah kertas gambar persegi LhDOTg.png
+        let boardX = canvas.width * 0.20;
+        let boardY = canvas.height * 0.51;
+        let boardWidth = canvas.width * 0.60;
+        let boardHeight = canvas.height * 0.26;
 
-        ctx.fillStyle = "#000";
+        ctx.fillStyle = "#000000";
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
 
@@ -115,7 +116,7 @@ router.get('/', async (req, res) => {
             let testWidth = ctx.measureText(testLine).width;
             if (testWidth > maxWidth) {
                 lines.push(currentLine);
-                currentLine = words[n] || words[i]; // Menyesuaikan pembacaan indeks looping kata
+                currentLine = words[i]; // FIX: Diubah dari words[n] menjadi words[i] agar tidak error
             } else {
                 currentLine = testLine;
             }
@@ -128,15 +129,15 @@ router.get('/', async (req, res) => {
         });
         // --- AKHIR LOGIKAL CANVAS ASLI KAMU ---
 
-        // 4. Ekstrak canvas langsung ke format buffer JPEG di dalam memori
+        // Ekstrak canvas langsung ke format buffer JPEG di dalam memori
         const jpegBuffer = await canvas.toBuffer("image/jpeg");
 
-        // 5. Konversi buffer JPEG tadi langsung ke format WebP menggunakan Sharp
+        // Konversi buffer JPEG tadi langsung ke format WebP menggunakan Sharp
         const webpBuffer = await sharp(jpegBuffer)
             .toFormat("webp")
             .toBuffer();
 
-        // 6. Kirim respons langsung ke client berbentuk file image/webp utuh
+        // Kirim respons langsung ke client berbentuk file image/webp utuh
         res.writeHead(200, {
             'Content-Type': 'image/webp',
             'Content-Length': webpBuffer.length,
