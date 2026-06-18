@@ -1,104 +1,154 @@
 const express = require('express');
 const axios = require('axios');
-const { createCanvas, loadImage } = require('@napi-rs/canvas');
+const path = require('path');
+const fs = require('fs');
+const sharp = require('sharp');
+const { createCanvas, loadImage, registerFont } = require('skia-canvas');
+
 const router = express.Router();
 
-// Fungsi mengambil data buffer dari gambar latar belakang (Aman dari 403)
-async function getBaseBg() {
-    try {
-        const response = await axios.get('https://arulz-uploader.vercel.app/files/LhDOTg.png', {
-            responseType: 'arraybuffer',
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8'
-            }
-        });
-        return Buffer.from(response.data);
-    } catch (error) {
-        console.error("Detail Error Download Gambar:", error.message);
-        throw new Error("Gagal memuat gambar latar belakang");
+// Setup path unduhan font emoji agar tersimpan aman di server
+const fontDir = path.join(__dirname, "..", "session");
+const fontPath = path.join(fontDir, "NotoColorEmoji.ttf");
+
+// Fungsi pembantu untuk mengunduh Font Emoji sekali saja saat server dinyalakan
+async function ensureFontExists() {
+    if (!fs.existsSync(fontDir)) {
+        fs.mkdirSync(fontDir, { recursive: true });
     }
+    if (!fs.existsSync(fontPath)) {
+        console.log("Downloading NotoColorEmoji Font...");
+        const fontUrl = "https://github.com/googlefonts/noto-emoji/raw/main/fonts/NotoColorEmoji.ttf";
+        const fontData = await axios.get(fontUrl, { responseType: "arraybuffer" });
+        fs.writeFileSync(fontPath, Buffer.from(fontData.data));
+        console.log("Font saved successfully.");
+    }
+    // Daftarkan font ke skia-canvas global runtime
+    registerFont(fontPath, { family: "EmojiFont" });
 }
 
-// Endpoint utama Router
+// Jalankan fungsi pengecekan font
+ensureFontExists().catch(err => console.error("Gagal inisialisasi font:", err));
+
+// Endpoint Utama Scrape API Brat
 router.get('/', async (req, res) => {
+    // Mengambil parameter query '?text=' dari URL endpoint
     const text = req.query.text || "";
 
+    if (!text) {
+        return res.status(400).json({
+            status: false,
+            creator: "Arulzxd",
+            message: "Masukkan teks untuk stiker pada parameter '?text='."
+        });
+    }
+
     try {
-        const baseImageBuffer = await getBaseBg();
-        const bgImage = await loadImage(baseImageBuffer);
+        let imageUrl = "https://cloudkuimages.com/uploads/images/67ddbbcb065a6.jpg";
 
-        const canvasSize = 512;
-        const canvas = createCanvas(canvasSize, canvasSize);
-        const ctx = canvas.getContext('2d');
+        // 1. Ambil data buffer gambar latar belakang (Aman dari block 403)
+        const response = await axios.get(imageUrl, {
+            responseType: "arraybuffer",
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+            }
+        });
+        const imageBuffer = Buffer.from(response.data);
 
-        // 1. Gambar background utama persegi
-        ctx.drawImage(bgImage, 0, 0, canvasSize, canvasSize);
+        // 2. Load gambar ke dalam skia-canvas menggunakan Buffer
+        const baseImage = await loadImage(imageBuffer);
+        const canvas = createCanvas(baseImage.width, baseImage.height);
+        const ctx = canvas.getContext("2d");
 
-        // Jika tidak ada parameter text, kirim gambar polos langsung
-        if (!text) {
-            res.writeHead(200, {
-                'Content-Type': 'image/png',
-                'Content-Length': baseImageBuffer.length,
-            });
-            return res.end(baseImageBuffer);
+        // 3. Gambar background utama
+        ctx.drawImage(baseImage, 0, 0, canvas.width, canvas.height);
+
+        // --- MULAI LOGIKAL CANVAS ASLI KAMU (TIDAK DIUBAH) ---
+        let boardX = canvas.width * 0.22;
+        let boardY = canvas.height * 0.5;
+        let boardWidth = canvas.width * 0.56;
+        let boardHeight = canvas.height * 0.25;
+
+        ctx.fillStyle = "#000";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+
+        let maxFontSize = 32;
+        let minFontSize = 12;
+        let fontSize = maxFontSize;
+
+        function isTextFit(text, fontSize) {
+            ctx.font = `bold ${fontSize}px EmojiFont`;
+            let words = text.split(" ");
+            let lineHeight = fontSize * 1.2;
+            let maxWidth = boardWidth * 0.9;
+            let lines = [];
+            let currentLine = words[0];
+            for (let i = 1; i < words.length; i++) {
+                let testLine = currentLine + " " + words[i];
+                let testWidth = ctx.measureText(testLine).width;
+                if (testWidth > maxWidth) {
+                    lines.push(currentLine);
+                    currentLine = words[i];
+                } else {
+                    currentLine = testLine;
+                }
+            }
+            lines.push(currentLine);
+            let textHeight = lines.length * lineHeight;
+            return textHeight <= boardHeight * 0.9;
         }
 
-        // 2. Atur gaya font Brat (Warna Hitam, Tebal)
-        ctx.fillStyle = '#000000'; 
-        ctx.font = 'bold 34px Arial, sans-serif'; 
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
+        while (!isTextFit(text, fontSize) && fontSize > minFontSize) {
+            fontSize -= 2;
+        }
 
-        const maxWidth = 280;  // Batas lebar teks di dalam kertas papan
-        const lineHeight = 40; // Jarak renggang antar baris
-
-        // 3. Logika Word-Wrap otomatis (Patah Baris)
-        const words = text.split(' ');
+        ctx.font = `bold ${fontSize}px EmojiFont`;
+        let words = text.split(" ");
+        let lineHeight = fontSize * 1.2;
+        let maxWidth = boardWidth * 0.9;
         let lines = [];
-        let currentLine = '';
+        let currentLine = words[0];
 
-        for (let n = 0; n < words.length; n++) {
-            let testLine = currentLine + words[n] + ' ';
-            let metrics = ctx.measureText(testLine);
-            let testWidth = metrics.width;
-            if (testWidth > maxWidth && n > 0) {
-                lines.push(currentLine.trim());
-                currentLine = words[n] + ' ';
+        for (let i = 1; i < words.length; i++) {
+            let testLine = currentLine + " " + words[i];
+            let testWidth = ctx.measureText(testLine).width;
+            if (testWidth > maxWidth) {
+                lines.push(currentLine);
+                currentLine = words[n] || words[i]; // Menyesuaikan pembacaan indeks looping kata
             } else {
                 currentLine = testLine;
             }
         }
-        lines.push(currentLine.trim());
+        lines.push(currentLine);
 
-        // 4. JIKA TEKS ADA: Lakukan kemiringan tanpa menggunakan metode translate (0,0)
-        ctx.save();
-        
-        // Geser sedikit rotasi global canvas sebesar -5 derajat
-        ctx.rotate(-0.085); 
-
-        // 5. Tulis teks dengan koordinat konvensional yang sudah disesuaikan dengan efek rotasi murni
-        // Karena canvas dirotasi ke kiri, posisi X harus digeser agak ke kiri (225) dan Y disesuaikan (365) agar pas di tengah kertas
-        const posX = 225; 
-        const posY = 365; 
-
-        let startY = posY - ((lines.length - 1) * lineHeight) / 2;
-        for (let i = 0; i < lines.length; i++) {
-            ctx.fillText(lines[i], posX, startY + (i * lineHeight));
-        }
-
-        ctx.restore();
-
-        // 6. Kirim hasil gambar PNG ke client
-        const bratBuffer = canvas.toBuffer('image/png');
-        res.writeHead(200, {
-            'Content-Type': 'image/png',
-            'Content-Length': bratBuffer.length,
+        let startY = boardY + boardHeight / 2 - (lines.length - 1) * lineHeight / 2;
+        lines.forEach((line, i) => {
+            ctx.fillText(line, boardX + boardWidth / 2, startY + i * lineHeight);
         });
-        res.end(bratBuffer);
+        // --- AKHIR LOGIKAL CANVAS ASLI KAMU ---
+
+        // 4. Ekstrak canvas langsung ke format buffer JPEG di dalam memori
+        const jpegBuffer = await canvas.toBuffer("image/jpeg");
+
+        // 5. Konversi buffer JPEG tadi langsung ke format WebP menggunakan Sharp
+        const webpBuffer = await sharp(jpegBuffer)
+            .toFormat("webp")
+            .toBuffer();
+
+        // 6. Kirim respons langsung ke client berbentuk file image/webp utuh
+        res.writeHead(200, {
+            'Content-Type': 'image/webp',
+            'Content-Length': webpBuffer.length,
+        });
+        res.end(webpBuffer);
 
     } catch (error) {
-        return res.status(500).json({ status: false, error: error.message });
+        console.error("API Error:", error);
+        res.status(500).json({
+            status: false,
+            error: error.message
+        });
     }
 });
 
