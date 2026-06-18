@@ -14,20 +14,20 @@ const CANVAS = {
 
 // AREA KERTAS
 const SAFE_ZONE = {
-    top: 760,
-    bottom: 1010,
-    left: 390,
-    right: 870
+    top: 785,
+    bottom: 980,
+    left: 430,
+    right: 830
 };
+
 
 const TEXT_STYLE = {
     fontFamily: "PoppinsBratGojo",
-    maxFontSize: 95,
-    minFontSize: 20,
-    lineHeight: 1.15,
+    maxFontSize: 82,
+    minFontSize: 18,
+    lineHeight: 1.22,
     color: "#111111"
 };
-
 async function downloadBuffer(url) {
     const res = await fetch(url);
 
@@ -190,17 +190,24 @@ function fitText(ctx, text, width, height) {
 }
 
 function drawCenteredText(ctx, text) {
-    const padding = 25;
+    const padding = {
+        top: 16,
+        bottom: 16,
+        left: 18,
+        right: 18
+    };
 
     const width =
-        SAFE_ZONE.right -
-        SAFE_ZONE.left -
-        (padding * 2);
+        PAPER_AREA.right -
+        PAPER_AREA.left -
+        padding.left -
+        padding.right;
 
     const height =
-        SAFE_ZONE.bottom -
-        SAFE_ZONE.top -
-        (padding * 2);
+        PAPER_AREA.bottom -
+        PAPER_AREA.top -
+        padding.top -
+        padding.bottom;
 
     const fitted = fitText(
         ctx,
@@ -213,36 +220,32 @@ function drawCenteredText(ctx, text) {
 
     ctx.save();
 
-    ctx.beginPath();
-    ctx.rect(
-        SAFE_ZONE.left,
-        SAFE_ZONE.top,
-        SAFE_ZONE.right - SAFE_ZONE.left,
-        SAFE_ZONE.bottom - SAFE_ZONE.top
+    ctx.translate(
+        (PAPER_AREA.left + PAPER_AREA.right) / 2,
+        (PAPER_AREA.top + PAPER_AREA.bottom) / 2
     );
-    ctx.clip();
+
+    // kemiringan mengikuti kertas
+    ctx.rotate(-0.025);
 
     ctx.fillStyle = TEXT_STYLE.color;
     ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-
-    const centerX =
-        (SAFE_ZONE.left + SAFE_ZONE.right) / 2;
-
-    const centerY =
-        (SAFE_ZONE.top + SAFE_ZONE.bottom) / 2;
+    ctx.textBaseline = "top";
 
     const blockHeight =
         fitted.lines.length *
         fitted.lineHeight;
 
     let y =
-        centerY -
-        (blockHeight / 2) +
-        (fitted.lineHeight / 2);
+        -blockHeight / 2;
 
     for (const line of fitted.lines) {
-        ctx.fillText(line, centerX, y);
+        ctx.fillText(
+            line,
+            0,
+            y
+        );
+
         y += fitted.lineHeight;
     }
 
