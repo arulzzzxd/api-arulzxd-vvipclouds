@@ -47,19 +47,19 @@ async function getBuffer(url) {
 
 router.get("/", async (req, res) => {
     try {
-        const { username, caption, pp } = req.query;
+        const {
+            username,
+            caption,
+            pp
+        } = req.query;
 
-if (!username)
-    return res.status(400).json({
-        status: false,
-        message: "Masukkan parameter username"
-    });
-
-if (!caption)
-    return res.status(400).json({
-        status: false,
-        message: "Masukkan parameter caption"
-    });
+        if (!username || !caption) {
+            return res.status(400).json({
+                status: false,
+                message:
+                    "Parameter username & caption wajib"
+            });
+        }
 
         const bg = await loadImage(
             await getBuffer(BG_URL)
