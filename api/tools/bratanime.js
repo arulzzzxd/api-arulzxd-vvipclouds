@@ -1,47 +1,34 @@
 const express = require('express');
 const axios = require('axios');
 const path = require('path');
-const fs = require('fs');
 // Menggunakan @napi-rs/canvas yang sepenuhnya didukung di Vercel
 const { createCanvas, loadImage, GlobalFonts } = require('@napi-rs/canvas');
 
 const router = express.Router();
 
-// PERBAIKAN JALUR FILE: Diarahkan ke folder '/tmp/session' yang aman untuk Vercel
-const fontDir = path.join('/tmp', 'session');
-const fontPath = path.join(fontDir, "NotoColorEmoji.ttf");
+// PERBAIKAN TOTAL: Arahkan langsung ke file font di dalam proyek
+// ../fonts/NotoColorEmoji.ttf
+const fontPath = path.join(__dirname, '..', 'fonts', 'NotoColorEmoji.ttf');
 
+// Variabel flag untuk memastikan pendaftaran font global hanya terjadi sekali per runtime
 let isFontRegistered = false;
 
-async function ensureFontExists() {
+function ensureFontIsRegistered() {
     if (isFontRegistered) return;
 
-    // Membuat folder /tmp/session jika belum ada
-    if (!fs.existsSync(fontDir)) {
-        fs.mkdirSync(fontDir, { recursive: true });
-    }
-
-    // Unduh font jika belum ada di direktori /tmp/session
-    if (!fs.existsSync(fontPath)) {
-        console.log("Downloading NotoColorEmoji Font...");
-        const fontUrl = "https://github.com/googlefonts/noto-emoji/raw/main/fonts/NotoColorEmoji.ttf";
-        
-        const fontData = await axios.get(fontUrl, { 
-            responseType: "arraybuffer",
-            timeout: 25000 // Beri timeout agak panjang karena font emoji berukuran besar
-        });
-        
-        fs.writeFileSync(fontPath, Buffer.from(fontData.data));
-        console.log("Font saved successfully to /tmp/session/NotoColorEmoji.ttf");
-    }
-
-    // Daftarkan font ke @napi-rs/canvas menggunakan GlobalFonts
+    // Cara mendaftarkan font lokal di @napi-rs/canvas menggunakan GlobalFonts
     try {
-        GlobalFonts.registerFromPath(fontPath, "EmojiFont");
-        isFontRegistered = true;
+        // Daftarkan font yang sudah ada di proyek
+        const registered = GlobalFonts.registerFromPath(fontPath, "EmojiFont");
+        if (registered) {
+            isFontRegistered = true;
+            console.log("Font locally registered from:", fontPath);
+        } else {
+            throw new Error("Gagal meregistrasi font, pastikan file ada di jalur yang benar.");
+        }
     } catch (e) {
-        console.error("Gagal meregistrasi font:", e.message);
-        throw e; // Lemparkan error agar ditangkap oleh blok catch endpoint utama
+        console.error("Fatal Error meregistrasi font lokal:", e.message);
+        throw e; // Lemparkan error agar ditangkap blok catch utama
     }
 }
 
@@ -58,8 +45,8 @@ router.get('/', async (req, res) => {
     }
 
     try {
-        // Pastikan font sudah terunduh & teregistrasi tanpa error
-        await ensureFontExists();
+        // Pastikan font lokal teregistrasi
+        ensureFontIsRegistered();
 
         let imageUrl = "https://files.catbox.moe/wlvb0g.png";
 
@@ -69,7 +56,7 @@ router.get('/', async (req, res) => {
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
             },
-            timeout: 10000
+            timeout: 8000 // Batas timeout unduhan background 8 detik
         });
         const imageBuffer = Buffer.from(response.data);
 
@@ -81,13 +68,13 @@ router.get('/', async (req, res) => {
         // 3. Gambar background utama
         ctx.drawImage(baseImage, 0, 0, canvas.width, canvas.height);
 
-        // --- LOGIKAL CANVAS ASLI KAMU ---
+        // --- LOGIKAL CANVAS ASLI KAMU (Optimized) ---
         let boardX = canvas.width * 0.22;
         let boardY = canvas.height * 0.5;
         let boardWidth = canvas.width * 0.56;
         let boardHeight = canvas.height * 0.25;
 
-        ctx.fillStyle = "#000";
+        ctx.fillStyle = "#000000";
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
 
@@ -95,13 +82,14 @@ router.get('/', async (req, res) => {
         let minFontSize = 12;
         let fontSize = maxFontSize;
 
-        function isTextFit(text, fontSize) {
-            ctx.font = `bold ${fontSize}px EmojiFont`;
+        function splitText(text, currentFontSize) {
+            ctx.font = `bold ${currentFontSize}px EmojiFont`;
             let words = text.split(" ");
-            let lineHeight = fontSize * 1.2;
+            let lineHeight = currentFontSize * 1.2;
             let maxWidth = boardWidth * 0.9;
             let lines = [];
             let currentLine = words[0];
+
             for (let i = 1; i < words.length; i++) {
                 let testLine = currentLine + " " + words[i];
                 let testWidth = ctx.measureText(testLine).width;
@@ -113,55 +101,43 @@ router.get('/', async (req, res) => {
                 }
             }
             lines.push(currentLine);
-            let textHeight = lines.length * lineHeight;
-            return textHeight <= boardHeight * 0.9;
+            return lines;
         }
 
-        while (!isTextFit(text, fontSize) && fontSize > minFontSize) {
+        // Ukuran font yang pas secara vertikal
+        while (fontSize > minFontSize) {
+            let lines = splitText(text, fontSize);
+            let textHeight = lines.length * (fontSize * 1.2);
+            if (textHeight <= boardHeight * 0.9) break;
             fontSize -= 2;
         }
 
-        ctx.font = `bold ${fontSize}px EmojiFont`;
-        let words = text.split(" ");
+        // Lakukan pemisahan teks akhir sesuai ukuran font yang didapat
+        let finalLines = splitText(text, fontSize);
         let lineHeight = fontSize * 1.2;
-        let maxWidth = boardWidth * 0.9;
-        let lines = [];
-        let currentLine = words[0];
 
-        for (let i = 1; i < words.length; i++) {
-            let testLine = currentLine + " " + words[i];
-            let testWidth = ctx.measureText(testLine).width;
-            if (testWidth > maxWidth) {
-                lines.push(currentLine);
-                currentLine = words[i];
-            } else {
-                currentLine = testLine;
-            }
-        }
-        lines.push(currentLine);
-
-        let startY = boardY + boardHeight / 2 - (lines.length - 1) * lineHeight / 2;
-        lines.forEach((line, i) => {
+        let startY = boardY + boardHeight / 2 - (finalLines.length - 1) * lineHeight / 2;
+        finalLines.forEach((line, i) => {
             ctx.fillText(line, boardX + boardWidth / 2, startY + i * lineHeight);
         });
-        // --- AKHIR LOGIKAL CANVAS ASLI KAMU ---
+        // --- AKHIR LOGIKAL CANVAS ---
 
-        // 4. Ekstrak canvas langsung ke format buffer png di dalam memori
+        // 4. Ekstrak canvas ke buffer PNG
         const pngBuffer = await canvas.toBuffer("image/png");
 
-        // 5. Kirim respons gambar PNG langsung ke client
+        // 5. Kirim respons langsung sebagai file gambar
         res.writeHead(200, {
             'Content-Type': 'image/png',
             'Content-Length': pngBuffer.length,
-            'Cache-Control': 'public, max-age=86400' 
+            'Cache-Control': 'public, max-age=86400, s-maxage=86400' // Caching agresif di CDN Vercel agar respons berikutnya instan
         });
         res.end(pngBuffer);
 
     } catch (error) {
-        console.error("API Error:", error);
+        console.error("Fatal API Error:", error);
         res.status(500).json({
             status: false,
-            error: error.message
+            error: `Gagal memproses gambar. Pastikan file font ada di jalur proyek: ${path.relative(__dirname, fontPath)}`
         });
     }
 });
