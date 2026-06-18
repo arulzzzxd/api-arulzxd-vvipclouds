@@ -4,7 +4,7 @@ const fetch = require("node-fetch");
 
 const router = express.Router();
 
-const BRAT_IMAGE_URL = "https://raw.githubusercontent.com/Ditzzx-vibecoder/Assets/main/Brat/Gojo.jpeg";
+const BRAT_IMAGE_URL = "https://files.catbox.moe/wlvb0g.png";
 const BRAT_FONT_URL = "https://raw.githubusercontent.com/Ditzzx-vibecoder/Assets/main/Brat/Poppins.ttf";
 
 const CANVAS = {
