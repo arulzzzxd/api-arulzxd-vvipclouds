@@ -15,11 +15,11 @@ async function getBuffer(url) {
     return Buffer.from(data);
 }
 
-function wrapTextCenter(
+function drawMultilineText(
     ctx,
     text,
     x,
-    y,
+    centerY,
     maxWidth,
     lineHeight
 ) {
@@ -28,36 +28,34 @@ function wrapTextCenter(
     let line = "";
 
     for (const word of words) {
-        const testLine = line + word + " ";
+        const test = line + word + " ";
 
         if (
-            ctx.measureText(testLine).width > maxWidth &&
-            line.length > 0
+            ctx.measureText(test).width > maxWidth &&
+            line
         ) {
             lines.push(line.trim());
             line = word + " ";
         } else {
-            line = testLine;
+            line = test;
         }
     }
 
-    if (line) {
-        lines.push(line.trim());
-    }
+    if (line) lines.push(line.trim());
 
     const totalHeight =
         lines.length * lineHeight;
 
-    let startY =
-        y - totalHeight / 2;
+    let y =
+        centerY -
+        totalHeight / 2 +
+        lineHeight / 2;
 
-    lines.forEach((txt, i) => {
-        ctx.fillText(
-            txt,
-            x,
-            startY + (i * lineHeight)
-        );
-    });
+    for (const txt of lines) {
+        ctx.strokeText(txt, x, y);
+        ctx.fillText(txt, x, y);
+        y += lineHeight;
+    }
 }
 
 router.get("/", async (req, res) => {
@@ -75,16 +73,14 @@ router.get("/", async (req, res) => {
         if (!username) {
             return res.status(400).json({
                 status: false,
-                message:
-                    "Parameter username wajib"
+                message: "Parameter username wajib"
             });
         }
 
         if (!caption) {
             return res.status(400).json({
                 status: false,
-                message:
-                    "Parameter caption wajib"
+                message: "Parameter caption wajib"
             });
         }
 
@@ -97,8 +93,8 @@ router.get("/", async (req, res) => {
         );
 
         const canvas = createCanvas(
-            720,
-            1280
+            bg.width,
+            bg.height
         );
 
         const ctx =
@@ -112,13 +108,12 @@ router.get("/", async (req, res) => {
             canvas.height
         );
 
-        // Foto profil
+        // Avatar
         const ppX = 40;
         const ppY = 250;
         const ppSize = 70;
 
         ctx.save();
-
         ctx.beginPath();
         ctx.arc(
             ppX + ppSize / 2,
@@ -127,8 +122,6 @@ router.get("/", async (req, res) => {
             0,
             Math.PI * 2
         );
-
-        ctx.closePath();
         ctx.clip();
 
         ctx.drawImage(
@@ -143,29 +136,31 @@ router.get("/", async (req, res) => {
 
         // Username
         ctx.font = "28px Arial";
-        ctx.fillStyle = "#FFFFFF";
+        ctx.fillStyle = "#ffffff";
         ctx.textAlign = "left";
         ctx.textBaseline = "middle";
 
         ctx.fillText(
             username,
             ppX + ppSize + 15,
-            ppY + (ppSize / 2)
+            ppY + ppSize / 2
         );
 
-        // Caption utama
-        ctx.font = "bold 34px Arial";
-        ctx.fillStyle = "#FFFFFF";
+        // Caption
+        ctx.font = "bold 40px Arial";
+        ctx.fillStyle = "#ffffff";
+        ctx.strokeStyle = "#000000";
+        ctx.lineWidth = 5;
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
 
-        wrapTextCenter(
+        drawMultilineText(
             ctx,
             caption,
             canvas.width / 2,
-            620,
-            550,
-            50
+            canvas.height / 2,
+            520,
+            55
         );
 
         const buffer =
@@ -176,7 +171,7 @@ router.get("/", async (req, res) => {
             "image/png"
         );
 
-        res.send(buffer);
+        res.end(buffer);
 
     } catch (err) {
         res.status(500).json({
