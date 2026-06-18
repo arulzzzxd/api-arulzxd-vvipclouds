@@ -1,51 +1,18 @@
 const axios = require('axios');
 const express = require('express');
-const fs = require('fs');
-const path = require('path');
-const { createCanvas, loadImage, registerFont } = require('skia-canvas');
+const { createCanvas, loadImage } = require('skia-canvas'); // Jika skia-canvas tetap crash di Vercel, ganti ke library 'canvas'
 const router = express.Router();
 
-const fontUrl = "https://github.com/googlefonts/noto-emoji/raw/main/fonts/NotoColorEmoji.ttf";
-// Menggunakan folder /tmp/ agar aman di Vercel, AWS Lambda, maupun VPS cPanel
-const tmpFontPath = path.join('/tmp', 'NotoColorEmoji.ttf'); 
-let isFontRegistered = false;
-let fontFamilyName = "sans-serif"; // Default jika font eksternal gagal dimuat
-
-async function ensureFont() {
-    if (isFontRegistered) return;
-
-    try {
-        if (!fs.existsSync(tmpFontPath)) {
-            console.log("Mengunduh font...");
-            const fontRes = await axios.get(fontUrl, { 
-                responseType: "arraybuffer",
-                timeout: 10000 // Timeout 10 detik agar tidak menggantung lama
-            });
-            fs.writeFileSync(tmpFontPath, Buffer.from(fontRes.data));
-            console.log("Font berhasil disimpan di /tmp");
-        }
-
-        registerFont(tmpFontPath, { family: "EmojiFont" });
-        fontFamilyName = "EmojiFont";
-        isFontRegistered = true;
-    } catch (err) {
-        // Jika gagal download font, jangan buat app crash. Gunakan font bawaan sistem.
-        console.error("Gagal memuat font eksternal, beralih ke font sistem:", err.message);
-        fontFamilyName = "sans-serif"; 
-        isFontRegistered = true; // Set true agar tidak mencoba download terus-menerus yang bikin lambat
-    }
-}
-
+// Fungsi memproses gambar
 async function generateImage(text) {
     try {
-        await ensureFont();
-
-        // Menggunakan URL gambar baru hasil edit
+        // Gunakan URL gambar template memegang kertas kosong
         const imageUrl = "https://files.catbox.moe/wlvb0g.png";
 
+        // Unduh gambar dasar langsung ke buffer dengan timeout ketat
         const imageRes = await axios.get(imageUrl, { 
             responseType: "arraybuffer",
-            timeout: 10000 
+            timeout: 8000 // 8 detik maks
         });
         const baseImage = await loadImage(Buffer.from(imageRes.data));
 
@@ -53,11 +20,15 @@ async function generateImage(text) {
         const ctx = canvas.getContext("2d");
         ctx.drawImage(baseImage, 0, 0, canvas.width, canvas.height);
 
-        // Koordinat area kertas putih pada gambar baru (Silakan sesuaikan jika kurang presisi)
+        // Koordinat area kertas putih
         const boardX = canvas.width * 0.22;
         const boardY = canvas.height * 0.5;
         const boardWidth = canvas.width * 0.56;
         const boardHeight = canvas.height * 0.25;
+
+        // Gunakan font standar sistem Linux yang dipastikan ada di server Vercel (Arial / Sans-Serif)
+        // Menghindari download font eksternal berukuran besar yang bikin Vercel timeout 500
+        const fontFamily = "Arial, sans-serif"; 
 
         ctx.fillStyle = "#000000";
         ctx.textAlign = "center";
@@ -65,8 +36,9 @@ async function generateImage(text) {
         let fontSize = 32;
         const minFontSize = 12;
 
+        // Cek apakah teks muat
         function isTextFit(inputText, size) {
-            ctx.font = `bold ${size}px ${fontFamilyName}`;
+            ctx.font = `bold ${size}px ${fontFamily}`;
             const words = inputText.split(" ");
             const lineHeight = size * 1.2;
             const maxWidth = boardWidth * 0.9;
@@ -87,12 +59,14 @@ async function generateImage(text) {
             return lines.length * lineHeight <= boardHeight * 0.9;
         }
 
+        // Sesuaikan ukuran font
         while (text && !isTextFit(text, fontSize) && fontSize > minFontSize) {
             fontSize -= 2;
         }
 
+        // Gambar teks jika parameter text diisi
         if (text) {
-            ctx.font = `bold ${fontSize}px ${fontFamilyName}`;
+            ctx.font = `bold ${fontSize}px ${fontFamily}`;
             const words = text.split(" ");
             const lineHeight = fontSize * 1.2;
             const maxWidth = boardWidth * 0.9;
@@ -117,7 +91,7 @@ async function generateImage(text) {
             });
         }
 
-        // Output sebagai PNG agar kualitas text dan gambar template baru tetap tajam
+        // Kembalikan sebagai PNG buffer
         return await canvas.toBuffer("image/png");
 
     } catch (error) {
@@ -125,21 +99,31 @@ async function generateImage(text) {
     }
 }
 
-// Endpoint
+// Endpoint /api/tools/bratnime
 router.get('/', async (req, res) => {
     try {
         const text = req.query.text;
+        
+        // Validasi input text agar tidak memproses string kosong/undefined yang merusak canvas
+        if (!text) {
+            return res.status(400).json({ error: "Parameter 'text' wajib diisi!" });
+        }
+
         const imageBuffer = await generateImage(text);
 
         res.writeHead(200, {
             'Content-Type': 'image/png',
-            'Content-Length': imageBuffer.length
+            'Content-Length': imageBuffer.length,
+            'Cache-Control': 'public, max-age=86400' // Tambahkan cache agar Vercel tidak bekerja keras di request yang sama
         });
         res.end(imageBuffer);
 
     } catch (error) {
-        console.error("DETEKSI ERROR LOG:", error); 
-        return res.status(500).json({ error: error.message });
+        console.error("VERCEL_ERROR_LOG:", error.message);
+        return res.status(500).json({ 
+            error: "Internal Server Error", 
+            details: error.message 
+        });
     }
 });
 
