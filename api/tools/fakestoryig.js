@@ -15,7 +15,14 @@ async function getBuffer(url) {
     return Buffer.from(data);
 }
 
-function wrapTextCenter(ctx, text, x, y, maxWidth, lineHeight) {
+function wrapTextCenter(
+    ctx,
+    text,
+    x,
+    y,
+    maxWidth,
+    lineHeight
+) {
     const words = text.split(" ");
     const lines = [];
     let line = "";
@@ -38,11 +45,17 @@ function wrapTextCenter(ctx, text, x, y, maxWidth, lineHeight) {
         lines.push(line.trim());
     }
 
+    const totalHeight =
+        lines.length * lineHeight;
+
+    let startY =
+        y - totalHeight / 2;
+
     lines.forEach((txt, i) => {
         ctx.fillText(
             txt,
             x,
-            y + (i * lineHeight)
+            startY + (i * lineHeight)
         );
     });
 }
@@ -62,14 +75,16 @@ router.get("/", async (req, res) => {
         if (!username) {
             return res.status(400).json({
                 status: false,
-                message: "Parameter username wajib"
+                message:
+                    "Parameter username wajib"
             });
         }
 
         if (!caption) {
             return res.status(400).json({
                 status: false,
-                message: "Parameter caption wajib"
+                message:
+                    "Parameter caption wajib"
             });
         }
 
@@ -97,6 +112,7 @@ router.get("/", async (req, res) => {
             canvas.height
         );
 
+        // Foto profil
         const ppX = 40;
         const ppY = 250;
         const ppSize = 70;
@@ -125,6 +141,7 @@ router.get("/", async (req, res) => {
 
         ctx.restore();
 
+        // Username
         ctx.font = "28px Arial";
         ctx.fillStyle = "#FFFFFF";
         ctx.textAlign = "left";
@@ -136,18 +153,19 @@ router.get("/", async (req, res) => {
             ppY + (ppSize / 2)
         );
 
-        ctx.font = "bold 30px Arial";
+        // Caption utama
+        ctx.font = "bold 34px Arial";
         ctx.fillStyle = "#FFFFFF";
         ctx.textAlign = "center";
-        ctx.textBaseline = "top";
+        ctx.textBaseline = "middle";
 
         wrapTextCenter(
             ctx,
             caption,
             canvas.width / 2,
-            canvas.height - 650,
-            canvas.width - 100,
-            42
+            620,
+            550,
+            50
         );
 
         const buffer =
