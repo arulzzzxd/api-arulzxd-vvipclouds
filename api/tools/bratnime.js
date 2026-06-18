@@ -6,60 +6,67 @@ const { createCanvas, loadImage, registerFont } = require('skia-canvas');
 const router = express.Router();
 
 const fontUrl = "https://github.com/googlefonts/noto-emoji/raw/main/fonts/NotoColorEmoji.ttf";
-const tmpFontPath = path.join(__dirname, 'NotoColorEmoji.ttf'); // atau gunakan '/tmp/NotoColorEmoji.ttf' jika di server serverless seperti Vercel/AWS
+// Menggunakan folder /tmp/ agar aman di Vercel, AWS Lambda, maupun VPS cPanel
+const tmpFontPath = path.join('/tmp', 'NotoColorEmoji.ttf'); 
 let isFontRegistered = false;
+let fontFamilyName = "sans-serif"; // Default jika font eksternal gagal dimuat
 
-// Fungsi helper untuk memastikan font sudah terunduh dan terdaftar sebelum request diproses
 async function ensureFont() {
     if (isFontRegistered) return;
 
     try {
-        // Unduh font jika belum ada di lokal
         if (!fs.existsSync(tmpFontPath)) {
-            const fontRes = await axios.get(fontUrl, { responseType: "arraybuffer" });
+            console.log("Mengunduh font...");
+            const fontRes = await axios.get(fontUrl, { 
+                responseType: "arraybuffer",
+                timeout: 10000 // Timeout 10 detik agar tidak menggantung lama
+            });
             fs.writeFileSync(tmpFontPath, Buffer.from(fontRes.data));
+            console.log("Font berhasil disimpan di /tmp");
         }
 
-        // Daftarkan font menggunakan path file string (bukan buffer)
         registerFont(tmpFontPath, { family: "EmojiFont" });
+        fontFamilyName = "EmojiFont";
         isFontRegistered = true;
     } catch (err) {
-        console.error("Gagal memuat font:", err);
-        throw new Error("Font initialization failed");
+        // Jika gagal download font, jangan buat app crash. Gunakan font bawaan sistem.
+        console.error("Gagal memuat font eksternal, beralih ke font sistem:", err.message);
+        fontFamilyName = "sans-serif"; 
+        isFontRegistered = true; // Set true agar tidak mencoba download terus-menerus yang bikin lambat
     }
 }
 
-// Fungsi memproses gambar
 async function generateImage(text) {
     try {
-        // Pastikan font sudah siap sebelum lanjut
         await ensureFont();
 
+        // Menggunakan URL gambar baru hasil edit
         const imageUrl = "https://files.catbox.moe/wlvb0g.png";
 
-        // Unduh gambar dasar langsung ke buffer
-        const imageRes = await axios.get(imageUrl, { responseType: "arraybuffer" });
+        const imageRes = await axios.get(imageUrl, { 
+            responseType: "arraybuffer",
+            timeout: 10000 
+        });
         const baseImage = await loadImage(Buffer.from(imageRes.data));
 
         const canvas = createCanvas(baseImage.width, baseImage.height);
         const ctx = canvas.getContext("2d");
         ctx.drawImage(baseImage, 0, 0, canvas.width, canvas.height);
 
-        // Area tempat tulisan
+        // Koordinat area kertas putih pada gambar baru (Silakan sesuaikan jika kurang presisi)
         const boardX = canvas.width * 0.22;
         const boardY = canvas.height * 0.5;
         const boardWidth = canvas.width * 0.56;
         const boardHeight = canvas.height * 0.25;
 
-        ctx.fillStyle = "#000";
+        ctx.fillStyle = "#000000";
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         let fontSize = 32;
         const minFontSize = 12;
 
-        // Cek apakah teks muat
         function isTextFit(inputText, size) {
-            ctx.font = `bold ${size}px EmojiFont`;
+            ctx.font = `bold ${size}px ${fontFamilyName}`;
             const words = inputText.split(" ");
             const lineHeight = size * 1.2;
             const maxWidth = boardWidth * 0.9;
@@ -80,14 +87,12 @@ async function generateImage(text) {
             return lines.length * lineHeight <= boardHeight * 0.9;
         }
 
-        // Sesuaikan ukuran font
         while (text && !isTextFit(text, fontSize) && fontSize > minFontSize) {
             fontSize -= 2;
         }
 
-        // Gambar teks jika ada
         if (text) {
-            ctx.font = `bold ${fontSize}px EmojiFont`;
+            ctx.font = `bold ${fontSize}px ${fontFamilyName}`;
             const words = text.split(" ");
             const lineHeight = fontSize * 1.2;
             const maxWidth = boardWidth * 0.9;
@@ -112,8 +117,8 @@ async function generateImage(text) {
             });
         }
 
-        // Mengembalikan buffer gambar JPEG
-        return await canvas.toBuffer("image/jpeg");
+        // Output sebagai PNG agar kualitas text dan gambar template baru tetap tajam
+        return await canvas.toBuffer("image/png");
 
     } catch (error) {
         throw error;
@@ -127,13 +132,13 @@ router.get('/', async (req, res) => {
         const imageBuffer = await generateImage(text);
 
         res.writeHead(200, {
-            'Content-Type': 'image/jpeg',
+            'Content-Type': 'image/png',
             'Content-Length': imageBuffer.length
         });
         res.end(imageBuffer);
 
     } catch (error) {
-        console.error(error); // Menampilkan detail error di console log server
+        console.error("DETEKSI ERROR LOG:", error); 
         return res.status(500).json({ error: error.message });
     }
 });
