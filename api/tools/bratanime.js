@@ -1,146 +1,319 @@
-const express = require('express');
-const axios = require('axios');
-const path = require('path');
-const fs = require('fs');
-// Menggunakan @napi-rs/canvas
-const { createCanvas, loadImage, GlobalFonts } = require('@napi-rs/canvas');
+const express = require("express");
+const { createCanvas, loadImage, GlobalFonts } = require("@napi-rs/canvas");
+const fetch = require("node-fetch");
 
 const router = express.Router();
 
-// Jalur file font lokal di dalam proyek kamu
-// Membaca folder 'fonts' langsung dari root directory project kamu
-const fontPath = path.join(process.cwd(), 'fonts', 'NotoColorEmoji.ttf');
+const BRAT_IMAGE_URL = "https://raw.githubusercontent.com/Ditzzx-vibecoder/Assets/main/Brat/Gojo.jpeg";
+const BRAT_FONT_URL = "https://raw.githubusercontent.com/Ditzzx-vibecoder/Assets/main/Brat/Poppins.ttf";
 
-let isFontRegistered = false;
-let fontStyleFamily = "sans-serif"; // Default fallback jika font ttf gagal dimuat
+const CANVAS = {
+    width: 1254,
+    height: 1254
+};
 
-function ensureFontIsRegistered() {
-    if (isFontRegistered) return;
+const SAFE_ZONE = {
+    a: 660,
+    b: 1180,
+    c: 270,
+    d: 990
+};
 
-    try {
-        // Cek apakah file font ttf benar-benar ada di server Vercel
-        if (fs.existsSync(fontPath)) {
-            const registered = GlobalFonts.registerFromPath(fontPath, "EmojiFont");
-            if (registered) {
-                fontStyleFamily = "EmojiFont";
-                isFontRegistered = true;
-                console.log("SUKSES: Font lokal berhasil terdaftar.");
-            }
-        } else {
-            console.warn("PERINGATAN: File font ttf tidak ditemukan di server Vercel. Menggunakan font sistem bawaan.");
-            fontStyleFamily = "sans-serif"; // Menggunakan font Linux bawaan server Vercel agar tidak crash 500
-            isFontRegistered = true; 
-        }
-    } catch (e) {
-        console.error("Gagal memuat font ttf, beralih ke font sistem:", e.message);
-        fontStyleFamily = "sans-serif";
-        isFontRegistered = true;
+const TEXT_STYLE = {
+    fontFamily: "PoppinsBratGojo",
+    maxFontSize: 90,
+    minFontSize: 22,
+    lineHeight: 1.18,
+    color: "#111111",
+    align: "center"
+};
+
+async function downloadBuffer(url) {
+    const res = await fetch(url);
+
+    if (!res.ok) {
+        throw new Error(`Download gagal: ${res.status}`);
     }
+
+    return Buffer.from(await res.arrayBuffer());
 }
 
-// Endpoint Utama
-router.get('/', async (req, res) => {
-    const text = req.query.text;
+function normalizeText(text) {
+    return String(text || "")
+        .replace(/\r/g, "")
+        .replace(/[ \t]+/g, " ")
+        .replace(/\n{3,}/g, "\n\n")
+        .trim();
+}
 
-    if (!text) {
-        return res.status(400).json({
-            status: false,
-            creator: "Arulzxd",
-            message: "Masukkan teks untuk gambar pada parameter '?text='."
-        });
+function getSafeRect(zone) {
+    return {
+        x: zone.c,
+        y: zone.a,
+        w: zone.d - zone.c,
+        h: zone.b - zone.a,
+        centerX: (zone.c + zone.d) / 2,
+        centerY: (zone.a + zone.b) / 2
+    };
+}
+
+function setFont(ctx, size) {
+    ctx.font = `${size}px ${TEXT_STYLE.fontFamily}`;
+}
+
+function splitLongWord(ctx, word, maxWidth) {
+    const chars = [...word];
+    const parts = [];
+    let current = "";
+
+    for (const char of chars) {
+        const test = current + char;
+
+        if (ctx.measureText(test).width <= maxWidth || !current) {
+            current = test;
+        } else {
+            parts.push(current);
+            current = char;
+        }
     }
 
+    if (current) parts.push(current);
+    return parts;
+}
+
+function wrapParagraph(ctx, paragraph, maxWidth) {
+    const words = paragraph.split(" ").filter(Boolean);
+    const lines = [];
+
+    let current = "";
+
+    for (const word of words) {
+        const test = current
+            ? `${current} ${word}`
+            : word;
+
+        if (ctx.measureText(test).width <= maxWidth) {
+            current = test;
+            continue;
+        }
+
+        if (current) {
+            lines.push(current);
+            current = "";
+        }
+
+        if (ctx.measureText(word).width <= maxWidth) {
+            current = word;
+        } else {
+            const parts = splitLongWord(
+                ctx,
+                word,
+                maxWidth
+            );
+
+            lines.push(...parts.slice(0, -1));
+            current = parts[parts.length - 1] || "";
+        }
+    }
+
+    if (current) lines.push(current);
+
+    return lines;
+}
+
+function wrapText(ctx, text, maxWidth) {
+    return text
+        .split("\n")
+        .flatMap(paragraph => {
+            const clean = paragraph.trim();
+
+            if (!clean) return [""];
+
+            return wrapParagraph(
+                ctx,
+                clean,
+                maxWidth
+            );
+        });
+}
+
+function fitText(ctx, text, rect) {
+    for (
+        let size = TEXT_STYLE.maxFontSize;
+        size >= TEXT_STYLE.minFontSize;
+        size--
+    ) {
+        setFont(ctx, size);
+
+        const lineHeight = Math.ceil(
+            size * TEXT_STYLE.lineHeight
+        );
+
+        const lines = wrapText(
+            ctx,
+            text,
+            rect.w
+        );
+
+        const totalHeight =
+            lines.length * lineHeight;
+
+        if (totalHeight <= rect.h) {
+            return {
+                size,
+                lines,
+                lineHeight,
+                totalHeight
+            };
+        }
+    }
+
+    const size = TEXT_STYLE.minFontSize;
+
+    setFont(ctx, size);
+
+    const lineHeight = Math.ceil(
+        size * TEXT_STYLE.lineHeight
+    );
+
+    const lines = wrapText(
+        ctx,
+        text,
+        rect.w
+    );
+
+    return {
+        size,
+        lines,
+        lineHeight,
+        totalHeight:
+            lines.length * lineHeight
+    };
+}
+
+function drawCenteredText(ctx, text, zone) {
+    const rect = getSafeRect(zone);
+
+    const fitted = fitText(
+        ctx,
+        text,
+        rect
+    );
+
+    const startY =
+        rect.y +
+        (rect.h - fitted.totalHeight) / 2;
+
+    ctx.save();
+
+    ctx.beginPath();
+    ctx.rect(
+        rect.x,
+        rect.y,
+        rect.w,
+        rect.h
+    );
+
+    ctx.clip();
+
+    setFont(ctx, fitted.size);
+
+    ctx.fillStyle = TEXT_STYLE.color;
+    ctx.textAlign = TEXT_STYLE.align;
+    ctx.textBaseline = "top";
+
+    fitted.lines.forEach((line, index) => {
+        const y =
+            startY +
+            index * fitted.lineHeight;
+
+        ctx.fillText(
+            line,
+            rect.centerX,
+            y
+        );
+    });
+
+    ctx.restore();
+}
+
+let fontLoaded = false;
+
+async function bratGojo(text) {
+    if (!fontLoaded) {
+        const fontBuffer =
+            await downloadBuffer(
+                BRAT_FONT_URL
+            );
+
+        GlobalFonts.register(
+            fontBuffer,
+            TEXT_STYLE.fontFamily
+        );
+
+        fontLoaded = true;
+    }
+
+    const imageBuffer =
+        await downloadBuffer(
+            BRAT_IMAGE_URL
+        );
+
+    const image =
+        await loadImage(imageBuffer);
+
+    const canvas = createCanvas(
+        CANVAS.width,
+        CANVAS.height
+    );
+
+    const ctx =
+        canvas.getContext("2d");
+
+    ctx.drawImage(
+        image,
+        0,
+        0,
+        CANVAS.width,
+        CANVAS.height
+    );
+
+    drawCenteredText(
+        ctx,
+        normalizeText(text),
+        SAFE_ZONE
+    );
+
+    return await canvas.encode("png");
+}
+
+router.get("/", async (req, res) => {
     try {
-        // Jalankan pengecekan ketersediaan font
-        ensureFontIsRegistered();
+        const text = req.query.text;
 
-        let imageUrl = "https://files.catbox.moe/wlvb0g.png";
-
-        // 1. Ambil data buffer gambar latar belakang
-        const response = await axios.get(imageUrl, {
-            responseType: "arraybuffer",
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-            },
-            timeout: 10000
-        });
-        const imageBuffer = Buffer.from(response.data);
-
-        // 2. Load gambar ke dalam canvas menggunakan Buffer
-        const baseImage = await loadImage(imageBuffer);
-        const canvas = createCanvas(baseImage.width, baseImage.height);
-        const ctx = canvas.getContext("2d");
-
-        // 3. Gambar background utama
-        ctx.drawImage(baseImage, 0, 0, canvas.width, canvas.height);
-
-        // --- LOGIKAL CANVAS ASLI KAMU (Menggunakan fontStyleFamily dinamik) ---
-        let boardX = canvas.width * 0.22;
-        let boardY = canvas.height * 0.5;
-        let boardWidth = canvas.width * 0.56;
-        let boardHeight = canvas.height * 0.25;
-
-        ctx.fillStyle = "#000000";
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-
-        let maxFontSize = 32;
-        let minFontSize = 12;
-        let fontSize = maxFontSize;
-
-        function splitText(text, currentFontSize) {
-            ctx.font = `bold ${currentFontSize}px ${fontStyleFamily}`;
-            let words = text.split(" ");
-            let lineHeight = currentFontSize * 1.2;
-            let maxWidth = boardWidth * 0.9;
-            let lines = [];
-            let currentLine = words[0];
-
-            for (let i = 1; i < words.length; i++) {
-                let testLine = currentLine + " " + words[i];
-                let testWidth = ctx.measureText(testLine).width;
-                if (testWidth > maxWidth) {
-                    lines.push(currentLine);
-                    currentLine = words[i];
-                } else {
-                    currentLine = testLine;
-                }
-            }
-            lines.push(currentLine);
-            return lines;
+        if (!text) {
+            return res.status(400).json({
+                status: false,
+                creator: "ArulzXD",
+                message: "Masukkan parameter text"
+            });
         }
 
-        while (fontSize > minFontSize) {
-            let lines = splitText(text, fontSize);
-            let textHeight = lines.length * (fontSize * 1.2);
-            if (textHeight <= boardHeight * 0.9) break;
-            fontSize -= 2;
-        }
+        const buffer =
+            await bratGojo(text);
 
-        let finalLines = splitText(text, fontSize);
-        let lineHeight = fontSize * 1.2;
+        res.setHeader(
+            "Content-Type",
+            "image/png"
+        );
 
-        let startY = boardY + boardHeight / 2 - (finalLines.length - 1) * lineHeight / 2;
-        finalLines.forEach((line, i) => {
-            ctx.fillText(line, boardX + boardWidth / 2, startY + i * lineHeight);
-        });
-        // --- AKHIR LOGIKAL CANVAS ---
+        res.send(buffer);
 
-        // 4. Ekstrak canvas langsung ke format buffer png di dalam memori
-        const pngBuffer = await canvas.toBuffer("image/png");
-
-        // 5. Kirim respons gambar PNG langsung ke client
-        res.writeHead(200, {
-            'Content-Type': 'image/png',
-            'Content-Length': pngBuffer.length,
-        });
-        res.end(pngBuffer);
-
-    } catch (error) {
-        console.error("API Error:", error);
+    } catch (err) {
         res.status(500).json({
             status: false,
-            error: error.message
+            creator: "ArulzXD",
+            message: err.message
         });
     }
 });
