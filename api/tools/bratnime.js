@@ -43,10 +43,10 @@ router.get('/', async (req, res) => {
     }
 
     try {
-        // Menggunakan gambar beresolusi persegi yang stabil dari uploader kamu
+        // Menggunakan gambar beresolusi persegi dari uploader kamu
         let imageUrl = "https://arulz-uploader.vercel.app/files/LhDOTg.png";
 
-        // Ambil data buffer gambar latar belakang (Aman dari block 403)
+        // Ambil data buffer gambar latar belakang
         const response = await axios.get(imageUrl, {
             responseType: "arraybuffer",
             headers: {
@@ -63,18 +63,17 @@ router.get('/', async (req, res) => {
         // Gambar background utama
         ctx.drawImage(baseImage, 0, 0, canvas.width, canvas.height);
 
-        // --- LOGIKAL CANVAS ASLI KAMU (FIXED TYPO) ---
-        // Penyesuaian koordinat boks agar teks jatuh pas di tengah kertas gambar persegi LhDOTg.png
+        // --- LOGIKAL CANVAS ---
         let boardX = canvas.width * 0.20;
-        let boardY = canvas.height * 0.51;
+        let boardY = canvas.height * 0.52;
         let boardWidth = canvas.width * 0.60;
-        let boardHeight = canvas.height * 0.26;
+        let boardHeight = canvas.height * 0.24;
 
         ctx.fillStyle = "#000000";
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
 
-        let maxFontSize = 32;
+        let maxFontSize = 34;
         let minFontSize = 12;
         let fontSize = maxFontSize;
 
@@ -116,7 +115,7 @@ router.get('/', async (req, res) => {
             let testWidth = ctx.measureText(testLine).width;
             if (testWidth > maxWidth) {
                 lines.push(currentLine);
-                currentLine = words[i]; // FIX: Diubah dari words[n] menjadi words[i] agar tidak error
+                currentLine = words[i];
             } else {
                 currentLine = testLine;
             }
@@ -127,22 +126,22 @@ router.get('/', async (req, res) => {
         lines.forEach((line, i) => {
             ctx.fillText(line, boardX + boardWidth / 2, startY + i * lineHeight);
         });
-        // --- AKHIR LOGIKAL CANVAS ASLI KAMU ---
+        // --- AKHIR LOGIKAL CANVAS ---
 
-        // Ekstrak canvas langsung ke format buffer JPEG di dalam memori
-        const jpegBuffer = await canvas.toBuffer("image/jpeg");
+        // 1. Ambil data mentah buffer JPEG dari canvas
+        const canvasBuffer = await canvas.toBuffer("image/jpeg");
 
-        // Konversi buffer JPEG tadi langsung ke format WebP menggunakan Sharp
-        const webpBuffer = await sharp(jpegBuffer)
-            .toFormat("webp")
+        // 2. Gunakan sharp untuk memproses & mengoptimasi output sebagai format JPEG gambar biasa
+        const jpegImageBuffer = await sharp(canvasBuffer)
+            .toFormat("jpeg", { quality: 90 })
             .toBuffer();
 
-        // Kirim respons langsung ke client berbentuk file image/webp utuh
+        // 3. UBAH RESPON: Kirim sebagai image/jpeg agar terbaca sebagai gambar biasa, bukan stiker webp
         res.writeHead(200, {
-            'Content-Type': 'image/webp',
-            'Content-Length': webpBuffer.length,
+            'Content-Type': 'image/jpeg',
+            'Content-Length': jpegImageBuffer.length,
         });
-        res.end(webpBuffer);
+        res.end(jpegImageBuffer);
 
     } catch (error) {
         console.error("API Error:", error);
