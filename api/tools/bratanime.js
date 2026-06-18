@@ -14,10 +14,10 @@ const CANVAS = {
 
 // AREA KERTAS
 const SAFE_ZONE = {
-    top: 700,
-    bottom: 920,
-    left: 350,
-    right: 910
+    top: 760,
+    bottom: 1010,
+    left: 390,
+    right: 870
 };
 
 const TEXT_STYLE = {
@@ -190,11 +190,17 @@ function fitText(ctx, text, width, height) {
 }
 
 function drawCenteredText(ctx, text) {
+    const padding = 25;
+
     const width =
-        SAFE_ZONE.right - SAFE_ZONE.left;
+        SAFE_ZONE.right -
+        SAFE_ZONE.left -
+        (padding * 2);
 
     const height =
-        SAFE_ZONE.bottom - SAFE_ZONE.top;
+        SAFE_ZONE.bottom -
+        SAFE_ZONE.top -
+        (padding * 2);
 
     const fitted = fitText(
         ctx,
@@ -211,30 +217,34 @@ function drawCenteredText(ctx, text) {
     ctx.rect(
         SAFE_ZONE.left,
         SAFE_ZONE.top,
-        width,
-        height
+        SAFE_ZONE.right - SAFE_ZONE.left,
+        SAFE_ZONE.bottom - SAFE_ZONE.top
     );
     ctx.clip();
 
     ctx.fillStyle = TEXT_STYLE.color;
     ctx.textAlign = "center";
-    ctx.textBaseline = "top";
+    ctx.textBaseline = "middle";
 
-    const startY =
-        SAFE_ZONE.top +
-        (height -
-            fitted.lines.length *
-                fitted.lineHeight) /
-            2;
+    const centerX =
+        (SAFE_ZONE.left + SAFE_ZONE.right) / 2;
 
-    fitted.lines.forEach((line, i) => {
-        ctx.fillText(
-            line,
-            SAFE_ZONE.left + width / 2,
-            startY +
-                i * fitted.lineHeight
-        );
-    });
+    const centerY =
+        (SAFE_ZONE.top + SAFE_ZONE.bottom) / 2;
+
+    const blockHeight =
+        fitted.lines.length *
+        fitted.lineHeight;
+
+    let y =
+        centerY -
+        (blockHeight / 2) +
+        (fitted.lineHeight / 2);
+
+    for (const line of fitted.lines) {
+        ctx.fillText(line, centerX, y);
+        y += fitted.lineHeight;
+    }
 
     ctx.restore();
 }
