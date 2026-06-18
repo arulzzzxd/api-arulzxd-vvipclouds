@@ -8,7 +8,8 @@ const { createCanvas, loadImage, GlobalFonts } = require('@napi-rs/canvas');
 const router = express.Router();
 
 // Jalur file font lokal di dalam proyek kamu
-const fontPath = path.join(__dirname, '..', 'fonts', 'NotoColorEmoji.ttf');
+// Membaca folder 'fonts' langsung dari root directory project kamu
+const fontPath = path.join(process.cwd(), 'fonts', 'NotoColorEmoji.ttf');
 
 let isFontRegistered = false;
 let fontStyleFamily = "sans-serif"; // Default fallback jika font ttf gagal dimuat
