@@ -44,27 +44,16 @@ router.get('/', async (req, res) => {
             return res.end(baseImageBuffer);
         }
 
-        // 2. Simpan state awal canvas sebelum rotasi
-        ctx.save();
-
-        // 3. Tentukan koordinat titik pusat kertas putih
-        const centerX = canvasSize / 2; 
-        const centerY = canvasSize * 0.64; // Set posisi tepat di tengah kertas putih
-
-        // 4. Pindahkan poros ke tengah kertas dan miringkan sejajar kertas (-5 derajat)
-        ctx.translate(centerX, centerY);
-        ctx.rotate(-0.085);
-
-        // 5. Atur gaya font Brat (Warna Hitam, Tebal)
+        // 2. Atur gaya font Brat (Warna Hitam, Tebal)
         ctx.fillStyle = '#000000'; 
-        ctx.font = 'bold 32px Arial, sans-serif'; 
+        ctx.font = 'bold 34px Arial, sans-serif'; 
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
 
         const maxWidth = 280;  // Batas lebar teks di dalam kertas papan
-        const lineHeight = 38; // Jarak renggang antar baris
+        const lineHeight = 40; // Jarak renggang antar baris
 
-        // 6. Logika Word-Wrap otomatis (Patah Baris)
+        // 3. Logika Word-Wrap otomatis (Patah Baris)
         const words = text.split(' ');
         let lines = [];
         let currentLine = '';
@@ -82,18 +71,25 @@ router.get('/', async (req, res) => {
         }
         lines.push(currentLine.trim());
 
-        // 7. FIX: Tulis teks relatif terhadap titik (0,0) baru setelah di-translate
-        // startY dihitung mulai dari minus setengah tinggi total baris agar teks presisi di tengah-tengah
-        let startY = 0 - ((lines.length - 1) * lineHeight) / 2;
+        // 4. JIKA TEKS ADA: Lakukan kemiringan tanpa menggunakan metode translate (0,0)
+        ctx.save();
+        
+        // Geser sedikit rotasi global canvas sebesar -5 derajat
+        ctx.rotate(-0.085); 
+
+        // 5. Tulis teks dengan koordinat konvensional yang sudah disesuaikan dengan efek rotasi murni
+        // Karena canvas dirotasi ke kiri, posisi X harus digeser agak ke kiri (225) dan Y disesuaikan (365) agar pas di tengah kertas
+        const posX = 225; 
+        const posY = 365; 
+
+        let startY = posY - ((lines.length - 1) * lineHeight) / 2;
         for (let i = 0; i < lines.length; i++) {
-            // Posisi X diatur ke 0 karena poros utama sudah digeser ke centerX oleh ctx.translate
-            ctx.fillText(lines[i], 0, startY + (i * lineHeight));
+            ctx.fillText(lines[i], posX, startY + (i * lineHeight));
         }
 
-        // 8. Kembalikan orientasi canvas ke normal
         ctx.restore();
 
-        // 9. Kirim hasil gambar PNG ke client
+        // 6. Kirim hasil gambar PNG ke client
         const bratBuffer = canvas.toBuffer('image/png');
         res.writeHead(200, {
             'Content-Type': 'image/png',
