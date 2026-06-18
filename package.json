@@ -26,7 +26,6 @@
     "path": "^0.12.7",
     "querystring": "^0.2.1",
     "skia-canvas": "^2.0.2",
-    "sharp": "^0.34.1",
     "uuid": "^13.0.0",
     "yt-search": "^2.13.1"
   }
