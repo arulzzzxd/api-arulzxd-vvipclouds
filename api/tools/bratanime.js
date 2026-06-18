@@ -6,30 +6,46 @@ const { createCanvas, loadImage, registerFont } = require('skia-canvas');
 
 const router = express.Router();
 
-// PERINGATAN VERCEL: Vercel bersifat read-only.
-// Folder unduhan font harus diarahkan ke direktori '/tmp' agar tidak memicu error izin akses.
-const fontDir = path.join('/font');
+// PERBAIKAN UTAMA: Gunakan direktori '/tmp' yang diizinkan oleh Vercel
+const fontDir = path.join('/tmp', 'session');
 const fontPath = path.join(fontDir, "NotoColorEmoji.ttf");
 
-// Fungsi untuk memastikan Font Emoji tersedia sebelum memproses gambar
+// Variabel flag untuk memastikan pendaftaran font global hanya terjadi sekali
+let isFontRegistered = false;
+
 async function ensureFontExists() {
+    // Jika font sudah terdaftar di runtime, lewati proses pengecekan file
+    if (isFontRegistered) return;
+
     if (!fs.existsSync(fontDir)) {
         fs.mkdirSync(fontDir, { recursive: true });
     }
+
     if (!fs.existsSync(fontPath)) {
         console.log("Downloading NotoColorEmoji Font...");
         const fontUrl = "https://github.com/googlefonts/noto-emoji/raw/main/fonts/NotoColorEmoji.ttf";
-        const fontData = await axios.get(fontUrl, { responseType: "arraybuffer" });
+        
+        // Gunakan timeout pada axios agar fungsi tidak stuck/gantung saat download
+        const fontData = await axios.get(fontUrl, { 
+            responseType: "arraybuffer",
+            timeout: 15000 
+        });
+        
         fs.writeFileSync(fontPath, Buffer.from(fontData.data));
-        console.log("Font saved successfully to /tmp.");
+        console.log("Font saved successfully to /tmp/session.");
     }
-    // Daftarkan font ke skia-canvas
-    registerFont(fontPath, { family: "EmojiFont" });
+
+    // Daftarkan font ke skia-canvas global runtime jika belum
+    try {
+        registerFont(fontPath, { family: "EmojiFont" });
+        isFontRegistered = true;
+    } catch (e) {
+        console.error("Gagal meregistrasi font:", e.message);
+    }
 }
 
 // Endpoint Utama
 router.get('/', async (req, res) => {
-    // Mengambil parameter query '?text=' dari URL
     const text = req.query.text;
 
     if (!text) {
@@ -41,7 +57,7 @@ router.get('/', async (req, res) => {
     }
 
     try {
-        // Pastikan font sudah terunduh & terdaftar sebelum canvas dibuat
+        // Jalankan fungsi pengecekan font (menggunakan /tmp)
         await ensureFontExists();
 
         let imageUrl = "https://files.catbox.moe/wlvb0g.png";
@@ -51,7 +67,8 @@ router.get('/', async (req, res) => {
             responseType: "arraybuffer",
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-            }
+            },
+            timeout: 10000 // Batasan timeout 10 detik agar tidak terkena vercel timeout
         });
         const imageBuffer = Buffer.from(response.data);
 
@@ -63,7 +80,7 @@ router.get('/', async (req, res) => {
         // 3. Gambar background utama
         ctx.drawImage(baseImage, 0, 0, canvas.width, canvas.height);
 
-        // --- LOGIKAL CANVAS ASLI KAMU ---
+        // --- LOGIKAL CANVAS ASLI ---
         let boardX = canvas.width * 0.22;
         let boardY = canvas.height * 0.5;
         let boardWidth = canvas.width * 0.56;
@@ -115,7 +132,7 @@ router.get('/', async (req, res) => {
             let testWidth = ctx.measureText(testLine).width;
             if (testWidth > maxWidth) {
                 lines.push(currentLine);
-                currentLine = words[i]; // Perbaikan dari words[n] menjadi words[i]
+                currentLine = words[i];
             } else {
                 currentLine = testLine;
             }
@@ -126,7 +143,7 @@ router.get('/', async (req, res) => {
         lines.forEach((line, i) => {
             ctx.fillText(line, boardX + boardWidth / 2, startY + i * lineHeight);
         });
-        // --- AKHIR LOGIKAL CANVAS ASLI KAMU ---
+        // --- AKHIR LOGIKAL CANVAS ASLI ---
 
         // 4. Ekstrak canvas langsung ke format buffer png di dalam memori
         const pngBuffer = await canvas.toBuffer("image/png");
@@ -135,6 +152,7 @@ router.get('/', async (req, res) => {
         res.writeHead(200, {
             'Content-Type': 'image/png',
             'Content-Length': pngBuffer.length,
+            'Cache-Control': 'public, max-age=86400' // Menyimpan cache di browser/CDN selama 1 hari agar respons berikutnya instan
         });
         res.end(pngBuffer);
 
