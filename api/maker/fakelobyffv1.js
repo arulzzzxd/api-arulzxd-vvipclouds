@@ -7,35 +7,52 @@ const router = express.Router();
 const TEMPLATE =
   "https://files.soonex.biz.id/upload/f4065fc2ed8e.jpg";
 
+const FONT_URL =
+  "https://raw.githubusercontent.com/arulzzzxd/database/main/font/TeutonNormal.otf";
+
 router.get("/", async (req, res) => {
   try {
-    const username = req.query.username;
+    const username = req.query.username || "Player";
 
-    const { data } = await axios.get(
-      TEMPLATE,
-      {
+    const [{ data: bg }, { data: font }] = await Promise.all([
+      axios.get(TEMPLATE, {
         responseType: "arraybuffer"
-      }
-    );
+      }),
+      axios.get(FONT_URL, {
+        responseType: "arraybuffer"
+      })
+    ]);
+
+    const fontBase64 = Buffer.from(font).toString("base64");
 
     const svg = `
       <svg width="736" height="1306">
+        <defs>
+          <style>
+            @font-face {
+              font-family: 'TeutonNormal';
+              src: url(data:font/otf;base64,${fontBase64}) format('opentype');
+            }
+
+            .username {
+              font-family: 'TeutonNormal';
+              font-size: 31px;
+              fill: #ffffff;
+            }
+          </style>
+        </defs>
+
         <text
           x="267.8"
           y="1019"
-          font-size="31"
-          fill="#ffffff"
-          font-family="Arial,sans-serif"
-          font-weight="bold"
+          class="username"
         >
           ${username}
         </text>
       </svg>
     `;
 
-    const buffer = await sharp(
-      Buffer.from(data)
-    )
+    const buffer = await sharp(Buffer.from(bg))
       .composite([
         {
           input: Buffer.from(svg)
@@ -44,11 +61,7 @@ router.get("/", async (req, res) => {
       .png()
       .toBuffer();
 
-    res.setHeader(
-      "Content-Type",
-      "image/png"
-    );
-
+    res.setHeader("Content-Type", "image/png");
     res.send(buffer);
 
   } catch (e) {
