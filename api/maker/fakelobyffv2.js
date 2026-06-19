@@ -1,68 +1,105 @@
 const express = require("express");
-const sharp = require("sharp");
 const axios = require("axios");
+const sharp = require("sharp");
+const {
+  createCanvas,
+  loadImage,
+  GlobalFonts
+} = require("@napi-rs/canvas");
 
 const router = express.Router();
 
 const TEMPLATE =
   "https://files.soonex.biz.id/upload/53053f994d09.jpg";
 
-const FONT_URL =
+const TEUTON_URL =
   "https://raw.githubusercontent.com/arulzzzxd/database/main/font/TeutonNormal.otf";
+
+const NOTO_URL =
+  "https://raw.githubusercontent.com/arulzzzxd/database/main/font//NotoSansCJKsc-Regular.otf";
+
+let fontsLoaded = false;
+
+async function loadFonts() {
+  if (fontsLoaded) return;
+
+  const [teuton, noto] = await Promise.all([
+    axios.get(TEUTON_URL, {
+      responseType: "arraybuffer"
+    }),
+    axios.get(NOTO_URL, {
+      responseType: "arraybuffer"
+    })
+  ]);
+
+  GlobalFonts.register(
+    Buffer.from(teuton.data),
+    "Teuton"
+  );
+
+  GlobalFonts.register(
+    Buffer.from(noto.data),
+    "Noto"
+  );
+
+  fontsLoaded = true;
+}
 
 router.get("/", async (req, res) => {
   try {
     const username = req.query.username || "Player";
 
-    const [{ data: bg }, { data: font }] = await Promise.all([
-      axios.get(TEMPLATE, {
+    await loadFonts();
+
+    const { data } = await axios.get(
+      TEMPLATE,
+      {
         responseType: "arraybuffer"
-      }),
-      axios.get(FONT_URL, {
-        responseType: "arraybuffer"
-      })
-    ]);
+      }
+    );
 
-    const fontBase64 = Buffer.from(font).toString("base64");
+    const bg = await loadImage(
+      Buffer.from(data)
+    );
 
-    const svg = `
-      <svg width="736" height="1309">
-        <defs>
-          <style>
-            @font-face {
-              font-family: 'TeutonNormal';
-              src: url(data:font/otf;base64,${fontBase64}) format('opentype');
-            }
+    const canvas = createCanvas(
+      bg.width,
+      bg.height
+    );
 
-            .username {
-              font-family: 'TeutonNormal';
-              font-size: 30px;
-              fill: #ffffff;
-            }
-          </style>
-        </defs>
+    const ctx = canvas.getContext("2d");
 
-        <text
-          x="321.8"
-          y="1024"
-          class="username"
-        >
-          ${username}
-        </text>
-      </svg>
-    `;
+    ctx.drawImage(
+      bg,
+      0,
+      0,
+      bg.width,
+      bg.height
+    );
 
-    const buffer = await sharp(Buffer.from(bg))
-      .composite([
-        {
-          input: Buffer.from(svg)
-        }
-      ])
+    ctx.fillStyle = "#FFFFFF";
+    ctx.textBaseline = "middle";
+    ctx.font =
+      "30px Teuton, Noto";
+
+    ctx.fillText(
+      username,
+      321.8,
+      1024
+    );
+
+    const png = await sharp(
+      canvas.toBuffer("image/png")
+    )
       .png()
       .toBuffer();
 
-    res.setHeader("Content-Type", "image/png");
-    res.send(buffer);
+    res.setHeader(
+      "Content-Type",
+      "image/png"
+    );
+
+    res.send(png);
 
   } catch (e) {
     res.status(500).json({
