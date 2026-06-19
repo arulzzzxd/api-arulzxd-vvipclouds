@@ -30,37 +30,48 @@ async function loadFont() {
     responseType: "arraybuffer"
   });
 
-  GlobalFonts.register(Buffer.from(data), "TeutonNormal");
+  GlobalFonts.register(
+    Buffer.from(data),
+    "TeutonNormal"
+  );
+
   fontLoaded = true;
 }
 
 router.get("/", async (req, res) => {
   try {
-    const { template, name } = req.query;
+    const template = String(
+      req.query.template || "1"
+    );
 
-    if (!template || !name) {
-      return res.status(400).json({
-        status: false,
-        message: "Parameter template dan name wajib diisi"
-      });
-    }
+    const name = String(
+      req.query.name || "ArulzXD"
+    );
 
-    const imageUrl = imageUrls[template];
+    const imageUrl =
+      imageUrls[Number(template)];
 
     if (!imageUrl) {
       return res.status(404).json({
         status: false,
-        message: "Template tidak ditemukan"
+        message: "Template tidak ditemukan",
+        availableTemplates:
+          Object.keys(imageUrls)
       });
     }
 
     await loadFont();
 
-    const bg = await axios.get(imageUrl, {
-      responseType: "arraybuffer"
-    });
+    const { data } = await axios.get(
+      imageUrl,
+      {
+        responseType: "arraybuffer"
+      }
+    );
 
-    const image = await loadImage(Buffer.from(bg.data));
+    const image = await loadImage(
+      Buffer.from(data)
+    );
 
     const canvas = createCanvas(
       image.width,
@@ -79,22 +90,22 @@ router.get("/", async (req, res) => {
 
     const len = name.length;
 
-    let size = 110;
+    let fontSize = 110;
 
-    if (len > 8) size = 90;
-    if (len > 12) size = 75;
-    if (len > 18) size = 60;
+    if (len > 8) fontSize = 90;
+    if (len > 12) fontSize = 75;
+    if (len > 18) fontSize = 60;
 
-    ctx.font = `${size}px TeutonNormal`;
+    ctx.font = `${fontSize}px TeutonNormal`;
     ctx.fillStyle = "#FFD700";
     ctx.strokeStyle = "#000000";
     ctx.lineWidth = 6;
 
-    const textWidth = ctx.measureText(name).width;
+    const textWidth =
+      ctx.measureText(name).width;
 
     const x =
-      image.width / 2 -
-      textWidth / 2 +
+      (image.width - textWidth) / 2 +
       image.width * 0.02;
 
     const y = image.height * 0.8;
@@ -102,9 +113,19 @@ router.get("/", async (req, res) => {
     ctx.strokeText(name, x, y);
     ctx.fillText(name, x, y);
 
-    const buffer = await canvas.encode("jpeg");
+    const buffer =
+      await canvas.encode("jpeg");
 
-    res.setHeader("Content-Type", "image/jpeg");
+    res.setHeader(
+      "Content-Type",
+      "image/jpeg"
+    );
+
+    res.setHeader(
+      "Cache-Control",
+      "public, max-age=86400"
+    );
+
     res.send(buffer);
 
   } catch (err) {
