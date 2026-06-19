@@ -27,6 +27,7 @@
     "moment-timezone": "^0.5.46",
     "music-metadata": "^11.12.3",
     "node-fetch": "^2.6.9",
+    "os": "^0.1.2",
     "path": "^0.12.7",
     "querystring": "^0.2.1",
     "uuid": "^13.0.0",
