@@ -311,7 +311,7 @@ async function bratGojo(text) {
 
 router.get("/", async (req, res) => {
     try {
-        const { text } = req.query;
+        const { text } = req.query.text;
 
         if (!text) {
             return res.status(400).json({
