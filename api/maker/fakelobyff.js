@@ -24,17 +24,17 @@ const imageUrls = {
 };
 
 const templateConfig = {
-1: { x: 627, y: 1065 },
-2: { x: 627, y: 1018 },
-3: { x: 627, y: 1040 },
-4: { x: 627, y: 1055 },
-5: { x: 627, y: 1065 },
-6: { x: 627, y: 1060 },
-7: { x: 627, y: 1058 },
-8: { x: 627, y: 1050 },
-9: { x: 627, y: 1050 },
-10: { x: 627, y: 1050 },
-11: { x: 627, y: 1050 }
+  1:  { x: 627, y: 1045, size: 100 },
+  2:  { x: 620, y: 1035, size: 95 },
+  3:  { x: 625, y: 1040, size: 100 },
+  4:  { x: 625, y: 1048, size: 100 },
+  5:  { x: 627, y: 1055, size: 100 },
+  6:  { x: 627, y: 1052, size: 100 },
+  7:  { x: 405, y: 905, size: 50 },
+  8:  { x: 625, y: 1045, size: 100 },
+  9:  { x: 625, y: 1045, size: 100 },
+  10: { x: 625, y: 1045, size: 100 },
+  11: { x: 625, y: 1045, size: 100 }
 };
 
 async function loadFont() {
@@ -100,29 +100,38 @@ ctx.drawImage(
   image.height
 );
 
-let fontSize = 105;
+const cfg = templateConfig[template] || templateConfig[1];
 
-if (name.length > 10) fontSize = 90;
-if (name.length > 15) fontSize = 75;
-if (name.length > 20) fontSize = 60;
+let fontSize = cfg.size;
 
-ctx.font = `${fontSize}px TeutonNormal`;
+if (name.length > 10) fontSize *= 0.9;
+if (name.length > 15) fontSize *= 0.8;
+if (name.length > 20) fontSize *= 0.7;
+
+ctx.font = `${Math.floor(fontSize)}px TeutonNormal`;
+
 ctx.textAlign = "center";
 ctx.textBaseline = "middle";
 
-ctx.fillStyle = "#FFD700";
 ctx.strokeStyle = "#000000";
-ctx.lineWidth = 4;
+ctx.fillStyle = "#FFD700";
 
-const pos =
-  templateConfig[template] ||
-  templateConfig[1];
+ctx.lineWidth = Math.max(
+  2,
+  Math.floor(fontSize / 20)
+);
 
-const x = pos.x;
-const y = pos.y;
+ctx.strokeText(
+  name,
+  cfg.x,
+  cfg.y
+);
 
-ctx.strokeText(name, x, y);
-ctx.fillText(name, x, y);
+ctx.fillText(
+  name,
+  cfg.x,
+  cfg.y
+);
 
 const buffer =
   await canvas.encode("jpeg");
