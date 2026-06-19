@@ -23,18 +23,19 @@ const imageUrls = {
 11: "https://files.catbox.moe/v2np8h.jpg"
 };
 
+// PERBAIKAN: Koordinat Y dikurangi agar posisi teks naik pas di dalam banner nama asli FF
 const templateConfig = {
-  1:  { x: 627, y: 1045, size: 100 },
-  2:  { x: 620, y: 1035, size: 95 },
-  3:  { x: 625, y: 1040, size: 100 },
-  4:  { x: 625, y: 1048, size: 100 },
-  5:  { x: 627, y: 1055, size: 100 },
-  6:  { x: 627, y: 1052, size: 100 },
-  7:  { x: 405, y: 905, size: 50 },
-  8:  { x: 625, y: 1045, size: 100 },
-  9:  { x: 625, y: 1045, size: 100 },
-  10: { x: 625, y: 1045, size: 100 },
-  11: { x: 625, y: 1045, size: 100 }
+  1:  { x: 627, y: 1015, size: 85 },   // Menurunkan ukuran font sedikit & menaikkan Y agar pas di banner
+  2:  { x: 620, y: 1005, size: 85 },   // Menaikkan posisi Y agar tidak menutupi tombol mic
+  3:  { x: 625, y: 1010, size: 85 },
+  4:  { x: 625, y: 1018, size: 85 },
+  5:  { x: 627, y: 1025, size: 85 },
+  6:  { x: 627, y: 1022, size: 85 },
+  7:  { x: 395, y: 885, size: 45 },    // Penyesuaian posisi melayang untuk Template 7
+  8:  { x: 625, y: 1015, size: 85 },
+  9:  { x: 625, y: 1015, size: 85 },
+  10: { x: 625, y: 1015, size: 85 },
+  11: { x: 625, y: 1015, size: 85 }
 };
 
 async function loadFont() {
@@ -104,21 +105,23 @@ const cfg = templateConfig[template] || templateConfig[1];
 
 let fontSize = cfg.size;
 
-if (name.length > 10) fontSize *= 0.9;
-if (name.length > 15) fontSize *= 0.8;
-if (name.length > 20) fontSize *= 0.7;
+// Handle auto-scaling untuk nama yang panjang agar tidak keluar dari area banner
+if (name.length > 8) fontSize *= 0.9;
+if (name.length > 12) fontSize *= 0.8;
+if (name.length > 16) fontSize *= 0.7;
 
 ctx.font = `${Math.floor(fontSize)}px TeutonNormal`;
 
 ctx.textAlign = "center";
 ctx.textBaseline = "middle";
 
+// Stroke (Garis tepi hitam) dibuat agak tebal agar terlihat mirip aslinya
 ctx.strokeStyle = "#000000";
 ctx.fillStyle = "#FFD700";
 
 ctx.lineWidth = Math.max(
-  2,
-  Math.floor(fontSize / 20)
+  4, // Menaikkan ketebalan minimal stroke hitam agar tulisan lebih tegas
+  Math.floor(fontSize / 15)
 );
 
 ctx.strokeText(
