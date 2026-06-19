@@ -16,7 +16,7 @@ const TEUTON_URL =
   "https://raw.githubusercontent.com/arulzzzxd/database/main/font/TeutonNormal.otf";
 
 const NOTO_URL =
-  "https://raw.githubusercontent.com/arulzzzxd/database/main/font//NotoSansCJKsc-Regular.otf";
+  "https://raw.githubusercontent.com/arulzzzxd/database/main/font/NotoSansCJKsc-Regular.otf";
 
 let fontsLoaded = false;
 
