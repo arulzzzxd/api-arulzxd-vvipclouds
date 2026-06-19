@@ -9,14 +9,14 @@ const FONT_URL =
 
 let fontLoaded = false;
 
-// Hanya menggunakan aset gambar dari Template 5
+// Menggunakan aset gambar dari Template 5 sesuai di screenshot
 const TEMPLATE_IMAGE_URL = "https://files.catbox.moe/cuatgd.jpg";
 
-// Konfigurasi posisi untuk Template 5 (Koordinat Y dinaikkan agar teks pas di tengah banner)
+// PERBAIKAN: Koordinat disesuaikan agar teks masuk ke dalam banner abu-abu/kuning di bawah kaki karakter
 const templateConfig = { 
-  x: 627, 
-  y: 1025, 
-  size: 85 
+  x: 520,   // Digeser agak ke kiri agar pas di tengah banner antara bendera dan logo rank
+  y: 812,   // Dinaikkan ke posisi banner bawah (bukan melayang di atas)
+  size: 40  // Ukuran font diperkecil agar pas dengan tinggi banner nama asli FF tersebut
 };
 
 async function loadFont() {
@@ -40,7 +40,6 @@ router.get("/", async (req, res) => {
 
     await loadFont();
 
-    // Mengambil data gambar Template 5
     const { data } = await axios.get(TEMPLATE_IMAGE_URL, {
       responseType: "arraybuffer"
     });
@@ -54,7 +53,7 @@ router.get("/", async (req, res) => {
 
     let fontSize = templateConfig.size;
 
-    // Auto-scaling ukuran font berdasarkan panjang nickname agar tidak keluar banner
+    // Auto-scaling jika nama terlalu panjang agar tetap muat di dalam kotak banner
     if (name.length > 8) fontSize *= 0.9;
     if (name.length > 12) fontSize *= 0.8;
     if (name.length > 16) fontSize *= 0.7;
@@ -63,11 +62,11 @@ router.get("/", async (req, res) => {
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
 
-    // Warna teks emas dengan stroke hitam tebal khas Free Fire
+    // Warna kuning emas khas Free Fire dengan stroke hitam tipis yang proporsional
     ctx.strokeStyle = "#000000";
     ctx.fillStyle = "#FFD700";
 
-    ctx.lineWidth = Math.max(4, Math.floor(fontSize / 15));
+    ctx.lineWidth = Math.max(2, Math.floor(fontSize / 15));
 
     ctx.strokeText(name, templateConfig.x, templateConfig.y);
     ctx.fillText(name, templateConfig.x, templateConfig.y);
