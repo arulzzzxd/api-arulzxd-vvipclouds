@@ -23,26 +23,34 @@ let fontsLoaded = false;
 async function loadFonts() {
   if (fontsLoaded) return;
 
-  const [teuton, noto] = await Promise.all([
-    axios.get(TEUTON_URL, {
-      responseType: "arraybuffer"
-    }),
-    axios.get(NOTO_URL, {
-      responseType: "arraybuffer"
-    })
-  ]);
+  try {
+    const [teuton, noto] = await Promise.all([
+      axios.get(TEUTON_URL, {
+        responseType: "arraybuffer",
+        timeout: 15000
+      }),
+      axios.get(NOTO_URL, {
+        responseType: "arraybuffer",
+        timeout: 15000
+      })
+    ]);
 
-  GlobalFonts.register(
-    Buffer.from(teuton.data),
-    "Teuton"
-  );
+    GlobalFonts.registerFromBuffer(
+      Buffer.from(teuton.data),
+      "Teuton"
+    );
 
-  GlobalFonts.register(
-    Buffer.from(noto.data),
-    "Noto"
-  );
+    GlobalFonts.registerFromBuffer(
+      Buffer.from(noto.data),
+      "Noto"
+    );
 
-  fontsLoaded = true;
+    fontsLoaded = true;
+    console.log("Fonts loaded");
+  } catch (err) {
+    console.error("Font Error:", err);
+    throw err;
+  }
 }
 
 router.get("/", async (req, res) => {
@@ -54,13 +62,12 @@ router.get("/", async (req, res) => {
     const { data } = await axios.get(
       TEMPLATE,
       {
-        responseType: "arraybuffer"
+        responseType: "arraybuffer",
+        timeout: 15000
       }
     );
 
-    const bg = await loadImage(
-      Buffer.from(data)
-    );
+    const bg = await loadImage(Buffer.from(data));
 
     const canvas = createCanvas(
       bg.width,
@@ -79,8 +86,7 @@ router.get("/", async (req, res) => {
 
     ctx.fillStyle = "#FFFFFF";
     ctx.textBaseline = "middle";
-    ctx.font =
-      "31px Teuton, Noto";
+    ctx.font = "31px Teuton";
 
     ctx.fillText(
       username,
@@ -88,9 +94,9 @@ router.get("/", async (req, res) => {
       1019
     );
 
-    const png = await sharp(
-      canvas.toBuffer("image/png")
-    )
+    const buffer = canvas.toBuffer("image/png");
+
+    const png = await sharp(buffer)
       .png()
       .toBuffer();
 
@@ -102,9 +108,12 @@ router.get("/", async (req, res) => {
     res.send(png);
 
   } catch (e) {
+    console.error(e);
+
     res.status(500).json({
       status: false,
-      error: e.message
+      error: e.message,
+      stack: e.stack
     });
   }
 });
