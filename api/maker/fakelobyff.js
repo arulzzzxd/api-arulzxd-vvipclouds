@@ -54,9 +54,7 @@ router.get("/", async (req, res) => {
     if (!imageUrl) {
       return res.status(404).json({
         status: false,
-        message: "Template tidak ditemukan",
-        availableTemplates:
-          Object.keys(imageUrls)
+        message: "Template tidak ditemukan"
       });
     }
 
@@ -92,26 +90,36 @@ router.get("/", async (req, res) => {
 
     let fontSize = 110;
 
-    if (len > 8) fontSize = 90;
-    if (len > 12) fontSize = 75;
-    if (len > 18) fontSize = 60;
+    if (len > 8) fontSize = 95;
+    if (len > 12) fontSize = 80;
+    if (len > 18) fontSize = 65;
 
     ctx.font = `${fontSize}px TeutonNormal`;
-    ctx.fillStyle = "#FFD700";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+
+    ctx.lineWidth = 4;
     ctx.strokeStyle = "#000000";
-    ctx.lineWidth = 6;
+    ctx.fillStyle = "#FFD700";
 
-    const textWidth =
-      ctx.measureText(name).width;
+    // Posisi nameplate FF
+    const centerX =
+      image.width / 2 + 18;
 
-    const x =
-      (image.width - textWidth) / 2 +
-      image.width * 0.02;
+    const centerY =
+      image.height * 0.805 + 14;
 
-    const y = image.height * 0.8;
+    ctx.strokeText(
+      name,
+      centerX,
+      centerY
+    );
 
-    ctx.strokeText(name, x, y);
-    ctx.fillText(name, x, y);
+    ctx.fillText(
+      name,
+      centerX,
+      centerY
+    );
 
     const buffer =
       await canvas.encode("jpeg");
@@ -119,11 +127,6 @@ router.get("/", async (req, res) => {
     res.setHeader(
       "Content-Type",
       "image/jpeg"
-    );
-
-    res.setHeader(
-      "Cache-Control",
-      "public, max-age=86400"
     );
 
     res.send(buffer);
