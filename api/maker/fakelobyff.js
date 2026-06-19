@@ -23,6 +23,20 @@ const imageUrls = {
   11: "https://files.catbox.moe/v2np8h.jpg"
 };
 
+const templateConfig = {
+  1: { x: 0.52, y: 0.805 },
+  2: { x: 0.52, y: 0.805 },
+  3: { x: 0.52, y: 0.805 },
+  4: { x: 0.52, y: 0.812 },
+  5: { x: 0.50, y: 0.835 },
+  6: { x: 0.50, y: 0.825 },
+  7: { x: 0.50, y: 0.825 },
+  8: { x: 0.50, y: 0.815 },
+  9: { x: 0.50, y: 0.805 },
+  10: { x: 0.50, y: 0.805 },
+  11: { x: 0.50, y: 0.805 }
+};
+
 async function loadFont() {
   if (fontLoaded) return;
 
@@ -40,23 +54,20 @@ async function loadFont() {
 
 router.get("/", async (req, res) => {
   try {
-    const template = String(
-      req.query.template || "1"
+    const template = Number(
+      req.query.template || 1
     );
 
     const name = String(
       req.query.name || "ArulzXD"
     );
 
-    const imageUrl =
-      imageUrls[Number(template)];
+    const imageUrl = imageUrls[template];
 
     if (!imageUrl) {
       return res.status(404).json({
         status: false,
-        message: "Template tidak ditemukan",
-        availableTemplates:
-          Object.keys(imageUrls)
+        message: "Template tidak ditemukan"
       });
     }
 
@@ -88,27 +99,26 @@ router.get("/", async (req, res) => {
       image.height
     );
 
-    const len = name.length;
-
     let fontSize = 110;
 
-    if (len > 8) fontSize = 90;
-    if (len > 12) fontSize = 75;
-    if (len > 18) fontSize = 60;
+    if (name.length > 8) fontSize = 95;
+    if (name.length > 12) fontSize = 80;
+    if (name.length > 18) fontSize = 65;
 
     ctx.font = `${fontSize}px TeutonNormal`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+
     ctx.fillStyle = "#FFD700";
     ctx.strokeStyle = "#000000";
-    ctx.lineWidth = 6;
+    ctx.lineWidth = 4;
 
-    const textWidth =
-      ctx.measureText(name).width;
+    const pos =
+      templateConfig[template] ||
+      templateConfig[1];
 
-    const x =
-      (image.width - textWidth) / 2 +
-      image.width * 0.02;
-
-    const y = image.height * 0.8;
+    const x = image.width * pos.x;
+    const y = image.height * pos.y;
 
     ctx.strokeText(name, x, y);
     ctx.fillText(name, x, y);
