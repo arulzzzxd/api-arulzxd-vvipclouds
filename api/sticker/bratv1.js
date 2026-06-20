@@ -1,84 +1,167 @@
-const express = require('express');
-const axios = require('axios');
+const express = require("express");
+const axios = require("axios");
+const { createCanvas, GlobalFonts } = require("@napi-rs/canvas");
+const GIFEncoder = require("gifencoder");
 
 const router = express.Router();
 
-// GET Route Utama API sesuai path /api/sticker/bratv1
-router.get('/', async (req, res) => {
-    const text = req.query.text;
-    const type = req.query.type || 'image'; // Default jika tidak diisi adalah image
+// URL Font Arial Narrow dari GitHub Raw agar kompatibel di Vercel
+const FONT_URL = "https://raw.githubusercontent.com/arulzzzxd/database/main/font/arialnarrow.ttf";
+let isFontRegistered = false;
 
-    // 1. Validasi parameter teks
-    if (!text) {
-        return res.status(400).json({
-            status: false,
-            message: "Parameter '?text=' wajib diisi pada URL endpoint.",
-            example: "/api/sticker/bratv1?type=image&text=Cewe+cantik"
-        });
-    }
-
-    // 2. Validasi tipe media yang didukung
-    const allowedTypes = ['image', 'video', 'gif'];
-    if (!allowedTypes.includes(type)) {
-        return res.status(400).json({
-            status: false,
-            message: "Parameter 'type' tidak valid. Pilih salah satu: 'image', 'video', atau 'gif'."
-        });
-    }
-
+async function loadFont() {
+    if (isFontRegistered) return;
     try {
-        // Menentukan base API URL eksternal berdasarkan tipe media
-        const externalApiUrl = `https://fareldevelopers-brat.hf.space/${type}?text=${encodeURIComponent(text)}`;
+        const response = await axios.get(FONT_URL, { responseType: "arraybuffer" });
+        const fontBuffer = Buffer.from(response.data);
+        GlobalFonts.register(fontBuffer, "Narrow");
+        isFontRegistered = true;
+    } catch (err) {
+        throw new Error("Gagal memuat font dari GitHub Raw: " + err.message);
+    }
+}
 
-        // Request data dari Hugging Face Space dengan format arraybuffer
-        const response = await axios.get(externalApiUrl, {
-            responseType: 'arraybuffer',
-            timeout: 15000, // batasan waktu 15 detik agar tidak menggantung jika HF overload
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-            }
-        });
+// Fungsi pembantu untuk merancang susunan baris teks teks berdasarkan ukuran font saat itu
+function getLayoutLines(ctx, text, width, margin, fontSize) {
+    const words = text.split(" ");
+    let lines = [];
+    let currentLine = "";
+    
+    ctx.font = `${fontSize}px Narrow`;
+    
+    for (let word of words) {
+        let testLine = currentLine ? `${currentLine} ${word}` : word;
+        let lineWidth = ctx.measureText(testLine).width;
+        
+        if (lineWidth < width - margin * 2) {
+            currentLine = testLine;
+        } else {
+            if (currentLine) lines.push(currentLine);
+            currentLine = word;
+        }
+    }
+    if (currentLine) lines.push(currentLine);
+    return lines;
+}
 
-        // Menentukan Content-Type header response berdasarkan tipe media
-        let contentType = 'image/png'; 
-        if (type === 'video' || type === 'gif') {
-            contentType = 'video/mp4'; // Brat video/gif dari HF space dikirim berbentuk MP4
+router.get("/", async (req, res) => {
+    try {
+        const apikey = req.query.apikey;
+        const text = req.query.text;
+
+        // 1. Validasi Apikey
+        if (!apikey) {
+            return res.status(403).json({ status: false, message: "Parameter 'apikey' diperlukan." });
+        }
+        if (apikey !== "arulzxd-keys") {
+            return res.status(403).json({ status: false, message: "Apikey tidak valid." });
         }
 
-        // Mengirimkan buffer media murni langsung ke browser/client
-        res.writeHead(200, {
-            'Content-Type': contentType,
-            'Content-Length': response.data.length,
-            'Cache-Control': 'public, max-age=86400, s-maxage=86400'
-        });
-        
-        return res.end(Buffer.from(response.data));
-
-    } catch (e) {
-        console.error('[Brat Multi API Error]:', e.message);
-        
-        // FIX: Jika axios mendapatkan error saat responseType 'arraybuffer', 
-        // e.response.data berbentuk Buffer. Kita harus mengubahnya kembali ke teks/string.
-        let errorMessage = e.message;
-        let statusCode = 500;
-
-        if (e.response) {
-            statusCode = e.response.status;
-            if (e.response.data) {
-                try {
-                    const parsedError = JSON.parse(Buffer.from(e.response.data).toString('utf-8'));
-                    errorMessage = parsedError.detail || parsedError.message || errorMessage;
-                } catch (_) {
-                    errorMessage = Buffer.from(e.response.data).toString('utf-8') || errorMessage;
-                }
-            }
+        // 2. Validasi Parameter Text
+        if (!text) {
+            return res.status(400).json({
+                status: false,
+                message: "Parameter 'text' diperlukan.",
+                example: "/api/sticker/brat-animated?apikey=arulzxd-keys&text=teks+animasi+saja"
+            });
         }
 
-        return res.status(statusCode).json({
+        // 3. Pastikan font sudah ter-registrasi
+        await loadFont();
+
+        const width = 512;
+        const height = 512;
+        const margin = 30;
+        const wordSpacing = 15;
+        const lineHeightMultiplier = 1.1;
+
+        // Buat canvas sementara untuk kalkulasi ukuran font optimal
+        const baseCanvas = createCanvas(width, height);
+        const baseCtx = baseCanvas.getContext("2d");
+        
+        let fontSize = 200;
+        let lines = getLayoutLines(baseCtx, text, width, margin, fontSize);
+
+        // Kecilkan font jika teks meluber ke bawah canvas
+        while (lines.length * fontSize * lineHeightMultiplier > height - margin * 2 && fontSize > 20) {
+            fontSize -= 2;
+            lines = getLayoutLines(baseCtx, text, width, margin, fontSize);
+        }
+
+        // Pecah seluruh kata ke dalam susunan koordinat (X, Y) untuk animasi progressive reveal
+        let wordsData = [];
+        let currentY = margin;
+        const lineHeight = fontSize * lineHeightMultiplier;
+
+        for (let line of lines) {
+            let wordsInLine = line.split(" ");
+            let currentX = margin;
+            baseCtx.font = `${fontSize}px Narrow`;
+            
+            for (let word of wordsInLine) {
+                wordsData.push({
+                    text: word,
+                    x: currentX,
+                    y: currentY
+                });
+                currentX += baseCtx.measureText(word).width + wordSpacing;
+            }
+            currentY += lineHeight;
+        }
+
+        // 4. Setup GIF Encoder untuk membuat teks bergerak
+        const encoder = new GIFEncoder(width, height);
+        const frames = [];
+
+        encoder.createReadStream().on("data", (chunk) => frames.push(chunk));
+
+        encoder.start();
+        encoder.setRepeat(0);      // 0 = Loop terus-menerus
+        encoder.setDelay(280);      // Jeda kemunculan per kata (280ms)
+        encoder.setQuality(10);     // Optimasi warna/kompresi
+
+        const renderCanvas = createCanvas(width, height);
+        const ctx = renderCanvas.getContext("2d");
+
+        // Loop memproses frame demi frame secara bertahap (kata demi kata)
+        for (let i = 1; i <= wordsData.length; i++) {
+            // Latar belakang putih bersih khas Brat asli
+            ctx.fillStyle = "white";
+            ctx.fillRect(0, 0, width, height);
+
+            // Render teks hitam hanya sampai indeks kata ke-i (efek mengetik/berjalan)
+            ctx.fillStyle = "black";
+            ctx.font = `${fontSize}px Narrow`;
+            ctx.textAlign = "left";
+            ctx.textBaseline = "top";
+
+            for (let j = 0; j < i; j++) {
+                const word = wordsData[j];
+                ctx.fillText(word.text, word.x, word.y);
+            }
+
+            encoder.addFrame(ctx);
+        }
+
+        // Frame Terakhir: Teks lengkap diberikan jeda baca lebih lama (1.5 detik) sebelum berulang kembali
+        encoder.setDelay(1500); 
+        encoder.addFrame(ctx);
+
+        encoder.finish();
+
+        // Menggabungkan seluruh buffer frame menjadi file .gif utuh
+        const gifBuffer = Buffer.concat(frames);
+
+        // 5. Kirim respon gambar animasi GIF murni ke client
+        res.setHeader("Content-Type", "image/gif");
+        return res.send(gifBuffer);
+
+    } catch (error) {
+        res.status(500).json({
             status: false,
-            code: statusCode,
-            message: "Gagal mengambil data dari server Brat utama (HuggingFace Space kemungkinan overload/down).",
-            error: errorMessage
+            creator: "ArulzXD",
+            error: error.message,
+            details: null
         });
     }
 });
