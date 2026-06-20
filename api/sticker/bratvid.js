@@ -1,5 +1,5 @@
 const express = require("express");
-const { bratvid } = require("brat-farel");
+const axios = require("axios");
 
 const router = express.Router();
 
@@ -27,31 +27,33 @@ router.get("/", async (req, res) => {
             return res.status(400).json({
                 status: false,
                 message: "Parameter 'text' diperlukan.",
-                example: "/api/sticker/bratvid?apikey=arulzxd-keys&text=Hello+World"
+                example: "/api/sticker/bratvidhd?apikey=arulzxd-keys&text=mending+tidur+gweh+mah"
             });
         }
 
-        // 3. Proses Rendering murni dari teks menjadi Buffer GIF menggunakan brat-farel
-        // Menggunakan parameter 'blur' dan 'fast' sesuai dokumentasi fungsi test Anda
-        const gifBuffer = await bratvid(text, {
-            blur: 5,
-            fast: true
+        // 3. Mengambil data dari upstream API Brat Video HD yang stabil
+        // Menggunakan metode proxy arraybuffer agar file binary video (.mp4) tidak rusak saat di-stream
+        const targetUrl = `https://api.deline.web.id/maker/bratvid?text=${encodeURIComponent(text)}`;
+        
+        const response = await axios({
+            method: "get",
+            url: targetUrl,
+            responseType: "arraybuffer",
+            headers: {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+            }
         });
 
-        if (!gifBuffer) {
-            throw new Error("Gagal me-render animasi brat menggunakan brat-farel.");
-        }
-
-        // 4. Set Header dan Kirim Respons data binary GIF langsung ke Client / Dashboard
-        res.setHeader("Content-Type", "image/gif");
-        return res.send(gifBuffer);
+        // 4. Set Header dan Kirim Respons data binary Video MP4 HD ke Client
+        res.setHeader("Content-Type", "video/mp4");
+        return res.send(response.data);
 
     } catch (error) {
         res.status(500).json({
             status: false,
             creator: "ArulzXD",
             error: error.message,
-            details: "Terjadi kesalahan internal pada proses rendering brat-farel."
+            details: error.response?.data?.toString() || "Gagal mengambil data dari server upstream bratvidhd."
         });
     }
 });
