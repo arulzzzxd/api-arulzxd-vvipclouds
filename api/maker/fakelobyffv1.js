@@ -70,8 +70,8 @@ router.get("/", async (req, res) => {
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
 
-    const centerX = 319;
-    const centerY = 1018;
+    const centerX = 317;
+    const centerY = 1019;
 
     // Stroke hitam tipis
     ctx.lineWidth = 2;
