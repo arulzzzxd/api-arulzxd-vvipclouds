@@ -12,6 +12,7 @@
     "@vreden/youtube_scraper": "^1.2.9",
     "axios": "^1.10.0",
     "cheerio": "github:iyayn-ajah/cheerio",
+    "brat-canvas": "^1.0.30",
     "crypto": "^1.0.1",
     "crypto-js": "^4.2.0",
     "child_process": "^1.0.2",
