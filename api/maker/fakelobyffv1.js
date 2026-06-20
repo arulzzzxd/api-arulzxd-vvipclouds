@@ -15,38 +15,23 @@ const TEMPLATE =
 const TEUTON_URL =
   "https://raw.githubusercontent.com/arulzzzxd/database/main/font/TeutonNormal.otf";
 
-const NOTO_URL =
-  "https://raw.githubusercontent.com/arulzzzxd/database/main/font/NotoSansCJKsc-Regular.otf";
-
 let fontsLoaded = false;
 
 async function loadFonts() {
   if (fontsLoaded) return;
 
   try {
-    const [teuton, noto] = await Promise.all([
-      axios.get(TEUTON_URL, {
-        responseType: "arraybuffer",
-        timeout: 15000
-      }),
-      axios.get(NOTO_URL, {
-        responseType: "arraybuffer",
-        timeout: 15000
-      })
-    ]);
+    const { data } = await axios.get(TEUTON_URL, {
+      responseType: "arraybuffer",
+      timeout: 15000
+    });
 
-    GlobalFonts.registerFromBuffer(
-      Buffer.from(teuton.data),
+    GlobalFonts.register(
+      Buffer.from(data),
       "Teuton"
     );
 
-    GlobalFonts.registerFromBuffer(
-      Buffer.from(noto.data),
-      "Noto"
-    );
-
     fontsLoaded = true;
-    console.log("Fonts loaded");
   } catch (err) {
     console.error("Font Error:", err);
     throw err;
@@ -59,13 +44,10 @@ router.get("/", async (req, res) => {
 
     await loadFonts();
 
-    const { data } = await axios.get(
-      TEMPLATE,
-      {
-        responseType: "arraybuffer",
-        timeout: 15000
-      }
-    );
+    const { data } = await axios.get(TEMPLATE, {
+      responseType: "arraybuffer",
+      timeout: 15000
+    });
 
     const bg = await loadImage(Buffer.from(data));
 
@@ -94,9 +76,9 @@ router.get("/", async (req, res) => {
       1019
     );
 
-    const buffer = canvas.toBuffer("image/png");
-
-    const png = await sharp(buffer)
+    const png = await sharp(
+      canvas.toBuffer("image/png")
+    )
       .png()
       .toBuffer();
 
@@ -112,8 +94,7 @@ router.get("/", async (req, res) => {
 
     res.status(500).json({
       status: false,
-      error: e.message,
-      stack: e.stack
+      error: e.message
     });
   }
 });
