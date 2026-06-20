@@ -27,20 +27,21 @@ router.get("/", async (req, res) => {
             return res.status(400).json({
                 status: false,
                 message: "Parameter 'text' diperlukan.",
-                example: "/api/sticker/bratvid?apikey=arulzxd-keys&text=Hai+semua"
+                example: "/api/sticker/bratvid?apikey=arulzxd-keys&text=mending+tidur+gweh+mah"
             });
         }
 
-        // 3. Memproses Text murni menjadi Video MP4 menggunakan brat-canvas/video
+        // 3. Proses Rendering murni dari teks menjadi Buffer Video MP4
         const videoBuffer = await bratVid(text, {
             outputFormat: "mp4"
         });
 
         if (!videoBuffer) {
-            throw new Error("Gagal me-render frame video brat.");
+            throw new Error("Gagal me-render video brat.");
         }
 
-        // 4. Set Header dan Kirim Respons berupa file Video MP4 murni
+        // 4. Set Header dan Kirim Respons data binary Video MP4 ke Client
+        // Menghilangkan proses 'writeFile' agar langsung tersaji di browser/dashboard tanpa beban penyimpanan
         res.setHeader("Content-Type", "video/mp4");
         return res.send(videoBuffer);
 
@@ -49,7 +50,7 @@ router.get("/", async (req, res) => {
             status: false,
             creator: "ArulzXD",
             error: error.message,
-            details: "Terjadi kesalahan internal saat memproses pembuatan video brat."
+            details: "Terjadi kesalahan internal saat memproses data binary video."
         });
     }
 });
