@@ -15,14 +15,13 @@ const TEMPLATE =
 const TEUTON_URL =
   "https://raw.githubusercontent.com/arulzzzxd/database/main/font/TeutonNormal.otf";
 
-let fontsLoaded = false;
+let fontLoaded = false;
 
 async function loadFonts() {
-  if (fontsLoaded) return;
+  if (fontLoaded) return;
 
   const { data } = await axios.get(TEUTON_URL, {
-    responseType: "arraybuffer",
-    timeout: 15000
+    responseType: "arraybuffer"
   });
 
   GlobalFonts.register(
@@ -30,23 +29,25 @@ async function loadFonts() {
     "Teuton"
   );
 
-  fontsLoaded = true;
+  fontLoaded = true;
 }
 
 router.get("/", async (req, res) => {
   try {
-    const username = (req.query.username || "Player")
-      .trim()
-      .substring(0, 12);
+    const username =
+      (req.query.username || "Arulz")
+        .trim()
+        .slice(0, 12);
 
     await loadFonts();
 
     const { data } = await axios.get(TEMPLATE, {
-      responseType: "arraybuffer",
-      timeout: 15000
+      responseType: "arraybuffer"
     });
 
-    const bg = await loadImage(Buffer.from(data));
+    const bg = await loadImage(
+      Buffer.from(data)
+    );
 
     const canvas = createCanvas(
       bg.width,
@@ -63,41 +64,40 @@ router.get("/", async (req, res) => {
       bg.height
     );
 
-    // ===== NICKNAME FF =====
+    // ==========================
+    // NICKNAME FREE FIRE
+    // ==========================
+
     ctx.save();
 
-    ctx.font = "30px Teuton";
-    ctx.textAlign = "center";
+    ctx.font = "29px Teuton";
+    ctx.textAlign = "left";
     ctx.textBaseline = "middle";
 
-    const centerX = 317;
-    const centerY = 1019;
+    const textX = 256;
+    const textY = 1261;
 
-    // Stroke hitam tipis
     ctx.lineWidth = 2;
     ctx.strokeStyle = "#000000";
     ctx.strokeText(
       username,
-      centerX,
-      centerY
+      textX,
+      textY
     );
 
-    // Teks putih
     ctx.fillStyle = "#FFFFFF";
     ctx.fillText(
       username,
-      centerX,
-      centerY
+      textX,
+      textY
     );
 
     ctx.restore();
 
-    const png = await sharp(
+    const output = await sharp(
       canvas.toBuffer("image/png")
     )
-      .png({
-        compressionLevel: 9
-      })
+      .png()
       .toBuffer();
 
     res.setHeader(
@@ -105,19 +105,14 @@ router.get("/", async (req, res) => {
       "image/png"
     );
 
-    res.setHeader(
-      "Cache-Control",
-      "public, max-age=86400"
-    );
+    res.send(output);
 
-    res.send(png);
-
-  } catch (e) {
-    console.error(e);
+  } catch (err) {
+    console.error(err);
 
     res.status(500).json({
       status: false,
-      error: e.message
+      error: err.message
     });
   }
 });
