@@ -1,108 +1,140 @@
-const express = require('express');
-const router = express.Router();
-const axios = require('axios');
-const cheerio = require('cheerio');
+const express = require("express");
+const axios = require("axios");
+const cheerio = require("cheerio");
 
-// ======================================================
-// UTILITY / HELPER FUNCTIONS
-// ======================================================
-function parseFileSize(size) {
-    return parseFloat(size) * (/GB/i.test(size)
-        ? 1000000
-        : /MB/i.test(size)
-            ? 1000
-            : /KB/i.test(size)
-                ? 1
-                : /bytes?/i.test(size)
-                    ? 0.001
-                    : /B/i.test(size)
-                        ? 0.1
-                        : 0);
+const router = express.Router();
+
+function getMimeTypeFromUrl(url) {
+    if (!url) return "unknown";
+
+    const fileName = url
+        .split("/")
+        .pop()
+        .split("?")[0];
+
+    const extension = fileName
+        .split(".")
+        .pop()
+        .toLowerCase();
+
+    const mimeTypes = {
+        "7z": "application/x-7z-compressed",
+        zip: "application/zip",
+        rar: "application/x-rar-compressed",
+        apk: "application/vnd.android.package-archive",
+        exe: "application/x-msdownload",
+        pdf: "application/pdf",
+        doc: "application/msword",
+        docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        xls: "application/vnd.ms-excel",
+        xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        ppt: "application/vnd.ms-powerpoint",
+        pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+        jpg: "image/jpeg",
+        jpeg: "image/jpeg",
+        png: "image/png",
+        gif: "image/gif",
+        mp3: "audio/mpeg",
+        mp4: "video/mp4",
+        txt: "text/plain",
+        json: "application/json",
+        js: "application/javascript",
+        html: "text/html",
+        css: "text/css"
+    };
+
+    return mimeTypes[extension] || "application/octet-stream";
 }
 
-// ======================================================
-// CORE MEDIAFIRE DOWNLOADER FUNCTION
-// ======================================================
-async function mediafireDl(url) {
-    if (!/https?:\/\/(www\.)?mediafire\.com/.test(url)) {
-        throw new Error('URL yang dimasukkan bukan link MediaFire yang valid!');
+async function mediafire(url) {
+    const { data: html } = await axios.get(url, {
+        headers: {
+            "User-Agent":
+                "Mozilla/5.0"
+        }
+    });
+
+    const $ = cheerio.load(html);
+
+    const title =
+        $('meta[property="og:title"]')
+            .attr("content") ||
+        "Unknown";
+
+    const image =
+        $('meta[property="og:image"]')
+            .attr("content");
+
+    const description =
+        $('meta[property="og:description"]')
+            .attr("content") ||
+        "No description";
+
+    const link_download =
+        $("#downloadButton").attr("href");
+
+    if (!link_download) {
+        throw new Error(
+            "Download link tidak ditemukan"
+        );
     }
 
+    const sizeText =
+        $("#downloadButton")
+            .text()
+            .trim();
+
+    const size = sizeText
+        .replace("Download (", "")
+        .replace(")", "")
+        .trim();
+
+    const mimetype =
+        getMimeTypeFromUrl(
+            link_download
+        );
+
+    return {
+        meta: {
+            title,
+            image,
+            description
+        },
+        download: {
+            url: link_download,
+            size,
+            mimetype
+        }
+    };
+}
+
+router.get("/", async (req, res) => {
     try {
-        const response = await axios.get(url, {
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
-            }
-        });
-        const $ = cheerio.load(response.data);
+        const url =
+            req.query.url?.trim();
 
-        const downloadUrl = ($('#downloadButton').attr('href') || '').trim();
-        const alternativeUrl = ($('#download_link > a.retry').attr('href') || '').trim();
-        
-        const $intro = $('div.dl-info > div.intro');
-        const filename = $intro.find('div.filename').text().trim();
-        const filetype = $intro.find('div.filetype > span').eq(0).text().trim();
-        
-        // Ekstraksi ekstensi file secara aman menggunakan regex
-        const extMatch = /\(\.(.*?)\)/.exec($intro.find('div.filetype > span').eq(1).text());
-        const ext = extMatch ? extMatch[1].trim() : 'bin';
-
-        const $li = $('div.dl-info > ul.details > li');
-        const uploadDate = $li.eq(1).find('span').text().trim();
-        const filesize = $li.eq(0).find('span').text().trim();
-        const filesizeB = parseFileSize(filesize);
-
-        if (!downloadUrl && !alternativeUrl) {
-            throw new Error('Gagal mendapatkan link unduhan. File mungkin sudah dihapus atau diblokir.');
+        if (!url) {
+            return res.status(400).json({
+                status: false,
+                message:
+                    "Parameter url wajib"
+            });
         }
 
-        return {
-            url: downloadUrl || alternativeUrl,
-            url2: alternativeUrl,
-            filename,
-            filetype,
-            ext,
-            upload_date: uploadDate,
-            filesize,
-            filesizeB
-        };
-    } catch (error) {
-        throw new Error(error.message || 'Gagal mengambil data dari MediaFire');
-    }
-}
+        const result =
+            await mediafire(url);
 
-// ======================================================
-// ENDPOINT GET UTAMA
-// ======================================================
-router.get('/', async (req, res) => {
-    const url = req.query.url;
-
-    if (!url) {
-        return res.status(400).json({
-            status: false,
-            message: "Parameter 'url' wajib diisi! Contoh: ?url=https://www.mediafire.com/file/..."
-        });
-    }
-
-    try {
-        const result = await mediafireDl(url);
-
-        return res.status(200).json({
+        res.json({
             status: true,
-            creator: 'Arulzxd',
-            result,
-            metadata: {
-                source: 'MediaFire Downloader',
-                timestamp: new Date().toISOString()
-            }
+            creator: "ArulzXD",
+            result
         });
 
-    } catch (error) {
-        return res.status(500).json({
+    } catch (err) {
+        res.status(500).json({
             status: false,
-            message: 'Gagal memproses link MediaFire',
-            error: error.message,
-            timestamp: new Date().toISOString()
+            creator: "ArulzXD",
+            message: err.message
         });
     }
 });
