@@ -75,7 +75,7 @@ ctx.textAlign = "left";
 ctx.textBaseline = "middle";
 
 const textX = 286;
-const textY = 1045;
+const textY = 1052;
 
 ctx.lineWidth = 2;
 ctx.strokeStyle = "#000";
