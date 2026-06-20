@@ -1,5 +1,5 @@
 const express = require("express");
-const { bratVid } = require("brat-canvas/video");
+const { bratvid } = require("brat-farel");
 
 const router = express.Router();
 
@@ -27,30 +27,31 @@ router.get("/", async (req, res) => {
             return res.status(400).json({
                 status: false,
                 message: "Parameter 'text' diperlukan.",
-                example: "/api/sticker/bratvid?apikey=arulzxd-keys&text=mending+tidur+gweh+mah"
+                example: "/api/sticker/bratvid?apikey=arulzxd-keys&text=Hello+World"
             });
         }
 
-        // 3. Proses Rendering murni dari teks menjadi Buffer Video MP4
-        const videoBuffer = await bratVid(text, {
-            outputFormat: "mp4"
+        // 3. Proses Rendering murni dari teks menjadi Buffer GIF menggunakan brat-farel
+        // Menggunakan parameter 'blur' dan 'fast' sesuai dokumentasi fungsi test Anda
+        const gifBuffer = await bratvid(text, {
+            blur: 5,
+            fast: true
         });
 
-        if (!videoBuffer) {
-            throw new Error("Gagal me-render video brat.");
+        if (!gifBuffer) {
+            throw new Error("Gagal me-render animasi brat menggunakan brat-farel.");
         }
 
-        // 4. Set Header dan Kirim Respons data binary Video MP4 ke Client
-        // Menghilangkan proses 'writeFile' agar langsung tersaji di browser/dashboard tanpa beban penyimpanan
-        res.setHeader("Content-Type", "video/mp4");
-        return res.send(videoBuffer);
+        // 4. Set Header dan Kirim Respons data binary GIF langsung ke Client / Dashboard
+        res.setHeader("Content-Type", "image/gif");
+        return res.send(gifBuffer);
 
     } catch (error) {
         res.status(500).json({
             status: false,
             creator: "ArulzXD",
             error: error.message,
-            details: "Terjadi kesalahan internal saat memproses data binary video."
+            details: "Terjadi kesalahan internal pada proses rendering brat-farel."
         });
     }
 });
