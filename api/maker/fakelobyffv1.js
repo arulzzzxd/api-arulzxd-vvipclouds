@@ -20,27 +20,24 @@ let fontsLoaded = false;
 async function loadFonts() {
   if (fontsLoaded) return;
 
-  try {
-    const { data } = await axios.get(TEUTON_URL, {
-      responseType: "arraybuffer",
-      timeout: 15000
-    });
+  const { data } = await axios.get(TEUTON_URL, {
+    responseType: "arraybuffer",
+    timeout: 15000
+  });
 
-    GlobalFonts.register(
-      Buffer.from(data),
-      "Teuton"
-    );
+  GlobalFonts.register(
+    Buffer.from(data),
+    "Teuton"
+  );
 
-    fontsLoaded = true;
-  } catch (err) {
-    console.error("Font Error:", err);
-    throw err;
-  }
+  fontsLoaded = true;
 }
 
 router.get("/", async (req, res) => {
   try {
-    const username = req.query.username || "Player";
+    const username = (req.query.username || "Player")
+      .trim()
+      .substring(0, 12);
 
     await loadFonts();
 
@@ -66,25 +63,51 @@ router.get("/", async (req, res) => {
       bg.height
     );
 
-    ctx.fillStyle = "#FFFFFF";
-    ctx.textBaseline = "middle";
-    ctx.font = "31px Teuton";
+    // ===== NICKNAME FF =====
+    ctx.save();
 
+    ctx.font = "30px Teuton";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+
+    const centerX = 319;
+    const centerY = 1018;
+
+    // Stroke hitam tipis
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = "#000000";
+    ctx.strokeText(
+      username,
+      centerX,
+      centerY
+    );
+
+    // Teks putih
+    ctx.fillStyle = "#FFFFFF";
     ctx.fillText(
       username,
-      267.8,
-      1019
+      centerX,
+      centerY
     );
+
+    ctx.restore();
 
     const png = await sharp(
       canvas.toBuffer("image/png")
     )
-      .png()
+      .png({
+        compressionLevel: 9
+      })
       .toBuffer();
 
     res.setHeader(
       "Content-Type",
       "image/png"
+    );
+
+    res.setHeader(
+      "Cache-Control",
+      "public, max-age=86400"
     );
 
     res.send(png);
