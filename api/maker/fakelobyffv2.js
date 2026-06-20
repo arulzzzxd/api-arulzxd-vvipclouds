@@ -10,46 +10,44 @@ const {
 const router = express.Router();
 
 const TEMPLATE =
-  "https://files.soonex.biz.id/upload/53053f994d09.jpg";
+    "https://files.soonex.biz.id/upload/53053f994d09.jpg";
 
 const TEUTON_URL =
   "https://raw.githubusercontent.com/arulzzzxd/database/main/font/TeutonNormal.otf";
 
-let fontsLoaded = false;
+let fontLoaded = false;
 
 async function loadFonts() {
-  if (fontsLoaded) return;
+  if (fontLoaded) return;
 
-  try {
-    const { data } = await axios.get(TEUTON_URL, {
-      responseType: "arraybuffer",
-      timeout: 15000
-    });
+  const { data } = await axios.get(TEUTON_URL, {
+    responseType: "arraybuffer"
+  });
 
-    GlobalFonts.register(
-      Buffer.from(data),
-      "Teuton"
-    );
+  GlobalFonts.register(
+    Buffer.from(data),
+    "Teuton"
+  );
 
-    fontsLoaded = true;
-  } catch (err) {
-    console.error("Font Error:", err);
-    throw err;
-  }
+  fontLoaded = true;
 }
 
 router.get("/", async (req, res) => {
   try {
-    const username = req.query.username || "Player";
+    const username =
+      (req.query.username || "Arulz")
+        .trim()
+        .slice(0, 12);
 
     await loadFonts();
 
     const { data } = await axios.get(TEMPLATE, {
-      responseType: "arraybuffer",
-      timeout: 15000
+      responseType: "arraybuffer"
     });
 
-    const bg = await loadImage(Buffer.from(data));
+    const bg = await loadImage(
+      Buffer.from(data)
+    );
 
     const canvas = createCanvas(
       bg.width,
@@ -66,17 +64,29 @@ router.get("/", async (req, res) => {
       bg.height
     );
 
-    ctx.fillStyle = "#FFFFFF";
-    ctx.textBaseline = "middle";
-    ctx.font = "31px Teuton";
+    // ==========================
+    // NICKNAME FREE FIRE
+    // ==========================
 
-    ctx.fillText(
-      username,
-      267.8,
-      1019
-    );
+    ctx.save();
 
-    const png = await sharp(
+ctx.font = "29px Teuton";
+ctx.textAlign = "left";
+ctx.textBaseline = "middle";
+
+const textX = 286;
+const textY = 1042;
+
+ctx.lineWidth = 2;
+ctx.strokeStyle = "#000";
+ctx.strokeText(username, textX, textY);
+
+ctx.fillStyle = "#fff";
+ctx.fillText(username, textX, textY);
+
+    ctx.restore();
+
+    const output = await sharp(
       canvas.toBuffer("image/png")
     )
       .png()
@@ -87,14 +97,14 @@ router.get("/", async (req, res) => {
       "image/png"
     );
 
-    res.send(png);
+    res.send(output);
 
-  } catch (e) {
-    console.error(e);
+  } catch (err) {
+    console.error(err);
 
     res.status(500).json({
       status: false,
-      error: e.message
+      error: err.message
     });
   }
 });
