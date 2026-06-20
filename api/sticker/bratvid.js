@@ -31,9 +31,9 @@ router.get("/", async (req, res) => {
             });
         }
 
-        // 3. Mengambil data dari upstream API Brat Video HD yang stabil
-        // Menggunakan metode proxy arraybuffer agar file binary video (.mp4) tidak rusak saat di-stream
-        const targetUrl = `https://api.deline.web.id/maker/bratvid?text=${encodeURIComponent(text)}`;
+        // 3. Mengambil data dari upstream API Brat Video
+        // Menambahkan parameter mode=gif (jika didukung upstream) atau melakukan stream binary GIF
+        const targetUrl = `https://api.deline.web.id/maker/bratvid?text=${encodeURIComponent(text)}&mode=gif`;
         
         const response = await axios({
             method: "get",
@@ -44,8 +44,8 @@ router.get("/", async (req, res) => {
             }
         });
 
-        // 4. Set Header dan Kirim Respons data binary Video MP4 HD ke Client
-        res.setHeader("Content-Type", "video/mp4");
+        // 4. Set Header untuk Animasi GIF dan kirimkan datanya langsung ke client
+        res.setHeader("Content-Type", "image/gif");
         return res.send(response.data);
 
     } catch (error) {
@@ -53,7 +53,7 @@ router.get("/", async (req, res) => {
             status: false,
             creator: "ArulzXD",
             error: error.message,
-            details: error.response?.data?.toString() || "Gagal mengambil data dari server upstream bratvidhd."
+            details: "Gagal memproses data animasi GIF dari server upstream."
         });
     }
 });
