@@ -70,27 +70,19 @@ router.get("/", async (req, res) => {
 
     ctx.save();
 
-    ctx.font = "29px Teuton";
-    ctx.textAlign = "left";
-    ctx.textBaseline = "middle";
+ctx.font = "29px Teuton";
+ctx.textAlign = "left";
+ctx.textBaseline = "middle";
 
-    const textX = 256;
-    const textY = 1261;
+const textX = 286;
+const textY = 1120;
 
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = "#000000";
-    ctx.strokeText(
-      username,
-      textX,
-      textY
-    );
+ctx.lineWidth = 2;
+ctx.strokeStyle = "#000";
+ctx.strokeText(username, textX, textY);
 
-    ctx.fillStyle = "#FFFFFF";
-    ctx.fillText(
-      username,
-      textX,
-      textY
-    );
+ctx.fillStyle = "#fff";
+ctx.fillText(username, textX, textY);
 
     ctx.restore();
 
