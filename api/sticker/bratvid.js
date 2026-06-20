@@ -7,10 +7,6 @@ router.get("/", async (req, res) => {
     try {
         const apikey = req.query.apikey;
         const text = req.query.text;
-        let mode = req.query.mode || "gif"; // Default ke gif
-
-        // Toleransi typo dari dashboard jika mengetik "gift"
-        if (mode === "gift") mode = "gif";
 
         // 1. Validasi Apikey
         if (!apikey) {
@@ -31,36 +27,21 @@ router.get("/", async (req, res) => {
             return res.status(400).json({
                 status: false,
                 message: "Parameter 'text' diperlukan.",
-                example: "/api/sticker/bratvid?apikey=arulzxd-keys&text=Hai+semua&mode=gif"
+                example: "/api/sticker/bratvid?apikey=arulzxd-keys&text=Hai+semua"
             });
         }
 
-        // 3. Validasi Mode
-        if (mode !== "gif" && mode !== "video" && mode !== "mp4") {
-            return res.status(400).json({
-                status: false,
-                message: "Mode tidak valid. Gunakan 'gif' atau 'video'."
-            });
-        }
-
-        // 4. Memproses Text menjadi Animasi menggunakan brat-canvas/video
-        // Mengikuti format internal library yang mengembalikan Buffer/File data
-        const outputFormat = mode === "gif" ? "gif" : "mp4";
+        // 3. Memproses Text murni menjadi Video MP4 menggunakan brat-canvas/video
         const videoBuffer = await bratVid(text, {
-            outputFormat: outputFormat
+            outputFormat: "mp4"
         });
 
         if (!videoBuffer) {
-            throw new Error("Gagal me-render frame animasi brat.");
+            throw new Error("Gagal me-render frame video brat.");
         }
 
-        // 5. Mengirimkan Response Header & Data ke Client
-        if (outputFormat === "gif") {
-            res.setHeader("Content-Type", "image/gif");
-        } else {
-            res.setHeader("Content-Type", "video/mp4");
-        }
-
+        // 4. Set Header dan Kirim Respons berupa file Video MP4 murni
+        res.setHeader("Content-Type", "video/mp4");
         return res.send(videoBuffer);
 
     } catch (error) {
@@ -68,7 +49,7 @@ router.get("/", async (req, res) => {
             status: false,
             creator: "ArulzXD",
             error: error.message,
-            details: "Terjadi kesalahan internal saat memproses rendering media brat."
+            details: "Terjadi kesalahan internal saat memproses pembuatan video brat."
         });
     }
 });
