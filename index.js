@@ -136,6 +136,7 @@ for (const category of endpointDirs) {
   }
 }
 
+// PERBAIKAN: Menambahkan properti type agar tersinkronisasi ke dokumentasi frontend
 function getEndpointsFromRouter(category, file) {
   const endpoints = [];
   const route = require(path.join(apiPath, category, file));
@@ -164,6 +165,7 @@ function getEndpointsFromRouter(category, file) {
         path: `/api/${category}/${file.replace(/\.js$/,"")}`,
         desc: `/${category}/${file.replace(/\.js$/,"")}`,
         status: route.status || "ready",
+        type: route.type || "free", // <-- Menyimpan properti tipe akses (free/premium)
         params,
         methods
       });
@@ -197,6 +199,7 @@ router.get('/apilist', (req, res) => {
         path: "/api/apilist",
         desc: "/apilist",
         status: "ready",
+        type: "free",
         params: {},
         methods: ["GET"]
       }
@@ -216,6 +219,9 @@ app.get('/styles.css', (req, res) => {
 });
 
 app.get('/', (req, res) => {
+    // Fallback playlist jika variabel belum didefinisikan agar tidak memicu crash
+    const playlist = typeof global.playlist !== 'undefined' ? global.playlist : [];
+
     res.send(`<!DOCTYPE html>
 <html lang="en" class="notranslate" translate="no">
 <head>

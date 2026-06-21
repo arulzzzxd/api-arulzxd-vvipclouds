@@ -659,10 +659,26 @@ function loadApis() {
             const path = pathParts[0];
             const queryParams = new URLSearchParams(pathParts[1] || '');
             
-            // Pengkondisian status dinamis dari backend (mendukung update, error/perbaikan, ready)
+            // Pengkondisian class warna status dasar dari backend
             let statusClass = "status-ready";
             if (item.status === 'update') statusClass = 'status-update';
             if (item.status === 'error' || item.status === 'perbaikan') statusClass = 'status-error';
+
+            // PETA STATUS BAHASA INGGRIS SECARA DINAMIS
+            let statusText = "READY"; 
+            if (item.status === 'update') {
+                statusText = "UPDATE";
+            } else if (item.status === 'error' || item.status === 'perbaikan') {
+                statusText = "MAINTENANCE";
+            }
+
+            // Badge Tipe Akses Premium / Free
+            let badgeTypeHtml = '';
+            if (item.type === 'premium') {
+                badgeTypeHtml = `<span class="px-1.5 py-0.5 text-[9px] rounded-sm bg-amber-500/20 text-amber-400 border border-amber-500/30 font-bold uppercase tracking-wider animate-pulse">👑 PREMIUM</span>`;
+            } else {
+                badgeTypeHtml = `<span class="px-1.5 py-0.5 text-[9px] rounded-sm bg-blue-500/20 text-blue-400 border border-blue-500/30 font-bold uppercase tracking-wider">FREE</span>`;
+            }
 
             html += `
             <div class="api-item border-t border-white/10 light-mode:border-slate-200" 
@@ -674,7 +690,8 @@ function loadApis() {
                             <p class="code-font font-semibold text-[13px] ${pathColorClass} truncate">${path}</p>
                             <div class="flex items-center gap-2 mt-1">
                                 <p class="text-xs ${subTextColorClass} truncate">${item.name}</p>
-                                <span class="px-1.5 py-0.5 text-[9px] rounded-sm ${statusClass} flex-shrink-0 uppercase tracking-wider font-bold">${item.status || 'ready'}</span>
+                                <span class="px-1.5 py-0.5 text-[9px] rounded-sm ${statusClass} flex-shrink-0 uppercase tracking-wider font-bold">${statusText}</span>
+                                ${badgeTypeHtml}
                             </div>
                         </div>
                     </div>
