@@ -166,7 +166,7 @@ function getEndpointsFromRouter(category, file) {
   return endpoints;
 }
 
-// ROUTE: Menyisipkan totalRequestsToday (berisi hit bulanan) ke response json
+// ROUTE: Menyisipkan totalRequestsThisMonth ke properti totalRequestsToday
 router.get('/apilist', (req, res) => {
   const categories = [];
 
@@ -198,8 +198,8 @@ router.get('/apilist', (req, res) => {
     ]
   });
 
-  // Variabel dikirim sebagai totalRequestsToday agar script.js bawaanmu langsung bisa membaca nilainya tanpa merubah frontend
-  res.json({ categories, totalRequestsToday: totalRequestsTodayMonth });
+  // FIXED: Menggunakan variabel totalRequestsThisMonth yang benar agar dibaca oleh frontend
+  res.json({ categories, totalRequestsToday: totalRequestsThisMonth });
 });
 
 app.use('/api', router);
@@ -398,7 +398,6 @@ app.get('/', (req, res) => {
                     <span id="totalCategories" class="text-3xl font-black text-cyan-400 mt-1 light-mode:text-cyan-600">0</span>
                 </div>
 
-                <!-- UPDATE: Label UI diubah menjadi Request / Bulan -->
                 <div class="glass-panel flex flex-col items-center justify-center p-4 rounded-xl shadow-lg">
                     <span id="stat-requests-title" class="text-xs font-bold uppercase tracking-wider text-slate-400">Request / Bulan</span>
                     <span id="totalRequests" class="text-3xl font-black text-cyan-400 mt-1 light-mode:text-cyan-600">0</span>
