@@ -729,38 +729,17 @@ function loadApis() {
                         <h4 class="font-bold text-[11px] uppercase tracking-wider text-slate-400 light-mode:text-slate-600 mb-3">Parameter</h4>
                         <form id="form-${catIdx}-${epIdx}" onsubmit="executeRequest(event, ${catIdx}, ${epIdx}, '${method}', '${path}')">
                             <div class="space-y-4 mb-4">`;
+                
                 if (item.params) {
                     Object.keys(item.params).forEach(paramName => {
                         const isRequired = !queryParams.has(paramName) || queryParams.get(paramName) === '';
                         
-                        // 1. Cek isi bawaan dari params value asli backend terlebih dahulu
-                        let exampleVal = item.params[paramName];
-                        
-                        // 2. Jika nilainya kosong atau sama persis dengan nama parameternya (seperti item.params.query = "query")
-                        // Maka buat pemetaan cerdas (Smart Mapping fallback) agar tampilannya presisi
-                        if (!exampleVal || exampleVal.toLowerCase() === paramName.toLowerCase()) {
-                            const nameLower = item.name.toLowerCase();
-                            const pathLower = item.path.toLowerCase();
-                            
-                            if (paramName === 'query') {
-                                if (nameLower.includes('youtube') || pathLower.includes('youtube')) exampleVal = 'alan walker';
-                                else if (nameLower.includes('chord') || pathLower.includes('chord')) exampleVal = 'surat cinta untuk starla';
-                                else if (nameLower.includes('google') || pathLower.includes('google')) exampleVal = 'berita terbaru hari ini';
-                                else exampleVal = 'alan walker';
-                            } else if (paramName === 'url') {
-                                if (nameLower.includes('tiktok') || pathLower.includes('tiktok')) exampleVal = 'https://vt.tiktok.com/ZSxxXXXXX/';
-                                else if (nameLower.includes('youtube') || pathLower.includes('youtube')) exampleVal = 'https://www.youtube.com/watch?v=XXXXXX';
-                                else if (nameLower.includes('instagram') || pathLower.includes('instagram')) exampleVal = 'https://www.instagram.com/p/XXXXXX';
-                                else exampleVal = 'https://example.com/link-media';
-                            } else if (paramName === 'text') {
-                                exampleVal = 'halo arulzxd';
-                            } else if (paramName === 'apikey' || paramName === 'key') {
-                                exampleVal = 'arulzxd-keys';
-                            } else if (paramName === 'username') {
-                                exampleVal = 'arulzzzxd';
-                            } else {
-                                exampleVal = 'value';
-                            }
+                        // AMBIL DESKRIPSI ASLI DARI FILE CONFIG ENDPOINT BACKEND KAMU
+                        let paramDesc = item.params[paramName];
+
+                        // Jika isi deskripsi dari backend kosong atau hanya mengulang nama parameternya, berikan teks bantuan standar
+                        if (!paramDesc || paramDesc.toLowerCase() === paramName.toLowerCase()) {
+                            paramDesc = `${paramName}`;
                         }
 
                         html += `
@@ -769,9 +748,9 @@ function loadApis() {
                                     <label class="block text-xs font-semibold text-slate-300 light-mode:text-slate-700 code-font">
                                         ${paramName} ${isRequired ? '<span class="text-red-500">*</span>' : ''}
                                     </label>
-                                    <span class="text-[10px] text-slate-500 light-mode:text-slate-400 italic font-normal">Contoh: ${exampleVal}</span>
+                                    <span class="text-[10px] text-slate-500 light-mode:text-slate-400 italic font-normal">${paramDesc}</span>
                                 </div>
-                                <input type="text" name="${paramName}" oninput="updateLivePreview(${catIdx}, ${epIdx}, '${method}', '${path}')" class="w-full px-3 py-2 rounded-lg bg-black/40 light-mode:bg-white border border-white/10 light-mode:border-slate-300 text-white light-mode:text-slate-900 focus:outline-none focus:border-cyan-500 code-font text-sm" placeholder="Contoh: ${exampleVal}" ${isRequired ? 'required' : ''}>
+                                <input type="text" name="${paramName}" oninput="updateLivePreview(${catIdx}, ${epIdx}, '${method}', '${path}')" class="w-full px-3 py-2 rounded-lg bg-black/40 light-mode:bg-white border border-white/10 light-mode:border-slate-300 text-white light-mode:text-slate-900 focus:outline-none focus:border-cyan-500 code-font text-sm" placeholder="${paramDesc}" ${isRequired ? 'required' : ''}>
                             </div>`;
                     });
                 }
