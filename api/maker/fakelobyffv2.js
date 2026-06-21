@@ -109,4 +109,6 @@ ctx.fillText(username, textX, textY);
   }
 });
 
+router.status = "ready"; 
+router.type = "free";
 module.exports = router;
