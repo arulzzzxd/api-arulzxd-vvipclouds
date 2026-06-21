@@ -30,7 +30,6 @@ const categoryIcons = {
     'default': '<svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 text-cyan-400"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>'
 };
 
-// UPDATE: Ditambahkan key requestsTitle
 const i18n = {
     id: {
         searchPlaceholder: "Cari endpoint berdasarkan nama, path, atau kategori...",
@@ -39,7 +38,7 @@ const i18n = {
         batteryTitle: "Baterai Anda",
         endpointsTitle: "Total Endpoint",
         categoriesTitle: "Total Kategori",
-        requestsTitle: "Request / Hari", // Baru
+        requestsTitle: "Request / Hari",
         batteryDetecting: "Mendeteksi...",
         batteryCharging: "Mengisi Daya",
         batteryFull: "Penuh",
@@ -62,7 +61,7 @@ const i18n = {
         batteryTitle: "Your Battery",
         endpointsTitle: "Total Endpoints",
         categoriesTitle: "Total Categories",
-        requestsTitle: "Requests / Day", // Baru
+        requestsTitle: "Requests / Day",
         batteryDetecting: "Detecting...",
         batteryCharging: "Charging",
         batteryFull: "Fully charged",
@@ -147,7 +146,6 @@ function toggleTheme() {
     if (apiData) loadApis();
 }
 
-// UPDATE: Menambahkan perubahan text multi bahasa untuk elemen `stat-requests-title`
 function setLanguage(lang) {
     currentLang = lang;
     localStorage.setItem('lang', lang);
@@ -161,7 +159,7 @@ function setLanguage(lang) {
     document.getElementById('stat-battery-title').textContent = i18n[lang].batteryTitle;
     document.getElementById('stat-endpoints-title').textContent = i18n[lang].endpointsTitle;
     document.getElementById('stat-categories-title').textContent = i18n[lang].categoriesTitle;
-    document.getElementById('stat-requests-title').textContent = i18n[lang].requestsTitle; // Baru
+    document.getElementById('stat-requests-title').textContent = i18n[lang].requestsTitle;
     
     if (batteryMonitor) {
         window.dispatchEvent(new Event('batteryupdate-hook'));
@@ -270,7 +268,6 @@ function initDigitalClock() {
 
 function updateTotalEndpoints() { document.getElementById('totalEndpoints').textContent = totalEndpoints; }
 function updateTotalCategories() { document.getElementById('totalCategories').textContent = totalCategories; }
-// BARU: Fungsi update data request ke UI HTML
 function updateTotalRequests(count) { document.getElementById('totalRequests').textContent = count || 0; }
 
 function showToast(message, isError = false) {
@@ -499,7 +496,7 @@ async function executeRequest(e, catIdx, epIdx, method, path) {
     } catch (error) {
         responseContent.innerHTML = `<pre class="text-red-400 code-font text-sm">Error: ${error.message}</pre>`;
         showToast(i18n[currentLang].toastRequestFailed, true);
-    } military {
+    } finally { // <=== BAGIAN INI SUDAH DI-FIX DARI 'military' MENJADI 'finally'
         isRequestInProgress = false;
         executeBtn.disabled = false;
         executeBtn.classList.remove('btn-loading');
@@ -596,7 +593,6 @@ function performSearch() {
     });
 }
 
-// UPDATE: Ditambahkan pemanggilan fungsi updateTotalRequests()
 function loadApis() {
     const apiList = document.getElementById('apiList');
     if (!apiData || !apiData.categories) {
@@ -610,7 +606,7 @@ function loadApis() {
     
     updateTotalEndpoints();
     updateTotalCategories();
-    updateTotalRequests(apiData.totalRequestsToday); // Baru
+    updateTotalRequests(apiData.totalRequestsToday);
     renderCategoryFilters();
     
     const isLightMode = body.classList.contains('light-mode');
