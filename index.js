@@ -16,44 +16,11 @@ const logo = "https://arulz-uploader.vercel.app/files/SnhJe3.png";
 // Mengubah headertitle menjadi tag img SVG
 const headertitle = `<img src="https://readme-typing-svg.demolab.com?font=Poppins&weight=700&size=28&pause=1000&color=00D4FF&center=true&vCenter=true&width=600&lines=Welcome+To+ArulzXD+API;Fast+%F0%9F%9A%80+Reliable+%E2%9A%A1;Free+REST+API+Services;Developer+Friendly+API" alt="Typing SVG" class="mx-auto" />`;
 const headerdescription = "Browse, inspect & fire requests against live endpoints._";
-const footer = "© Arulz-XD";
+const footer = "ﾂｩ Arulz-XD";
 
 // API KEY CONFIGURATION
-const VALID_API_KEY = "arulzxd-keys";
-
-// === KONFIGURASI PLAYLIST BANYAK MUSIK ===
-const playlist = [
-  {
-    title: "PAMIT KERJO",
-    artist: "NDX. AKA",
-    cover: "https://raw.githubusercontent.com/upload-file-lab/fileupload7/main/uploads/1764494355026.jpeg",
-    url: "https://files.catbox.moe/gfuwnv.mp3"
-  },
-  {
-    title: "TANPO HUBUNGAN",
-    artist: "LA TASYA",
-    cover: "https://i.ytimg.com/vi/1gRZjdf02bo/hq720.jpg",
-    url: "https://files.catbox.moe/xd5oq3.mp3"
-  },
-  {
-    title: "DENOK",
-    artist: "LA TASYA",
-    cover: "https://i.ytimg.com/vi/J1TFFzbCIiM/hq720.jpg",
-    url: "https://arulz-uploader.vercel.app/files/xlXr2L.mp3"
-  },
-  {
-    title: "TUNGGAL EKA",
-    artist: "DENNY CAKNAN",
-    cover: "https://i.ytimg.com/vi/827HSYJX5uw/hq720.jpg",
-    url: "https://files.catbox.moe/x67fur.mp3"
-  },
-  {
-    title: "NGAPAIN REPOT",
-    artist: "AJENG FEBRIA",
-    cover: "https://i.ytimg.com/vi/-ix-XswQz10/hq720.jpg",
-    url: "https://files.catbox.moe/hs1azs.mp3"
-  }
-];
+const VALID_API_KEY = "arulzxd-keys"; // Key Free
+const PREMIUM_API_KEYS = ["arulz-premium-xyz", "key-vip-arulz", "owner-key-999"]; // List Key Premium
 
 const router = express.Router();
 const apiPath = path.join(__dirname, 'api');
@@ -73,12 +40,49 @@ const validateApiKey = (req, res, next) => {
     });
   }
   
-  if (userKey !== VALID_API_KEY) {
+  const isFreeKey = (userKey === VALID_API_KEY);
+  const isPremiumKey = PREMIUM_API_KEYS.includes(userKey);
+
+  if (!isFreeKey && !isPremiumKey) {
     return res.status(403).json({
       status: false,
       creator: "Arulz-XD",
       message: "API Key salah / tidak valid! Silakan cek menu informasi untuk melihat key yang benar."
     });
+  }
+
+  // DINAMIS: Cek Status Fitur & Hak Akses Fitur Premium
+  const pathParts = req.path.split('/');
+  const currentCategory = pathParts[1]; 
+  const currentRouteName = pathParts[2];   
+  
+  if (currentCategory && currentRouteName) {
+    try {
+      const routeFilePath = path.join(apiPath, currentCategory, `${currentRouteName}.js`);
+      if (fs.existsSync(routeFilePath)) {
+        const routeModule = require(routeFilePath);
+        
+        // Cek Status Fitur (Maintenance/Perbaikan)
+        if (routeModule.status === "error" || routeModule.status === "perbaikan") {
+          return res.status(503).json({
+            status: false,
+            creator: "Arulz-XD",
+            message: "Fitur ini sedang dalam perbaikan / maintenance!"
+          });
+        }
+
+        // Cek Tipe Fitur Premium
+        if (routeModule.type === "premium" && !isPremiumKey) {
+          return res.status(403).json({
+            status: false,
+            creator: "Arulz-XD",
+            message: "Endpoint ini khusus pengguna Premium! Hubungi Developer untuk mendapatkan akses VIP."
+          });
+        }
+      }
+    } catch (e) {
+      console.error("Gagal memvalidasi status/type router:", e.message);
+    }
   }
   
   next();
@@ -126,7 +130,7 @@ function getEndpointsFromRouter(category, file) {
         name: `/${category}/${file.replace(/\.js$/,"")}`,
         path: `/api/${category}/${file.replace(/\.js$/,"")}`,
         desc: `/${category}/${file.replace(/\.js$/,"")}`,
-        status: "ready",
+        status: route.status || "ready",
         params,
         methods
       });
@@ -323,7 +327,7 @@ app.get('/', (req, res) => {
     </div>
 
     <div id="bioDropdown" class="fixed top-0 right-0 h-full w-72 bg-[#08111e]/95 backdrop-blur-lg border-l border-white/10 transform translate-x-full transition-transform duration-300 ease-in-out z-50 shadow-2xl flex flex-col p-6 font-['Space_Grotesk'] light-mode:bg-white/95 light-mode:border-slate-200">
-        <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center justify-between mb-4">
             <div class="flex gap-0 border border-black p-0.5 bg-[#111]">
                 <button id="lang-id" class="lang-btn active" onclick="setLanguage('id')">ID</button>
                 <button id="lang-en" class="lang-btn" onclick="setLanguage('en')">EN</button>
@@ -347,11 +351,16 @@ app.get('/', (req, res) => {
             </div>
         </div>
 
-        <div class="mb-6 p-3 bg-cyan-950/40 border border-cyan-500/30 rounded-xl light-mode:bg-cyan-50 light-mode:border-cyan-200">
-            <span class="text-[10px] font-bold text-cyan-400 light-mode:text-cyan-700 uppercase tracking-widest block mb-1">🔑 Current API Key</span>
+        <!-- FITUR TOMBOL COPY API KEY FREE DI MENU -->
+        <div class="mb-4 p-3 bg-cyan-950/40 border border-cyan-500/30 rounded-xl light-mode:bg-cyan-50 light-mode:border-cyan-200">
+            <span class="text-[10px] font-bold text-cyan-400 light-mode:text-cyan-700 uppercase tracking-widest block mb-1">泊 Current API Key</span>
             <div class="flex items-center justify-between bg-black/40 rounded px-2 py-1.5 font-mono text-xs text-slate-200 border border-white/5 light-mode:bg-white light-mode:text-slate-800 light-mode:border-slate-200">
                 <span class="select-all">${VALID_API_KEY}</span>
-                <span class="text-[9px] bg-cyan-500/20 text-cyan-300 px-1 rounded light-mode:bg-cyan-100 light-mode:text-cyan-700 font-sans font-bold">FREE</span>
+                <button onclick="copyText('${VALID_API_KEY}', 'API Key Free')" class="p-1 text-slate-400 hover:text-cyan-400 transition-colors" title="Copy API Key">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                    </svg>
+                </button>
             </div>
         </div>
 
@@ -372,7 +381,7 @@ app.get('/', (req, res) => {
     <div class="max-w-5xl mx-auto px-4 py-8 relative z-10">
         <header id="api" class="mb-12 text-center">
             <div class="flex items-center justify-center gap-3 mb-2">
-                <span class="bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest animate-pulse light-mode:bg-cyan-100 light-mode:text-cyan-700">● ONLINE</span>
+                <span class="bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest animate-pulse light-mode:bg-cyan-100 light-mode:text-cyan-700">笳ONLINE</span>
             </div>
             <div id="mainTitle" class="flex justify-center mb-4 min-h-[50px] items-center">${headertitle}</div>
             <p id="mainDescription" class="text-md md:text-lg font-medium tracking-wide text-slate-300 max-w-xl mx-auto">${headerdescription}</p>
@@ -415,7 +424,7 @@ app.get('/', (req, res) => {
 
             <div class="glass-panel max-w-3xl mx-auto mt-4 p-3 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-3 border border-white/20">
                 <div class="flex items-center gap-2 text-sm text-cyan-400 light-mode:text-cyan-700 code-font">
-                    <span>🔗</span> <span class="underline break-all font-semibold">https://simple-api-lagi.vercel.app/</span>
+                    <span>迫</span> <span class="underline break-all font-semibold">https://simple-api-lagi.vercel.app/</span>
                 </div>
                 <a href="https://wa.me/6285122629940?text=Halo%20Arulz,%20saya%20ingin%20request%20fitur%20baru%20di%20REST%20API%20:" 
                    target="_blank" 
@@ -428,12 +437,12 @@ app.get('/', (req, res) => {
                 <a href="https://wa.me/6285122629940?text=Halo%20Arulz,%20boleh%20minta%20link%20Channel%20kamu%3F" 
                    target="_blank" 
                    class="flex-1 glass-panel py-2 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-white/10 light-mode:hover:bg-slate-100 transition-colors light-mode:text-slate-700 text-center block">
-                   💬 Channel
+                   町 Channel
                 </a>
                 <a href="https://wa.me/6285122629940?text=Halo%20Arulz,%20boleh%20minta%20link%20Group%20kamu%3F" 
                    target="_blank" 
                    class="flex-1 glass-panel py-2 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-white/10 light-mode:hover:bg-slate-100 transition-colors light-mode:text-slate-700 text-center block">
-                   👥 Group
+                   則 Group
                 </a>
             </div>
 
@@ -491,7 +500,7 @@ app.get('/', (req, res) => {
         </div>
 
         <div id="noResults" class="text-center py-12 hidden">
-            <div class="text-4xl mb-2">🔍</div>
+            <div class="text-4xl mb-2">剥</div>
             <h3 id="no-results-title" class="text-sm font-bold mb-1 text-white">Endpoint tidak ditemukan</h3>
             <p id="no-results-desc" class="text-xs text-slate-400 light-mode:text-slate-500">Coba gunakan kata kunci lain</p>
         </div>
@@ -501,6 +510,16 @@ app.get('/', (req, res) => {
         <footer id="siteFooter" class="mt-12 pt-6 border-t border-white/10 text-center text-xs text-slate-500">
             ${footer}
         </footer>
+    </div>
+
+    <!-- MODAL LIGHTBOX UNTUK MEMPERBESAR GAMBAR RESPONSE -->
+    <div id="imageLightbox" class="fixed inset-0 bg-black/90 z-[100] hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300 backdrop-blur-sm cursor-zoom-out">
+        <div class="relative max-w-4xl max-h-[90vh] flex items-center justify-center">
+            <img id="lightboxImage" src="" alt="Preview" class="max-w-full max-h-[85vh] rounded-lg shadow-2xl object-contain scale-95 transition-transform duration-300" />
+            <button id="closeLightbox" class="absolute -top-12 right-0 text-white hover:text-cyan-400 transition-colors focus:outline-none flex items-center gap-1 bg-black/50 px-3 py-1.5 rounded-lg border border-white/10 text-xs font-mono">
+                ✕ Close
+            </button>
+        </div>
     </div>
     
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.30.1/moment.min.js"></script>

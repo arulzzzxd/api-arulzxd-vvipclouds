@@ -256,13 +256,8 @@ function initDigitalClock() {
     function updateClock() {
         if (typeof moment === 'undefined') return;
         
-        // Ambil waktu wilayah Asia/Jakarta
         const now = moment().tz("Asia/Jakarta");
-
-        // Format Jam -> Jam:Menit:Detik (HH:mm:ss)
         clockElement.textContent = now.format('HH:mm:ss');
-
-        // Format Tanggal sesuai Lokalisasi Bahasa (id / en)
         const formatLang = currentLang === 'id' ? 'id' : 'en';
         dateElement.textContent = now.locale(formatLang).format('dddd, D MMMM YYYY');
     }
@@ -363,7 +358,7 @@ function getContentType(url, contentType) {
         if (contentType.includes('audio/')) return 'audio';
         if (contentType.includes('application/pdf')) return 'pdf';
     }
-    if (url.includes('.jpg') || url.includes('.png')) return 'image';
+    if (url.includes('.jpg') || url.includes('.png') || url.includes('.jpeg')) return 'image';
     if (url.includes('.mp4')) return 'video';
     if (url.includes('.mp3')) return 'audio';
     if (url.includes('.pdf')) return 'pdf';
@@ -376,7 +371,7 @@ function createMediaPreview(url, contentType, originalUrl = '') {
     
     switch(type) {
         case 'image':
-            previewHtml = `<div class="media-preview"><img src="${url}" class="media-image" alt="Response Image"></div>`;
+            previewHtml = `<div class="media-preview cursor-zoom-in"><img src="${url}" class="media-image transition-transform duration-200 hover:brightness-90" alt="Response Image"></div>`;
             break;
         case 'video':
             previewHtml = `<div class="media-preview"><video controls class="media-iframe"><source src="${url}">Your browser does not support the video tag.</video></div>`;
@@ -444,6 +439,15 @@ async function executeRequest(e, catIdx, epIdx, method, path) {
 
     try {
         const response = await fetch(fullPath);
+        
+        // INTERSEPSI JIKA TERKENA BLOKIR AKSES (403/503) DARI MIDDLEWARE BACKEND
+        if (response.status === 403 || response.status === 503) {
+            const data = await response.json();
+            responseContent.innerHTML = `<pre class="text-red-400 code-font text-sm overflow-auto">${JSON.stringify(data, null, 2)}</pre>`;
+            showToast(data.message || "Akses Ditolak!", true);
+            return;
+        }
+
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
         const contentType = response.headers.get("content-type");
@@ -508,27 +512,22 @@ async function executeRequest(e, catIdx, epIdx, method, path) {
     }
 }
 
-// ==================== FITUR BERSIHKAN RESPONSE + PARAMS INPUT ====================
 function clearResponse(catIdx, epIdx) {
-    // 1. Sembunyikan container hasil response
     const responseDiv = document.getElementById(`response-${catIdx}-${epIdx}`);
     if (responseDiv) {
         responseDiv.classList.add('hidden');
     }
 
-    // 2. Kosongkan semua teks parameter di dalam form input
     const form = document.getElementById(`form-${catIdx}-${epIdx}`);
     if (form) {
-        form.reset(); // Mereset elemen <form> membersihkan semua kolom input sekaligus
+        form.reset(); 
         
-        // 3. Kembalikan Tampilan Live URL ke path awal tanpa parameter query
         const urlContainer = document.getElementById(`live-url-${catIdx}-${epIdx}`);
         if (urlContainer) {
             const basePath = urlContainer.textContent.split('?')[0];
             urlContainer.textContent = basePath;
         }
         
-        // 4. Kembalikan Tampilan Live cURL ke wujud awal
         const curlContainer = document.getElementById(`live-curl-${catIdx}-${epIdx}`);
         if (curlContainer) {
             const method = curlContainer.textContent.split(' ')[1] || 'GET';
@@ -659,7 +658,11 @@ function loadApis() {
             const pathParts = item.path.split('?');
             const path = pathParts[0];
             const queryParams = new URLSearchParams(pathParts[1] || '');
-            let statusClass = item.status === 'update' ? 'status-update' : (item.status === 'error' ? 'status-error' : 'status-ready');
+            
+            // Pengkondisian status dinamis dari backend (mendukung update, error/perbaikan, ready)
+            let statusClass = "status-ready";
+            if (item.status === 'update') statusClass = 'status-update';
+            if (item.status === 'error' || item.status === 'perbaikan') statusClass = 'status-error';
 
             html += `
             <div class="api-item border-t border-white/10 light-mode:border-slate-200" 
@@ -699,7 +702,7 @@ function loadApis() {
                         </div>
                     </div>`;
 
-            if (item.status === 'ready') {
+            if (item.status === 'ready' || item.status === 'update') {
                 html += `
                     <div>
                         <h4 class="font-bold text-[11px] uppercase tracking-wider text-slate-400 light-mode:text-slate-600 mb-3">Parameter</h4>
@@ -819,13 +822,63 @@ function initMultiMusicPlayer() {
     loadTrack(0);
 }
 
+// ==================== FITUR LIGHTBOX/ZOOM GAMBAR RESPONSE API ====================
+function initImageLightbox() {
+    const lightbox = document.getElementById('imageLightbox');
+    const lightboxImg = document.getElementById('lightboxImage');
+    const closeBtn = document.getElementById('closeLightbox');
+
+    if (!lightbox || !lightboxImg) return;
+
+    // Delegasi klik pada element IMG hasil response eksekusi API
+    document.getElementById('apiList').addEventListener('click', (e) => {
+        if (e.target.tagName === 'IMG' && e.target.classList.contains('media-image')) {
+            e.preventDefault();
+            lightboxImg.src = e.target.src;
+            
+            lightbox.classList.remove('hidden');
+            requestAnimationFrame(() => {
+                lightbox.classList.remove('opacity-0');
+                lightbox.classList.add('opacity-100');
+                lightboxImg.classList.remove('scale-95');
+                lightboxImg.classList.add('scale-100');
+            });
+        }
+    });
+
+    function hideLightbox() {
+        lightbox.classList.remove('opacity-100');
+        lightbox.classList.add('opacity-0');
+        lightboxImg.classList.remove('scale-100');
+        lightboxImg.classList.add('scale-95');
+        setTimeout(() => {
+            lightbox.classList.add('hidden');
+            lightboxImg.src = '';
+        }, 300);
+    }
+
+    if (closeBtn) closeBtn.addEventListener('click', hideLightbox);
+    lightbox.addEventListener('click', (e) => {
+        if (e.target === lightbox || e.target.id === 'closeLightbox') {
+            hideLightbox();
+        }
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && !lightbox.classList.contains('hidden')) {
+            hideLightbox();
+        }
+    });
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     const savedLang = localStorage.getItem('lang') || 'id';
     
     initTheme();
     initBatteryDetection();
-    initDigitalClock(); // Aktifkan jam digital real-time saat DOM siap
+    initDigitalClock();
     initMultiMusicPlayer();
+    initImageLightbox(); // Aktifkan pendeteksi klik zoom gambar response
     setLanguage(savedLang);
     
     const bioMenuBtn = document.getElementById('bioMenuBtn');
