@@ -20,6 +20,7 @@ const footer = "© Arulz-XD";
 
 // API KEY CONFIGURATION
 const VALID_API_KEY = "arulzxd-keys"; // API Key Free
+const PREMIUM_API_KEY = "arulzxd-premium"; // API Key Premium tetap rahasia di backend
 
 // Ambil list folder di dalam direktori 'api' untuk dijadikan kategori secara dinamis
 const apiDir = path.join(__dirname, 'api');
@@ -39,27 +40,21 @@ if (fs.existsSync(apiDir)) {
                 files.forEach(file => {
                     try {
                         const router = require(path.join(categoryPath, file));
-                        // Daftarkan route ke express secara dinamis
                         app.use(router);
 
-                        // Ambil metadata dari router untuk dikirim ke frontend menu
                         if (router.stack) {
                             router.stack.forEach(layer => {
                                 if (layer.route) {
                                     const methods = Object.keys(layer.route.methods).join(', ').toUpperCase();
                                     
-                                    // Mengambil settingan .type dan .status dari router (Default: free dan ready)
-                                    const endpointType = router.type || "free";
-                                    const endpointStatus = router.status || "ready";
-
+                                    // Membaca settingan rahasia dari router (Sesuai cara setting yang kamu minta)
                                     apiData[category].endpoints.push({
                                         path: layer.route.path,
                                         method: methods,
-                                        // Parameter diambil dari file router jika kamu mendefinisikannya, atau default kosong
-                                        params: router.params || [], 
+                                        params: router.params || [],
                                         description: router.description || `Endpoint untuk layanan ${category}`,
-                                        type: endpointType,
-                                        status: endpointStatus
+                                        type: router.type || "free",      // Membaca router.type (free/premium)
+                                        status: router.status || "ready"  // Membaca router.status (ready/error/perbaikan)
                                     });
                                 }
                             });
@@ -73,7 +68,7 @@ if (fs.existsSync(apiDir)) {
     });
 }
 
-// Endpoint untuk mendapatkan list API ke frontend (Premium apikey aman karena tidak ditaruh di sini)
+// Endpoint JSON List - Premium API Key TIDAK ditaruh di sini demi keamanan
 app.get('/api/apilist', (req, res) => {
     res.json(apiData);
 });
@@ -205,8 +200,7 @@ app.get('/', (req, res) => {
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" /></svg>
                         <span>Semua Fitur API</span>
                     </button>
-                    <div id="dynamicCategoryNav" class="space-y-1.5 pt-2 border-t border-white/5">
-                        </div>
+                    <div id="dynamicCategoryNav" class="space-y-1.5 pt-2 border-t border-white/5"></div>
                 </nav>
             </div>
 
