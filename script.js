@@ -7,6 +7,8 @@ let allApiElements = [];
 let totalEndpoints = 0;
 let totalCategories = 0;
 let batteryMonitor = null;
+let batteryInterval = null;
+let boundUpdateBatteryInfo = null; 
 let activeCategory = 'all';
 
 const themeToggleBtn = document.getElementById('themeToggle');
@@ -51,7 +53,9 @@ const i18n = {
         endpointNotAvailable: "⚠️ Endpoint ini tidak tersedia untuk pengujian",
         toastRequestWait: "Harap tunggu permintaan saat ini selesai",
         toastRequestSuccess: "Permintaan berhasil diselesaikan!",
-        toastRequestFailed: "Permintaan gagal!"
+        toastRequestFailed: "Permintaan gagal!",
+        // Tambahan i18n Baru untuk Status Waktu Baterai
+        batterySimulated: "Simulasi"
     },
     en: {
         searchPlaceholder: "Search endpoints by name, path, or category...",
@@ -73,7 +77,9 @@ const i18n = {
         endpointNotAvailable: "⚠️ This endpoint is not available for testing",
         toastRequestWait: "Please wait for current request",
         toastRequestSuccess: "Request completed successfully!",
-        toastRequestFailed: "Request failed!"
+        toastRequestFailed: "Request failed!",
+        // Tambahan i18n Baru untuk Status Waktu Baterai
+        batterySimulated: "Simulated"
     }
 };
 
@@ -158,7 +164,7 @@ function setLanguage(lang) {
     document.getElementById('stat-endpoints-title').textContent = i18n[lang].endpointsTitle;
     document.getElementById('stat-categories-title').textContent = i18n[lang].categoriesTitle;
 
-    if (batteryMonitor) {
+    if (batteryMonitor || batteryInterval) {
         window.dispatchEvent(new Event('batteryupdate-hook'));
     }
 
@@ -191,59 +197,164 @@ function initBatteryDetection() {
     const batteryPercentageElement = document.getElementById('batteryPercentage');
     const batteryStatusElement = document.getElementById('batteryStatus');
     const batteryContainer = document.getElementById('batteryContainer');
-
+    
     if ('getBattery' in navigator) {
         navigator.getBattery().then(function(battery) {
-            function updateBatteryInfo() {
+            boundUpdateBatteryInfo = function updateBatteryInfo() {
                 const level = battery.level * 100;
                 const isCharging = battery.charging;
                 const roundedLevel = Math.round(level);
-
+                const isLightMode = body.classList.contains('light-mode');
+                
                 batteryPercentageElement.textContent = `${roundedLevel}%`;
                 batteryLevelElement.style.width = `${level}%`;
-
+                
                 if (level > 60) {
-                    batteryLevelElement.className = 'battery-level bg-green-500';
+                    batteryLevelElement.className = 'battery-level ' + (isLightMode ? 'bg-green-600' : 'bg-green-500');
                 } else if (level > 20) {
-                    batteryLevelElement.className = 'battery-level bg-yellow-500';
+                    batteryLevelElement.className = 'battery-level ' + (isLightMode ? 'bg-yellow-600' : 'bg-yellow-500');
                 } else {
-                    batteryLevelElement.className = 'battery-level bg-red-500';
+                    batteryLevelElement.className = 'battery-level ' + (isLightMode ? 'bg-red-600' : 'bg-red-500');
                 }
-
+                
                 if (isCharging) {
                     batteryContainer.classList.add('charging');
                     batteryStatusElement.textContent = i18n[currentLang].batteryCharging;
+                    batteryLevelElement.classList.add('battery-charging');
                 } else {
                     batteryContainer.classList.remove('charging');
+                    batteryLevelElement.classList.remove('battery-charging');
+                    
                     if (battery.dischargingTime === Infinity) {
                         batteryStatusElement.textContent = i18n[currentLang].batteryFull;
                     } else {
                         batteryStatusElement.textContent = i18n[currentLang].batteryDischarging;
                     }
                 }
-            }
-
-            updateBatteryInfo();
-            battery.addEventListener('levelchange', updateBatteryInfo);
-            battery.addEventListener('chargingchange', updateBatteryInfo);
-            window.addEventListener('batteryupdate-hook', updateBatteryInfo);
+                
+                if (isCharging && battery.chargingTime !== Infinity) {
+                    const hours = Math.floor(battery.chargingTime / 3600);
+                    const minutes = Math.floor((battery.chargingTime % 3600) / 60);
+                    const timeStr = currentLang === 'id' ? `${hours}jam ${minutes}menit` : `${hours}h ${minutes}m`;
+                    batteryStatusElement.textContent = `${i18n[currentLang].batteryCharging} (${timeStr})`;
+                } else if (!isCharging && battery.dischargingTime !== Infinity) {
+                    const hours = Math.floor(battery.dischargingTime / 3600);
+                    const minutes = Math.floor((battery.dischargingTime % 3600) / 60);
+                    const suffix = i18n[currentLang].batteryLeft;
+                    const timeUnit = currentLang === 'id' ? `${hours}jam ${minutes}menit` : `${hours}h ${minutes}m`;
+                    batteryStatusElement.textContent = `${timeUnit} ${suffix}`;
+                }
+            };
+            
+            boundUpdateBatteryInfo();
+            battery.addEventListener('levelchange', boundUpdateBatteryInfo);
+            battery.addEventListener('chargingchange', boundUpdateBatteryInfo);
+            battery.addEventListener('chargingtimechange', boundUpdateBatteryInfo);
+            battery.addEventListener('dischargingtimechange', boundUpdateBatteryInfo);
+            window.addEventListener('batteryupdate-hook', boundUpdateBatteryInfo);
             batteryMonitor = battery;
-
-        }).catch(function() { fallbackBattery(); });
+            
+        }).catch(function(error) {
+            console.error("Battery API error:", error);
+            fallbackBattery();
+        });
     } else {
+        console.log("Battery Status API not supported");
         fallbackBattery();
     }
-
+    
     function fallbackBattery() {
-        batteryStatusElement.textContent = 'Simulated';
-        batteryPercentageElement.textContent = '85%';
-        batteryLevelElement.style.width = '85%';
-        batteryLevelElement.className = 'battery-level bg-green-400';
+        let simulatedLevel = localStorage.getItem('simulatedBattery');
+        if (!simulatedLevel) {
+            simulatedLevel = Math.floor(Math.random() * 30) + 30;
+            localStorage.setItem('simulatedBattery', simulatedLevel.toString());
+        } else {
+            simulatedLevel = parseInt(simulatedLevel);
+        }
+        
+        let isSimulatedCharging = localStorage.getItem('simulatedCharging') === 'true';
+        
+        function simulateBattery() {
+            const isLightMode = body.classList.contains('light-mode');
+            let newLevel = simulatedLevel;
+            
+            if (isSimulatedCharging) {
+                const chargeRate = 0.5;
+                newLevel = Math.min(100, newLevel + chargeRate);
+                
+                if (newLevel >= 100) {
+                    isSimulatedCharging = false;
+                    localStorage.setItem('simulatedCharging', 'false');
+                    batteryContainer.classList.remove('charging');
+                    batteryLevelElement.classList.remove('battery-charging');
+                    batteryStatusElement.textContent = i18n[currentLang].batteryFull;
+                } else {
+                    batteryStatusElement.textContent = i18n[currentLang].batteryCharging;
+                }
+            } else {
+                const drainRate = 0.1;
+                newLevel = Math.max(5, newLevel - drainRate);
+                
+                if (newLevel <= 15 && Math.random() > 0.7) {
+                    isSimulatedCharging = true;
+                    localStorage.setItem('simulatedCharging', 'true');
+                    batteryContainer.classList.add('charging');
+                    batteryLevelElement.classList.add('battery-charging');
+                    batteryStatusElement.textContent = i18n[currentLang].batteryCharging;
+                } else {
+                    const minutesLeft = Math.round((newLevel - 5) / drainRate);
+                    const hours = Math.floor(minutesLeft / 60);
+                    const minutes = minutesLeft % 60;
+                    const suffix = i18n[currentLang].batteryLeft;
+                    
+                    if (hours > 0) {
+                        const timeUnit = currentLang === 'id' ? `${hours}jam ${minutes}menit` : `${hours}h ${minutes}m`;
+                        batteryStatusElement.textContent = `${timeUnit} ${suffix}`;
+                    } else {
+                        const timeUnit = currentLang === 'id' ? `${minutes}menit` : `${minutes}m`;
+                        batteryStatusElement.textContent = `${timeUnit} ${suffix}`;
+                    }
+                }
+            }
+            
+            simulatedLevel = newLevel;
+            localStorage.setItem('simulatedBattery', newLevel.toString());
+            const roundedLevel = Math.round(newLevel);
+            batteryPercentageElement.textContent = `${roundedLevel}%`;
+            batteryLevelElement.style.width = `${newLevel}%`;
+            
+            if (newLevel > 60) {
+                batteryLevelElement.className = 'battery-level ' + (isLightMode ? 'bg-green-600' : 'bg-green-500');
+            } else if (newLevel > 20) {
+                batteryLevelElement.className = 'battery-level ' + (isLightMode ? 'bg-yellow-600' : 'bg-yellow-500');
+            } else {
+                batteryLevelElement.className = 'battery-level ' + (isLightMode ? 'bg-red-600' : 'bg-red-500');
+            }
+        }
+        
+        simulateBattery();
+        window.addEventListener('batteryupdate-hook', simulateBattery);
+        if (!batteryInterval) {
+            batteryInterval = setInterval(simulateBattery, 10000);
+        }
     }
 }
 
 function cleanupBatteryMonitor() {
-    if (batteryMonitor) batteryMonitor = null;
+    if (batteryMonitor && boundUpdateBatteryInfo) {
+        batteryMonitor.removeEventListener('levelchange', boundUpdateBatteryInfo);
+        batteryMonitor.removeEventListener('chargingchange', boundUpdateBatteryInfo);
+        batteryMonitor.removeEventListener('chargingtimechange', boundUpdateBatteryInfo);
+        batteryMonitor.removeEventListener('dischargingtimechange', boundUpdateBatteryInfo);
+        window.removeEventListener('batteryupdate-hook', boundUpdateBatteryInfo);
+        batteryMonitor = null;
+        boundUpdateBatteryInfo = null;
+    }
+    
+    if (batteryInterval) {
+        clearInterval(batteryInterval);
+        batteryInterval = null;
+    }
 }
 
 // ==================== FITUR JAM & TANGGAL MOMENT-TIMEZONE ====================
@@ -256,13 +367,10 @@ function initDigitalClock() {
     function updateClock() {
         if (typeof moment === 'undefined') return;
 
-        // Gunakan objek moment dengan zona waktu Jakarta
         const now = moment().tz("Asia/Jakarta");
         clockElement.textContent = now.format('HH:mm:ss');
         
-        // Cek bahasa aktif yang sedang digunakan di aplikasi
         if (currentLang === 'id') {
-            // .locale('id') sekarang aman digunakan karena datanya sudah dimuat di HTML
             dateElement.textContent = now.locale('id').format('dddd, D MMMM YYYY');
         } else {
             dateElement.textContent = now.locale('en').format('dddd, MMMM D, YYYY');
@@ -355,7 +463,7 @@ function toggleEndpoint(catIdx, epIdx) {
     const content = document.getElementById(`ep-${catIdx}-${epIdx}`);
     const icon = document.getElementById(`ep-icon-${catIdx}-${epIdx}`);
     content.classList.toggle('hidden');
-    icon.style.transform = content.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(180deg)';
+    icon.style.transform = content.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(180deg)', '';
 }
 
 function getContentType(url, contentType) {
@@ -447,7 +555,6 @@ async function executeRequest(e, catIdx, epIdx, method, path) {
     try {
         const response = await fetch(fullPath);
 
-        // INTERSEPSI JIKA TERKENA BLOKIR AKSES (403/503) DARI MIDDLEWARE BACKEND
         if (response.status === 403 || response.status === 503) {
             const data = await response.json();
             responseContent.innerHTML = `<pre class="text-red-400 code-font text-sm overflow-auto">${JSON.stringify(data, null, 2)}</pre>`;
@@ -733,11 +840,8 @@ function loadApis() {
                 if (item.params) {
                     Object.keys(item.params).forEach(paramName => {
                         const isRequired = !queryParams.has(paramName) || queryParams.get(paramName) === '';
-                        
-                        // AMBIL DESKRIPSI ASLI DARI FILE CONFIG ENDPOINT BACKEND KAMU
                         let paramDesc = item.params[paramName];
 
-                        // Jika isi deskripsi dari backend kosong atau hanya mengulang nama parameternya, berikan teks bantuan standar
                         if (!paramDesc || paramDesc.toLowerCase() === paramName.toLowerCase()) {
                             paramDesc = `${paramName}`;
                         }
@@ -856,7 +960,6 @@ function initMultiMusicPlayer() {
     loadTrack(0);
 }
 
-// ==================== FITUR LIGHTBOX/ZOOM GAMBAR RESPONSE API ====================
 function initImageLightbox() {
     const lightbox = document.getElementById('imageLightbox');
     const lightboxImg = document.getElementById('lightboxImage');
@@ -864,7 +967,6 @@ function initImageLightbox() {
 
     if (!lightbox || !lightboxImg) return;
 
-    // Delegasi klik pada element IMG hasil response eksekusi API
     document.getElementById('apiList').addEventListener('click', (e) => {
         if (e.target.tagName === 'IMG' && e.target.classList.contains('media-image')) {
             e.preventDefault();
@@ -912,7 +1014,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initBatteryDetection();
     initDigitalClock();
     initMultiMusicPlayer();
-    initImageLightbox(); // Aktifkan pendeteksi klik zoom gambar response
+    initImageLightbox(); 
     setLanguage(savedLang);
 
     const bioMenuBtn = document.getElementById('bioMenuBtn');
@@ -940,38 +1042,7 @@ document.addEventListener('DOMContentLoaded', function() {
         .catch(err => {
             document.getElementById('apiList').innerHTML = `<div class="text-center p-8 bg-red-900/20 border border-red-700 rounded-lg"><div class="text-4xl mb-4">⚠️</div><h3 class="font-bold text-lg mb-2">Failed to load API data</h3></div>`;
         });
-});
 
-// ... KODE SCRIPT.JS KAMU YANG DI ATAS SEBELUMNYA ...
-
-    // Bagian akhir dari DOMContentLoaded yang sudah ada di script.js kamu:
-    if (bioMenuBtn && bioDropdown && menuOverlay) {
-        bioMenuBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            bioDropdown.style.transform = 'translateX(0)';
-            menuOverlay.classList.remove('hidden');
-        });
-        if (closeMenuBtn) closeMenuBtn.addEventListener('click', closeSidebarMenu);
-        menuOverlay.addEventListener('click', closeSidebarMenu);
-        bioDropdown.addEventListener('click', (e) => { e.stopPropagation(); });
-    }
-
-    fetch('/api/apilist')
-        .then(res => res.json())
-        .then(data => {
-            apiData = data;
-            loadApis();
-        })
-        .catch(err => {
-            document.getElementById('apiList').innerHTML = `<div class="text-center p-8 bg-red-900/20 border border-red-700 rounded-lg"><div class="text-4xl mb-4">⚠️</div><h3 class="font-bold text-lg mb-2">Failed to load API data</h3></div>`;
-        });
-
-
-    // ==========================================================
-    // TAROH KODE KAMU DI SINI (TEPAT SEBELUM TUTUP DOMContentLoaded)
-    // ==========================================================
-    
-    // Pastikan ID di bawah ini sama dengan ID/Class yang ada di HTML index.js kamu
     const uploaderBtn = document.getElementById('uploaderMenuBtn'); 
     const pastebinBtn = document.getElementById('pastebinMenuBtn'); 
 
@@ -986,8 +1057,6 @@ document.addEventListener('DOMContentLoaded', function() {
             window.open('https://arulz-pastecode.vercel.app/', '_blank');
         });
     }
-    // ==========================================================
-
 });
 
 themeToggleBtn.addEventListener('click', toggleTheme);
