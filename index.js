@@ -219,9 +219,6 @@ app.get('/styles.css', (req, res) => {
 });
 
 app.get('/', (req, res) => {
-    // Fallback playlist jika variabel belum didefinisikan agar tidak memicu crash
-    const playlist = typeof global.playlist !== 'undefined' ? global.playlist : [];
-
     res.send(`<!DOCTYPE html>
 <html lang="en" class="notranslate" translate="no">
 <head>
