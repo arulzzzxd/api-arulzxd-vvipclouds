@@ -16,7 +16,7 @@ const categoryIcons = {
     'tools': '<svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 text-cyan-400"><path d="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.3C.5 6.7.9 9.8 2.9 11.8c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1.1-1.6z"/></svg>'
 };
 
-// 1. REALTIME WIDGET CLOCK LOGIC (WIB INDONESIA TIME)
+// 1. REALTIME WIDGET CLOCK LOGIC
 function updateDigitalClock() {
     const clockEl = document.getElementById('digitalClock');
     const dateEl = document.getElementById('digitalDate');
@@ -29,8 +29,7 @@ function updateDigitalClock() {
         if (sidebarTimeEl) sidebarTimeEl.innerText = now.format("HH:mm");
     } else {
         const now = new Date();
-        const strTime = now.toLocaleTimeString('id-ID');
-        if (clockEl) clockEl.innerText = strTime;
+        if (clockEl) clockEl.innerText = now.toLocaleTimeString('id-ID');
     }
 }
 setInterval(updateDigitalClock, 1000);
@@ -50,7 +49,7 @@ function initBatteryMonitor() {
                 const level = Math.round(bat.level * 100);
                 if (percent) percent.innerText = `${level}%`;
                 if (bar) {
-                    bar.style.w = `${level}%`;
+                    bar.style.width = `${level}%`;
                     if (bat.charging) {
                         bar.className = "h-full bg-cyan-400 w-0 rounded-2xs animate-pulse";
                     } else if (level <= 20) {
@@ -67,7 +66,7 @@ function initBatteryMonitor() {
     }
 }
 
-// 3. SWITCH THEME MANAGEMENT (DARK / LIGHT THEME MODES)
+// 3. SWITCH THEME MANAGEMENT
 function toggleTheme() {
     const body = document.body;
     if (body.classList.contains('light-mode')) {
@@ -79,7 +78,7 @@ function toggleTheme() {
     }
 }
 
-// 4. GENERATE DAN RE-RENDER API CARDS MENU UTAMA (Menampilkan Status Ready/Error/Perbaikan & Tipe Free/Premium)
+// 4. GENERATE DAN RE-RENDER API CARDS MENU UTAMA
 function loadApis() {
     const container = document.getElementById('apiList');
     const navContainer = document.getElementById('dynamicCategoryNav');
@@ -94,7 +93,6 @@ function loadApis() {
     for (const categoryKey in apiData) {
         const category = apiData[categoryKey];
         
-        // Buat Elemen Section Kategori
         const section = document.createElement('section');
         section.className = "mb-12 category-section";
         section.setAttribute('data-category', categoryKey);
@@ -111,7 +109,6 @@ function loadApis() {
 
         const grid = section.querySelector('.card-grid');
 
-        // Render List Endpoint di Kategori Ini
         category.endpoints.forEach(ep => {
             totalEndpoints++;
             const card = document.createElement('div');
@@ -155,7 +152,6 @@ function loadApis() {
                 </div>
             `;
 
-            // Handler klik tombol Open/Execute Endpoint
             card.querySelector('.open-test-btn').addEventListener('click', () => {
                 if (currentStatus !== 'ready') {
                     alert(`Gagal mengakses: Fitur ini sedang dalam status perbaikan/error (${currentStatus.toUpperCase()}).`);
@@ -176,7 +172,6 @@ function loadApis() {
 
         container.appendChild(section);
 
-        // Render Opsi List Menu ke Dalam Sidebar Secara Dinamis
         if (navContainer) {
             const navBtn = document.createElement('button');
             navBtn.className = "w-full text-left px-4 py-2.5 rounded-xl hover:bg-white/5 text-slate-400 hover:text-white font-medium border border-transparent transition-all flex items-center space-x-3 nav-category-btn";
@@ -189,22 +184,19 @@ function loadApis() {
         }
     }
 
-    // Update Counter Dashboard Stats
     const totalEndpointsEl = document.getElementById('totalEndpoints');
     const totalCategoriesEl = document.getElementById('totalCategories');
     if (totalEndpointsEl) totalEndpointsEl.innerText = totalEndpoints;
     if (totalCategoriesEl) totalCategoriesEl.innerText = totalCategories;
 
-    // Pasang Ulang Handler Klik Tombol Navigasi Kategori di Sidebar
     initSidebarNavFilters();
 }
 
-// 5. EVENT FILTER CATEGORIES MANAGE (SIDEBAR BUTTONS FILTERING)
+// 5. EVENT FILTER CATEGORIES MANAGE
 function initSidebarNavFilters() {
     const btns = document.querySelectorAll('.active-nav-btn, .nav-category-btn');
     btns.forEach(btn => {
         btn.addEventListener('click', () => {
-            // Hapus style aktif sebelumnya
             btns.forEach(b => {
                 b.classList.remove('bg-gradient-to-r', 'from-cyan-500/20', 'to-blue-500/20', 'text-cyan-400', 'border-cyan-500/30');
                 b.classList.add('text-slate-400');
@@ -212,7 +204,6 @@ function initSidebarNavFilters() {
                 if(dot) { dot.classList.remove('bg-cyan-400'); dot.classList.add('bg-slate-600'); }
             });
 
-            // Tambahkan class aktif pada tombol yang dipilih
             btn.classList.remove('text-slate-400');
             btn.classList.add('bg-gradient-to-r', 'from-cyan-500/20', 'to-blue-500/20', 'text-cyan-400', 'border-cyan-500/30');
             const activeDot = btn.querySelector('.dynamic-dot');
@@ -221,7 +212,6 @@ function initSidebarNavFilters() {
             activeCategory = btn.getAttribute('data-target');
             applyMainFiltering();
             
-            // Otomatis tutup menu sidebar jika di HP setelah memilih kategori
             if (window.innerWidth < 1024) {
                 closeSidebarMenu();
             }
@@ -229,7 +219,7 @@ function initSidebarNavFilters() {
     });
 }
 
-// 6. MAIN SYSTEM FILTERING (SEARCH & CATEGORY UNION COMBINATION FILTER)
+// 6. MAIN SYSTEM FILTERING
 function applyMainFiltering() {
     const searchInput = document.getElementById('searchInput');
     const query = searchInput ? searchInput.value.toLowerCase() : '';
@@ -245,7 +235,6 @@ function applyMainFiltering() {
         }
     });
 
-    // Sembunyikan Container Title Judul Kategori Jika di dalamnya Kosong Semua
     document.querySelectorAll('.category-section').forEach(sec => {
         const cards = sec.querySelectorAll('.card-grid > div');
         let totalVisible = 0;
@@ -254,7 +243,7 @@ function applyMainFiltering() {
     });
 }
 
-// 7. SIDEBAR TOGGLE OPACITY TRANSITION INTERACTIVITY
+// 7. SIDEBAR TOGGLE OPACITY TRANSITION
 const sidebarMenu = document.getElementById('sidebarMenu');
 const menuOverlay = document.getElementById('menuOverlay');
 
@@ -285,22 +274,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchInput = document.getElementById('searchInput');
     const themeToggleBtn = document.getElementById('themeToggle');
 
-    // Trigger Side Menu
     if (menuToggleBtn) menuToggleBtn.addEventListener('click', openSidebarMenu);
     if (closeMenuBtn) closeMenuBtn.addEventListener('click', closeSidebarMenu);
     if (menuOverlay) menuOverlay.addEventListener('click', closeSidebarMenu);
 
-    // Bind Search Input Bar
     if (searchInput) {
         searchInput.addEventListener('input', applyMainFiltering);
     }
 
-    // Bind Switch Theme Mode Light
     if (themeToggleBtn) {
         themeToggleBtn.addEventListener('click', toggleTheme);
     }
 
-    // Bio Dropdown Event (Click Avatar)
     const avatarContainer = document.getElementById('avatarContainer');
     const bioDropdown = document.getElementById('bioDropdown');
     if (avatarContainer && bioDropdown) {
@@ -326,7 +311,6 @@ document.addEventListener('DOMContentLoaded', () => {
         bioDropdown.addEventListener('click', (e) => e.stopPropagation());
     }
 
-    // Image Zoom Feature Event Trigger (Hero Logo)
     const heroLogo = document.getElementById('heroLogo');
     const zoomModal = document.getElementById('imageZoomModal');
     const zoomedImg = document.getElementById('zoomedImage');
@@ -350,7 +334,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Fetch API Data List From Backend
     fetch('/api/apilist')
         .then(res => res.json())
         .then(data => {
@@ -361,7 +344,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error(err);
             const container = document.getElementById('apiList');
             if(container) {
-                container.innerHTML = `<div class="text-center p-8 bg-red-900/20 border border-red-700 rounded-lg"><div class="text-4xl mb-4">⚠️</div><h3 class="font-bold text-lg mb-2">Failed to load API data from Server</h3></div>`;
+                container.innerHTML = `<div class="text-center p-8 bg-red-900/20 border border-red-700 rounded-lg"><div class="text-4xl mb-4">⚠️</div><h3 class="font-bold text-lg mb-2">Failed to load API data</h3></div>`;
             }
         });
 });
