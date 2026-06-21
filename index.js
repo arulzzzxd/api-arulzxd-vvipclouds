@@ -64,7 +64,7 @@ const playlist = [
   {
     title: "DENOK",
     artist: "LA TASYA",
-    cover: "https://i.ytimg.com/vi/J1TFFzbCIiM/hq720.jpg",
+    cover: "https://arulz-uploader.vercel.app/files/xlXr2L.mp3",
     url: "https://arulz-uploader.vercel.app/files/xlXr2L.mp3"
   },
   {
@@ -111,7 +111,6 @@ const validateApiKey = (req, res, next) => {
 
 router.use(validateApiKey);
 
-// Membaca direktori kategori API jika ada
 let endpointDirs = [];
 if (fs.existsSync(apiPath)) {
   endpointDirs = fs.readdirSync(apiPath).filter(f => fs.statSync(path.join(apiPath, f)).isDirectory());
@@ -166,7 +165,6 @@ function getEndpointsFromRouter(category, file) {
   return endpoints;
 }
 
-// ROUTE: Menyisipkan totalRequestsThisMonth ke properti totalRequestsToday
 router.get('/apilist', (req, res) => {
   const categories = [];
 
@@ -198,7 +196,7 @@ router.get('/apilist', (req, res) => {
     ]
   });
 
-  // FIXED: Menggunakan variabel totalRequestsThisMonth yang benar agar dibaca oleh frontend
+  // totalRequestsThisMonth dimasukkan ke totalRequestsToday agar kompatibel dengan script.js bawaan
   res.json({ categories, totalRequestsToday: totalRequestsThisMonth });
 });
 
@@ -482,6 +480,7 @@ app.get('/', (req, res) => {
     </div>
     
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.30.1/moment.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.30.1/locale/id.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.45/moment-timezone-with-data.min.js"></script>
 <script class="notranslate" translate="no">
     window.musicPlaylist = ${JSON.stringify(playlist)};
