@@ -132,4 +132,6 @@ router.get('/', (req, res) => {
     });
 });
 
+router.status = "ready"; 
+router.type = "free";
 module.exports = router;
