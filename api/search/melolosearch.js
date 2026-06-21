@@ -205,4 +205,6 @@ res.json({
     });
   }
 });
+router.status = "ready"; 
+router.type = "free";
 module.exports = router;

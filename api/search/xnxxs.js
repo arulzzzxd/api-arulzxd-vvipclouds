@@ -109,4 +109,6 @@ if (!apikey) {
     }
 });
 
+router.status = "ready"; 
+router.type = "premium";
 module.exports = router;
