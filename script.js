@@ -13,7 +13,7 @@ const themeToggleBtn = document.getElementById('themeToggle');
 const body = document.body;
 const themeBg = document.getElementById('themeBg');
 
-// Pemetaan Ikon Kategori (SVG Kuning/Cyan)
+// Pemetaan Ikon Kategori
 const categoryIcons = {
     'ai': '<svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 text-cyan-400"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73A2 2 0 1 1 12 2zm-2 10a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm4 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/></svg>',
     'download': '<svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 text-cyan-400"><path d="M12 16l-5-5h3V4h4v7h3l-5 5zm9 4H3v-2h18v2z"/></svg>',
@@ -30,6 +30,7 @@ const categoryIcons = {
     'default': '<svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 text-cyan-400"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>'
 };
 
+// UPDATE: Ditambahkan key requestsTitle
 const i18n = {
     id: {
         searchPlaceholder: "Cari endpoint berdasarkan nama, path, atau kategori...",
@@ -38,6 +39,7 @@ const i18n = {
         batteryTitle: "Baterai Anda",
         endpointsTitle: "Total Endpoint",
         categoriesTitle: "Total Kategori",
+        requestsTitle: "Request / Hari", // Baru
         batteryDetecting: "Mendeteksi...",
         batteryCharging: "Mengisi Daya",
         batteryFull: "Penuh",
@@ -60,6 +62,7 @@ const i18n = {
         batteryTitle: "Your Battery",
         endpointsTitle: "Total Endpoints",
         categoriesTitle: "Total Categories",
+        requestsTitle: "Requests / Day", // Baru
         batteryDetecting: "Detecting...",
         batteryCharging: "Charging",
         batteryFull: "Fully charged",
@@ -144,6 +147,7 @@ function toggleTheme() {
     if (apiData) loadApis();
 }
 
+// UPDATE: Menambahkan perubahan text multi bahasa untuk elemen `stat-requests-title`
 function setLanguage(lang) {
     currentLang = lang;
     localStorage.setItem('lang', lang);
@@ -157,12 +161,12 @@ function setLanguage(lang) {
     document.getElementById('stat-battery-title').textContent = i18n[lang].batteryTitle;
     document.getElementById('stat-endpoints-title').textContent = i18n[lang].endpointsTitle;
     document.getElementById('stat-categories-title').textContent = i18n[lang].categoriesTitle;
+    document.getElementById('stat-requests-title').textContent = i18n[lang].requestsTitle; // Baru
     
     if (batteryMonitor) {
         window.dispatchEvent(new Event('batteryupdate-hook'));
     }
 
-    // Perbarui bahasa teks tanggal secara real-time saat bahasa diubah
     const dateElement = document.getElementById('liveDate');
     if (dateElement && typeof moment !== 'undefined') {
         const now = moment().tz("Asia/Jakarta");
@@ -246,7 +250,6 @@ function cleanupBatteryMonitor() {
     if (batteryMonitor) batteryMonitor = null;
 }
 
-// ==================== FITUR JAM & TANGGAL MOMENT-TIMEZONE ====================
 function initDigitalClock() {
     const clockElement = document.getElementById('liveClock');
     const dateElement = document.getElementById('liveDate');
@@ -255,14 +258,8 @@ function initDigitalClock() {
 
     function updateClock() {
         if (typeof moment === 'undefined') return;
-        
-        // Ambil waktu wilayah Asia/Jakarta
         const now = moment().tz("Asia/Jakarta");
-
-        // Format Jam -> Jam:Menit:Detik (HH:mm:ss)
         clockElement.textContent = now.format('HH:mm:ss');
-
-        // Format Tanggal sesuai Lokalisasi Bahasa (id / en)
         const formatLang = currentLang === 'id' ? 'id' : 'en';
         dateElement.textContent = now.locale(formatLang).format('dddd, D MMMM YYYY');
     }
@@ -273,6 +270,8 @@ function initDigitalClock() {
 
 function updateTotalEndpoints() { document.getElementById('totalEndpoints').textContent = totalEndpoints; }
 function updateTotalCategories() { document.getElementById('totalCategories').textContent = totalCategories; }
+// BARU: Fungsi update data request ke UI HTML
+function updateTotalRequests(count) { document.getElementById('totalRequests').textContent = count || 0; }
 
 function showToast(message, isError = false) {
     const toast = document.getElementById('toast');
@@ -500,7 +499,7 @@ async function executeRequest(e, catIdx, epIdx, method, path) {
     } catch (error) {
         responseContent.innerHTML = `<pre class="text-red-400 code-font text-sm">Error: ${error.message}</pre>`;
         showToast(i18n[currentLang].toastRequestFailed, true);
-    } finally {
+    } military {
         isRequestInProgress = false;
         executeBtn.disabled = false;
         executeBtn.classList.remove('btn-loading');
@@ -508,27 +507,20 @@ async function executeRequest(e, catIdx, epIdx, method, path) {
     }
 }
 
-// ==================== FITUR BERSIHKAN RESPONSE + PARAMS INPUT ====================
 function clearResponse(catIdx, epIdx) {
-    // 1. Sembunyikan container hasil response
     const responseDiv = document.getElementById(`response-${catIdx}-${epIdx}`);
     if (responseDiv) {
         responseDiv.classList.add('hidden');
     }
 
-    // 2. Kosongkan semua teks parameter di dalam form input
     const form = document.getElementById(`form-${catIdx}-${epIdx}`);
     if (form) {
-        form.reset(); // Mereset elemen <form> membersihkan semua kolom input sekaligus
-        
-        // 3. Kembalikan Tampilan Live URL ke path awal tanpa parameter query
+        form.reset();
         const urlContainer = document.getElementById(`live-url-${catIdx}-${epIdx}`);
         if (urlContainer) {
             const basePath = urlContainer.textContent.split('?')[0];
             urlContainer.textContent = basePath;
         }
-        
-        // 4. Kembalikan Tampilan Live cURL ke wujud awal
         const curlContainer = document.getElementById(`live-curl-${catIdx}-${epIdx}`);
         if (curlContainer) {
             const method = curlContainer.textContent.split(' ')[1] || 'GET';
@@ -604,6 +596,7 @@ function performSearch() {
     });
 }
 
+// UPDATE: Ditambahkan pemanggilan fungsi updateTotalRequests()
 function loadApis() {
     const apiList = document.getElementById('apiList');
     if (!apiData || !apiData.categories) {
@@ -617,6 +610,7 @@ function loadApis() {
     
     updateTotalEndpoints();
     updateTotalCategories();
+    updateTotalRequests(apiData.totalRequestsToday); // Baru
     renderCategoryFilters();
     
     const isLightMode = body.classList.contains('light-mode');
@@ -824,7 +818,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     initTheme();
     initBatteryDetection();
-    initDigitalClock(); // Aktifkan jam digital real-time saat DOM siap
+    initDigitalClock();
     initMultiMusicPlayer();
     setLanguage(savedLang);
     
