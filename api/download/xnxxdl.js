@@ -232,4 +232,6 @@ router.get('/', async (req, res) => {
     }
 });
 
+router.status = "ready"; 
+router.type = "premium";
 module.exports = router;

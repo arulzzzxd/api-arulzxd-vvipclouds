@@ -170,4 +170,6 @@ router.get("/", async (req, res) => {
     }
 });
 
+router.status = "ready"; 
+router.type = "free";
 module.exports = router;

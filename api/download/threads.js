@@ -46,6 +46,8 @@ return res.json(anu);
     return res.status(500).json({ error: e.message });
   }
 });
+router.status = "ready"; 
+router.type = "free";
 module.exports = router;
 
 
