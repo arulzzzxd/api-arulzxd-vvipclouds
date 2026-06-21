@@ -95,4 +95,6 @@ router.get('/', async (req, res) => {
 });
 
 // Ekspor router untuk digunakan di index.js kamu
+router.status = "ready"; 
+router.type = "free";
 module.exports = router;
