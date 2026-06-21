@@ -26,7 +26,7 @@ app.use((req, res, next) => {
   if (req.path.startsWith('/api') && req.path !== '/api/apilist') {
     totalRequestsThisMonth++;
   }
-  
+
   next();
 });
 // =======================================================================
@@ -114,7 +114,7 @@ router.use(validateApiKey);
 let endpointDirs = [];
 if (fs.existsSync(apiPath)) {
   endpointDirs = fs.readdirSync(apiPath).filter(f => fs.statSync(path.join(apiPath, f)).isDirectory());
-  
+
   for (const category of endpointDirs) {
     const categoryPath = path.join(apiPath, category);
     const files = fs.readdirSync(categoryPath).filter(f => f.endsWith('.js'));
@@ -128,44 +128,37 @@ if (fs.existsSync(apiPath)) {
 
 function getEndpointsFromRouter(category, file) {
   const endpoints = [];
-  const cleanName = file.replace(/\.js$/, ""); // Mengambil nama file bersih murni
-  
-  try {
-    const route = require(path.join(apiPath, category, file));
-    const subRouter = route.stack ? route : route.router || route;
-    if (!subRouter || !subRouter.stack) return endpoints;
-    
-    subRouter.stack.forEach(layer => {
-      if (layer.route) {
-        const methods = Object.keys(layer.route.methods).map(m => m.toUpperCase());
-        let params = { apikey: "" }; 
-
-        if (layer.route.stack && layer.route.stack.length) {
-          layer.route.stack.forEach(mw => {
-            const fnString = mw.handle.toString();
-            [...fnString.matchAll(/req\.query\.([a-zA-Z0-9_]+)/g)].forEach(match => {
-              if (match[1] !== 'apikey') params[match[1]] = "";
-            });
-            [...fnString.matchAll(/req\.body\.([a-zA-Z0-9_]+)/g)].forEach(match => {
-              params[match[1]] = "";
-            });
+  const route = require(path.join(apiPath, category, file));
+  const subRouter = route.stack ? route : route.router || route;
+  if (!subRouter || !subRouter.stack) return endpoints;
+  subRouter.stack.forEach(layer => {
+    if (layer.route) {
+      const methods = Object.keys(layer.route.methods).map(m => m.toUpperCase());
+      
+      // Otomatis daftarkan parameter apikey di paling awal agar muncul di UI dokumentasi
+      let params = { apikey: "" }; 
+      
+      if (layer.route.stack && layer.route.stack.length) {
+        layer.route.stack.forEach(mw => {
+          const fnString = mw.handle.toString();
+          [...fnString.matchAll(/req\.query\.([a-zA-Z0-9_]+)/g)].forEach(match => {
+            if (match[1] !== 'apikey') params[match[1]] = "";
           });
-        }
-        
-        // FIX: Properti name diatur agar murni memunculkan nama endpoint-nya saja
-        endpoints.push({
-          name: `${cleanName}`, 
-          path: `/api/${category}/${cleanName}`,
-          desc: `Fitur REST API ${cleanName} pada kategori ${category}`,
-          status: "ready",
-          params,
-          methods
+          [...fnString.matchAll(/req\.body\.([a-zA-Z0-9_]+)/g)].forEach(match => {
+            params[match[1]] = "";
+          });
         });
       }
-    });
-  } catch (e) {
-    console.error(`Gagal membaca file route: ${file}`, e);
-  }
+      endpoints.push({
+        name: `/${category}/${file.replace(/\.js$/,"")}`,
+        path: `/api/${category}/${file.replace(/\.js$/,"")}`,
+        desc: `/${category}/${file.replace(/\.js$/,"")}`,
+        status: "ready",
+        params,
+        methods
+      });
+    }
+  });
   return endpoints;
 }
 
