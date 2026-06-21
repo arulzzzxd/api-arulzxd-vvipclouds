@@ -165,7 +165,6 @@ function setLanguage(lang) {
         window.dispatchEvent(new Event('batteryupdate-hook'));
     }
 
-    // Dikunci ke lokalisasi bahasa 'id' agar kalender tetap memuat Bahasa Indonesia
     const dateElement = document.getElementById('liveDate');
     if (dateElement && typeof moment !== 'undefined') {
         const now = moment().tz("Asia/Jakarta");
@@ -248,7 +247,6 @@ function cleanupBatteryMonitor() {
     if (batteryMonitor) batteryMonitor = null;
 }
 
-// ==================== FITUR JAM & TANGGAL BAHASA INDONESIA ====================
 function initDigitalClock() {
     const clockElement = document.getElementById('liveClock');
     const dateElement = document.getElementById('liveDate');
@@ -259,9 +257,7 @@ function initDigitalClock() {
         if (typeof moment === 'undefined') return;
         
         const now = moment().tz("Asia/Jakarta");
-        // Format Jam (HH:mm:ss)
         clockElement.textContent = now.format('HH:mm:ss');
-        // Dikunci menggunakan metode .locale('id') agar selalu berbahasa Indonesia
         dateElement.textContent = now.locale('id').format('dddd, D MMMM YYYY');
     }
 
@@ -272,7 +268,6 @@ function initDigitalClock() {
 function updateTotalEndpoints() { document.getElementById('totalEndpoints').textContent = totalEndpoints; }
 function updateTotalCategories() { document.getElementById('totalCategories').textContent = totalCategories; }
 
-// Sinkronisasi data total request bulanan ke halaman utama
 function updateMonthlyRequests(count = 0) {
     const reqEl = document.getElementById('totalRequests');
     if (reqEl) {
@@ -280,7 +275,7 @@ function updateMonthlyRequests(count = 0) {
     }
 }
 
-// === FUNGSI FETCH STATISTIK REAL-TIME DARI BACKEND ===
+// Fungsi sinkronisasi stat request terbaru langsung dari file stats.json di backend
 function fetchStats() {
     fetch('/api/stats')
         .then(res => res.json())
@@ -289,7 +284,7 @@ function fetchStats() {
                 updateMonthlyRequests(data.totalRequests);
             }
         })
-        .catch(err => console.error("Gagal memuat statistik real-time:", err));
+        .catch(err => console.error("Gagal memuat statistik database:", err));
 }
 
 function showToast(message, isError = false) {
@@ -315,6 +310,7 @@ function copyText(text, type = 'path') {
     });
 }
 
+// Perbaikan fungsi copyFromElement agar value parameter dinamis ikut tersalin
 function copyFromElement(elementId, type) {
     const el = document.getElementById(elementId);
     if (el) {
@@ -388,7 +384,6 @@ function getContentType(url, contentType) {
     return 'unknown';
 }
 
-// ==================== IMAGE MODAL HANDLERS (ZOOM) ====================
 function openImageModal(imgSrc) {
     const modal = document.getElementById('imageModal');
     const modalImg = document.getElementById('modalTargetImg');
@@ -402,6 +397,7 @@ function openImageModal(imgSrc) {
     }
 }
 
+// Ditambahkan tutup modal zoom gambar
 function closeImageModal() {
     const modal = document.getElementById('imageModal');
     const modalImg = document.getElementById('modalTargetImg');
@@ -543,7 +539,7 @@ async function executeRequest(e, catIdx, epIdx, method, path) {
         responseContent.insertBefore(actionContainer, responseContent.firstChild);
         showToast(i18n[currentLang].toastRequestSuccess);
         
-        // Singkronkan jumlah request ke UI terbaru setelah sukses mengeksekusi endpoint
+        // Memperbarui UI counter request sesaat setelah pengetesan API berhasil
         fetchStats();
 
     } catch (error) {
@@ -567,17 +563,17 @@ function clearResponse(catIdx, epIdx) {
     if (form) {
         form.reset();
         
-        const urlContainer = document.getElementById(`live-url-${catIdx}-${epIdx}`);
+        const urlContainer = document.getElementById('live-url-' + catIdx + '-' + epIdx);
         if (urlContainer) {
             const basePath = urlContainer.textContent.split('?')[0];
             urlContainer.textContent = basePath;
         }
         
-        const curlContainer = document.getElementById(`live-curl-${catIdx}-${epIdx}`);
+        const curlContainer = document.getElementById('live-curl-' + catIdx + '-' + epIdx);
         if (curlContainer) {
             const method = curlContainer.textContent.split(' ')[1] || 'GET';
             const baseUrl = curlContainer.textContent.split('"')[1] || '';
-            curlContainer.textContent = `curl -X ${method} "${baseUrl.split('?')[0]}"`;
+            curlContainer.textContent = 'curl -X ' + method + ' "' + baseUrl.split('?')[0] + '"';
         }
     }
 }
@@ -872,7 +868,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initMultiMusicPlayer();
     setLanguage(savedLang);
     
-    // Tarik & sinkronisasikan total request real-time dari database stats.json milik backend
+    // Sinkronisasi data awal stat request saat web dimuat pertama kali
     fetchStats();
 
     const bioMenuBtn = document.getElementById('bioMenuBtn');
