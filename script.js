@@ -6,7 +6,6 @@ let currentLang = 'id';
 let allApiElements = [];
 let totalEndpoints = 0;
 let totalCategories = 0;
-let batteryMonitor = null;
 let activeCategory = 'all';
 
 const themeToggleBtn = document.getElementById('themeToggle');
@@ -37,7 +36,6 @@ const i18n = {
         noResultsDesc: "Coba gunakan kata kunci lain",
         endpointsTitle: "Total Endpoint",
         categoriesTitle: "Total Kategori",
-        requestsTitle: "Total Hit Request",
         endpointsCount: "endpoints",
         btnExecute: "Eksekusi",
         btnClear: "Bersihkan",
@@ -54,7 +52,6 @@ const i18n = {
         noResultsDesc: "Try a different search term",
         endpointsTitle: "Total Endpoints",
         categoriesTitle: "Total Categories",
-        requestsTitle: "Total Hit Requests",
         endpointsCount: "endpoints",
         btnExecute: "Execute",
         btnClear: "Clear",
@@ -146,7 +143,6 @@ function setLanguage(lang) {
     document.getElementById('no-results-desc').textContent = i18n[lang].noResultsDesc;
     document.getElementById('stat-endpoints-title').textContent = i18n[lang].endpointsTitle;
     document.getElementById('stat-categories-title').textContent = i18n[lang].categoriesTitle;
-    document.getElementById('stat-requests-title').textContent = i18n[lang].requestsTitle;
 
     const dateElement = document.getElementById('liveDate');
     if (dateElement && typeof moment !== 'undefined') {
@@ -190,24 +186,6 @@ function initDigitalClock() {
 
 function updateTotalEndpoints() { document.getElementById('totalEndpoints').textContent = totalEndpoints; }
 function updateTotalCategories() { document.getElementById('totalCategories').textContent = totalCategories; }
-
-function updateMonthlyRequests(count = 0) {
-    const reqEl = document.getElementById('totalRequests');
-    if (reqEl) {
-        reqEl.textContent = count.toLocaleString('id-ID');
-    }
-}
-
-function fetchStats() {
-    fetch('/api/stats')
-        .then(res => res.json())
-        .then(data => {
-            if (data && typeof data.totalRequests !== 'undefined') {
-                updateMonthlyRequests(data.totalRequests);
-            }
-        })
-        .catch(err => console.error("Gagal memuat statistik database:", err));
-}
 
 function showToast(message, isError = false) {
     const toast = document.getElementById('toast');
@@ -410,21 +388,19 @@ function loadApis() {
                     const placeholderText = isApikeyParam 
                         ? (isPremium ? "Masukkan API Key Premium Anda" : "Masukkan API Key Free Anda")
                         : `Parameter ${pKey}...`;
-                    const defaultValue = isApikeyParam ? "" : "";
 
                     paramInputsHtml += `
                         <div class="space-y-1">
                             <label class="text-[10px] font-bold font-['JetBrains_Mono'] text-slate-400 light-mode:text-slate-600 tracking-wide flex items-center gap-1">
                                 ${pKey} <span class="text-red-500 text-[9px]">*</span>
                             </label>
-                            <input type="text" name="${pKey}" value="${defaultValue}" placeholder="${placeholderText}" oninput="updateLivePreview(${catIdx}, ${epIdx}, '${method}', '${ep.path}')" class="w-full bg-black/20 light-mode:bg-white border border-white/10 light-mode:border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-200 light-mode:text-slate-800 focus:outline-none focus:border-cyan-500/50 transition-colors font-['Space_Grotesk']" required />
+                            <input type="text" name="${pKey}" value="" placeholder="${placeholderText}" oninput="updateLivePreview(${catIdx}, ${epIdx}, '${method}', '${ep.path}')" class="w-full bg-black/20 light-mode:bg-white border border-white/10 light-mode:border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-200 light-mode:text-slate-800 focus:outline-none focus:border-cyan-500/50 transition-colors font-['Space_Grotesk']" required />
                         </div>
                     `;
                 });
                 paramInputsHtml += `</div>`;
             }
 
-            // Menonaktifkan button eksekusi jika status endpoint ERROR
             const executeButtonHtml = isError
                 ? `<button type="button" disabled class="px-4 py-2 rounded-lg text-xs font-bold font-['JetBrains_Mono'] bg-slate-800 border border-white/5 text-slate-500 cursor-not-allowed flex items-center gap-1.5">${i18n[currentLang].btnExecute}</button>`
                 : `<button type="submit" class="px-4 py-2 rounded-lg text-xs font-bold font-['JetBrains_Mono'] bg-cyan-500 text-slate-950 hover:bg-cyan-400 border border-cyan-500 shadow-md shadow-cyan-500/10 transition-all active:scale-95 flex items-center gap-1.5">${i18n[currentLang].btnExecute}</button>`;
@@ -683,7 +659,6 @@ function fireRequest(event, catIdx, epIdx, method, path, isError) {
             } else {
                 showToast(i18n[currentLang].toastRequestFailed, true);
             }
-            fetchStats();
         })
         .catch(err => {
             const endTime = performance.now();
@@ -754,7 +729,7 @@ function clearResponse(catIdx, epIdx) {
     updateLivePreview(catIdx, epIdx, 'GET', `/api/any`);
 }
 
-// === MUSIK CONTROLLER SYSTEM (FIXED TRACK COMPONENT) ===
+// === MUSIK CONTROLLER SYSTEM ===
 let currentMusicIdx = 0;
 let audioPlayer = new Audio();
 let isMusicPlaying = false;
@@ -859,7 +834,6 @@ document.addEventListener('DOMContentLoaded', () => {
     setLanguage(savedLang);
     initDigitalClock();
     initPlaylistPlayer();
-    fetchStats();
 
     const bioMenuBtn = document.getElementById('bioMenuBtn');
     const bioDropdown = document.getElementById('bioDropdown');
