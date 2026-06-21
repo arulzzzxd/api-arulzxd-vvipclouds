@@ -16,17 +16,17 @@ const logo = "https://arulz-uploader.vercel.app/files/SnhJe3.png";
 // Mengubah headertitle menjadi tag img SVG
 const headertitle = `<img src="https://readme-typing-svg.demolab.com?font=Poppins&weight=700&size=28&pause=1000&color=00D4FF&center=true&vCenter=true&width=600&lines=Welcome+To+ArulzXD+API;Fast+%F0%9F%9A%80+Reliable+%E2%9A%A1;Free+REST+API+Services;Developer+Friendly+API" alt="Typing SVG" class="mx-auto" />`;
 const headerdescription = "Browse, inspect & fire requests against live endpoints._";
-const footer = "ﾂｩ Arulz-XD";
+const footer = "© Arulz-XD";
 
 // API KEY CONFIGURATION
 const VALID_API_KEY = "arulzxd-keys"; // Key Free
-const PREMIUM_API_KEYS = ["arulz-premium-xyz", "key-vip-arulz", "owner-key-999"]; // List Key Premium
+const PREMIUM_API_KEYS = ["arulz-premium", "key-vip-arulz", "owner-key-999"]; // List Key Premium
 
 const playlist = [
   {
     title: "PAMIT KERJO",
     artist: "NDX. AKA",
-    cover: "https://raw.githubusercontent.com/upload-file-lab/fileupload7/main/uploads/1764494355026.jpeg",
+    cover: "https://i.ytimg.com/vi/x8ZMFhXiNyg/hq720.jpg",
     url: "https://files.catbox.moe/gfuwnv.mp3"
   },
   {
@@ -389,7 +389,7 @@ app.get('/', (req, res) => {
 
         <!-- FITUR TOMBOL COPY API KEY FREE DI MENU -->
         <div class="mb-4 p-3 bg-cyan-950/40 border border-cyan-500/30 rounded-xl light-mode:bg-cyan-50 light-mode:border-cyan-200">
-            <span class="text-[10px] font-bold text-cyan-400 light-mode:text-cyan-700 uppercase tracking-widest block mb-1">泊 Current API Key</span>
+            <span class="text-[10px] font-bold text-cyan-400 light-mode:text-cyan-700 uppercase tracking-widest block mb-1">🔑 Current API Key</span>
             <div class="flex items-center justify-between bg-black/40 rounded px-2 py-1.5 font-mono text-xs text-slate-200 border border-white/5 light-mode:bg-white light-mode:text-slate-800 light-mode:border-slate-200">
                 <span class="select-all">${VALID_API_KEY}</span>
                 <button onclick="copyText('${VALID_API_KEY}', 'API Key Free')" class="p-1 text-slate-400 hover:text-cyan-400 transition-colors" title="Copy API Key">
@@ -417,7 +417,7 @@ app.get('/', (req, res) => {
     <div class="max-w-5xl mx-auto px-4 py-8 relative z-10">
         <header id="api" class="mb-12 text-center">
             <div class="flex items-center justify-center gap-3 mb-2">
-                <span class="bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest animate-pulse light-mode:bg-cyan-100 light-mode:text-cyan-700">笳ONLINE</span>
+                <span class="bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest animate-pulse light-mode:bg-cyan-100 light-mode:text-cyan-700">● ONLINE</span>
             </div>
             <div id="mainTitle" class="flex justify-center mb-4 min-h-[50px] items-center">${headertitle}</div>
             <p id="mainDescription" class="text-md md:text-lg font-medium tracking-wide text-slate-300 max-w-xl mx-auto">${headerdescription}</p>
@@ -460,7 +460,7 @@ app.get('/', (req, res) => {
 
             <div class="glass-panel max-w-3xl mx-auto mt-4 p-3 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-3 border border-white/20">
                 <div class="flex items-center gap-2 text-sm text-cyan-400 light-mode:text-cyan-700 code-font">
-                    <span>迫</span> <span class="underline break-all font-semibold">https://simple-api-lagi.vercel.app/</span>
+                    <span>🌐</span> <span class="underline break-all font-semibold">https://api-arulzxd-vvipclouds.vercel.app/</span>
                 </div>
                 <a href="https://wa.me/6285122629940?text=Halo%20Arulz,%20saya%20ingin%20request%20fitur%20baru%20di%20REST%20API%20:" 
                    target="_blank" 
@@ -473,12 +473,12 @@ app.get('/', (req, res) => {
                 <a href="https://wa.me/6285122629940?text=Halo%20Arulz,%20boleh%20minta%20link%20Channel%20kamu%3F" 
                    target="_blank" 
                    class="flex-1 glass-panel py-2 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-white/10 light-mode:hover:bg-slate-100 transition-colors light-mode:text-slate-700 text-center block">
-                   町 Channel
+                   💬 Channel
                 </a>
                 <a href="https://wa.me/6285122629940?text=Halo%20Arulz,%20boleh%20minta%20link%20Group%20kamu%3F" 
                    target="_blank" 
                    class="flex-1 glass-panel py-2 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-white/10 light-mode:hover:bg-slate-100 transition-colors light-mode:text-slate-700 text-center block">
-                   則 Group
+                   👥 Group
                 </a>
             </div>
 
