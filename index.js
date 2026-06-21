@@ -16,7 +16,7 @@ const logo = "https://arulz-uploader.vercel.app/files/SnhJe3.png";
 // Mengubah headertitle menjadi tag img SVG
 const headertitle = `<img src="https://readme-typing-svg.demolab.com?font=Poppins&weight=700&size=28&pause=1000&color=00D4FF&center=true&vCenter=true&width=600&lines=Welcome+To+ArulzXD+API;Fast+%F0%9F%9A%80+Reliable+%E2%9A%A1;Free+REST+API+Services;Developer+Friendly+API" alt="Typing SVG" class="mx-auto" />`;
 const headerdescription = "Browse, inspect & fire requests against live endpoints._";
-const footer = "© Arulz-XD";
+const footer = "ﾂｩ Arulz-XD";
 
 // API KEY CONFIGURATION
 const VALID_API_KEY = "arulzxd-keys"; // Key Free
@@ -387,7 +387,6 @@ app.get('/', (req, res) => {
             </div>
         </div>
 
-        <!-- FITUR TOMBOL COPY API KEY FREE DI MENU -->
         <div class="mb-4 p-3 bg-cyan-950/40 border border-cyan-500/30 rounded-xl light-mode:bg-cyan-50 light-mode:border-cyan-200">
             <span class="text-[10px] font-bold text-cyan-400 light-mode:text-cyan-700 uppercase tracking-widest block mb-1">🔑 Current API Key</span>
             <div class="flex items-center justify-between bg-black/40 rounded px-2 py-1.5 font-mono text-xs text-slate-200 border border-white/5 light-mode:bg-white light-mode:text-slate-800 light-mode:border-slate-200">
@@ -403,8 +402,8 @@ app.get('/', (req, res) => {
         <nav class="flex flex-col gap-5 text-sm font-bold tracking-wider uppercase text-gray-300 light-mode:text-slate-700 flex-1 overflow-y-auto scrollbar-hide">
             <a href="#api" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-2">HOME</a>
             <a href="#apiList" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-2">DOCUMENTATION</a>
-            <a href="#" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-2">FILE UPLOADER</a>
-            <a href="#" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-2">PASTEBIN</a>
+            <a href="https://arulz-uploader.vercel.app/" target="_blank" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-2">FILE UPLOADER</a>
+            <a href="https://arulz-pastecode.vercel.app/" target="_blank" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-2">PASTECODE</a>
             <hr class="border-white/10 my-2 light-mode:border-slate-200">
             <a href="#" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-2 text-xs opacity-80">BUG REPORT</a>
             <a href="https://wa.me/6285122629940" target="_blank" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-2 text-xs opacity-80">OWNER (WHATSAPP)</a>
@@ -548,7 +547,6 @@ app.get('/', (req, res) => {
         </footer>
     </div>
 
-    <!-- MODAL LIGHTBOX UNTUK MEMPERBESAR GAMBAR RESPONSE -->
     <div id="imageLightbox" class="fixed inset-0 bg-black/90 z-[100] hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300 backdrop-blur-sm cursor-zoom-out">
         <div class="relative max-w-4xl max-h-[90vh] flex items-center justify-center">
             <img id="lightboxImage" src="" alt="Preview" class="max-w-full max-h-[85vh] rounded-lg shadow-2xl object-contain scale-95 transition-transform duration-300" />
