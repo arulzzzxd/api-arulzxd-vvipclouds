@@ -63,7 +63,7 @@ const validateApiKey = (req, res, next) => {
   if (req.path === '/apilist') {
     return next();
   }
-  
+
   const userKey = req.query.apikey;
   if (!userKey) {
     return res.status(403).json({
@@ -72,7 +72,7 @@ const validateApiKey = (req, res, next) => {
       message: "API Key mana? masukkan parameter ?apikey=MasukkanApiKey"
     });
   }
-  
+
   const isFreeKey = (userKey === VALID_API_KEY);
   const isPremiumKey = PREMIUM_API_KEYS.includes(userKey);
 
@@ -88,13 +88,13 @@ const validateApiKey = (req, res, next) => {
   const pathParts = req.path.split('/');
   const currentCategory = pathParts[1]; 
   const currentRouteName = pathParts[2];   
-  
+
   if (currentCategory && currentRouteName) {
     try {
       const routeFilePath = path.join(apiPath, currentCategory, `${currentRouteName}.js`);
       if (fs.existsSync(routeFilePath)) {
         const routeModule = require(routeFilePath);
-        
+
         // Cek Status Fitur (Maintenance/Perbaikan)
         if (routeModule.status === "error" || routeModule.status === "perbaikan") {
           return res.status(503).json({
@@ -117,7 +117,7 @@ const validateApiKey = (req, res, next) => {
       console.error("Gagal memvalidasi status/type router:", e.message);
     }
   }
-  
+
   next();
 };
 
@@ -145,10 +145,10 @@ function getEndpointsFromRouter(category, file) {
   subRouter.stack.forEach(layer => {
     if (layer.route) {
       const methods = Object.keys(layer.route.methods).map(m => m.toUpperCase());
-      
+
       // Otomatis daftarkan parameter apikey di paling awal agar muncul di UI dokumentasi
       let params = { apikey: "" }; 
-      
+
       if (layer.route.stack && layer.route.stack.length) {
         layer.route.stack.forEach(mw => {
           const fnString = mw.handle.toString();
@@ -559,6 +559,8 @@ app.get('/', (req, res) => {
     </div>
     
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.30.1/moment.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.30.1/locale/id.min.js"></script>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.45/moment-timezone-with-data.min.js"></script>
 
 <script class="notranslate" translate="no">

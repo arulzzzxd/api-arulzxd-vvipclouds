@@ -247,7 +247,6 @@ function cleanupBatteryMonitor() {
 }
 
 // ==================== FITUR JAM & TANGGAL MOMENT-TIMEZONE ====================
-// ==================== FITUR JAM & TANGGAL MOMENT-TIMEZONE ====================
 function initDigitalClock() {
     const clockElement = document.getElementById('liveClock');
     const dateElement = document.getElementById('liveDate');
@@ -257,19 +256,16 @@ function initDigitalClock() {
     function updateClock() {
         if (typeof moment === 'undefined') return;
 
-        // Mengambil waktu terkini dengan zona Asia/Jakarta
+        // Gunakan objek moment dengan zona waktu Jakarta
         const now = moment().tz("Asia/Jakarta");
         clockElement.textContent = now.format('HH:mm:ss');
         
-        // Memilih kode bahasa berdasarkan preferensi saat ini
-        const formatLang = currentLang === 'id' ? 'id' : 'en';
-        
-        // Mengubah lokalitas moment secara dinamis untuk menyelaraskan nama hari dan bulan
-        if (formatLang === 'id') {
+        // Cek bahasa aktif yang sedang digunakan di aplikasi
+        if (currentLang === 'id') {
+            // .locale('id') sekarang aman digunakan karena datanya sudah dimuat di HTML
             dateElement.textContent = now.locale('id').format('dddd, D MMMM YYYY');
         } else {
-            dateElement.textContent = now.locale('en').format('dddd, MMMM D, YYYY'); 
-            // Menggunakan standar format bahasa Inggris: Friday, June 22, 2026
+            dateElement.textContent = now.locale('en').format('dddd, MMMM D, YYYY');
         }
     }
 
@@ -670,12 +666,10 @@ function loadApis() {
             const path = pathParts[0];
             const queryParams = new URLSearchParams(pathParts[1] || '');
             
-            // Pengkondisian class warna status dasar dari backend
             let statusClass = "status-ready";
             if (item.status === 'update') statusClass = 'status-update';
             if (item.status === 'error' || item.status === 'perbaikan') statusClass = 'status-error';
 
-            // PETA STATUS BAHASA INGGRIS SECARA DINAMIS
             let statusText = "READY"; 
             if (item.status === 'update') {
                 statusText = "UPDATE";
@@ -683,7 +677,6 @@ function loadApis() {
                 statusText = "MAINTENANCE";
             }
 
-            // Badge Tipe Akses Premium / Free
             let badgeTypeHtml = '';
             if (item.type === 'premium') {
                 badgeTypeHtml = `<span class="px-1.5 py-0.5 text-[9px] rounded-sm bg-amber-500/20 text-amber-400 border border-amber-500/30 font-bold uppercase tracking-wider animate-pulse">👑 PREMIUM</span>`;
@@ -740,19 +733,34 @@ function loadApis() {
                     Object.keys(item.params).forEach(paramName => {
                         const isRequired = !queryParams.has(paramName) || queryParams.get(paramName) === '';
                         
-                        // EKSTRAKSI AUTOMATIS CONTOH DATA BERDASARKAN BAGIAN URL ATAU PARAMS
-                        let exampleVal = '';
-                        if (queryParams.has(paramName)) {
-                            exampleVal = queryParams.get(paramName);
-                        } else if (item.path.includes(`${paramName}=`)) {
-                            // Mencari fallback value dari query string bawaan path
-                            const match = item.path.match(new RegExp(`[?&]${paramName}=([^&]+)`));
-                            if (match) exampleVal = decodeURIComponent(match[1]);
-                        }
-
-                        // Jika kosong atau berupa default placeholder, berikan fallback tulisan yang bagus
-                        if (!exampleVal || exampleVal === 'undefined') {
-                            exampleVal = paramName === 'query' ? 'alan walker' : (item.params[paramName] || 'value');
+                        // 1. Cek isi bawaan dari params value asli backend terlebih dahulu
+                        let exampleVal = item.params[paramName];
+                        
+                        // 2. Jika nilainya kosong atau sama persis dengan nama parameternya (seperti item.params.query = "query")
+                        // Maka buat pemetaan cerdas (Smart Mapping fallback) agar tampilannya presisi
+                        if (!exampleVal || exampleVal.toLowerCase() === paramName.toLowerCase()) {
+                            const nameLower = item.name.toLowerCase();
+                            const pathLower = item.path.toLowerCase();
+                            
+                            if (paramName === 'query') {
+                                if (nameLower.includes('youtube') || pathLower.includes('youtube')) exampleVal = 'alan walker';
+                                else if (nameLower.includes('chord') || pathLower.includes('chord')) exampleVal = 'surat cinta untuk starla';
+                                else if (nameLower.includes('google') || pathLower.includes('google')) exampleVal = 'berita terbaru hari ini';
+                                else exampleVal = 'alan walker';
+                            } else if (paramName === 'url') {
+                                if (nameLower.includes('tiktok') || pathLower.includes('tiktok')) exampleVal = 'https://vt.tiktok.com/ZSxxXXXXX/';
+                                else if (nameLower.includes('youtube') || pathLower.includes('youtube')) exampleVal = 'https://www.youtube.com/watch?v=XXXXXX';
+                                else if (nameLower.includes('instagram') || pathLower.includes('instagram')) exampleVal = 'https://www.instagram.com/p/XXXXXX';
+                                else exampleVal = 'https://example.com/link-media';
+                            } else if (paramName === 'text') {
+                                exampleVal = 'halo arulzxd';
+                            } else if (paramName === 'apikey' || paramName === 'key') {
+                                exampleVal = 'arulzxd-keys';
+                            } else if (paramName === 'username') {
+                                exampleVal = 'arulzzzxd';
+                            } else {
+                                exampleVal = 'value';
+                            }
                         }
 
                         html += `
