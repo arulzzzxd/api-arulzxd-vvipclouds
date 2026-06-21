@@ -21,35 +21,7 @@ const footer = "ﾂｩ Arulz-XD";
 const FREE_API_KEYS = ["arulzxd-keys", "free-key-2"];
 const PREMIUM_API_KEYS = ["premium-arulz", "vip-user-key"]; // Tambahkan custom apikey premium Anda di sini
 
-// PATH FILE STATISTIK GLOBAL
-const statsFilePath = path.join(__dirname, 'stats.json');
-
-// Fungsi pembantu untuk membaca total request saat ini secara real-time
-function getGlobalStats() {
-  try {
-    if (!fs.existsSync(statsFilePath)) {
-      fs.writeFileSync(statsFilePath, JSON.stringify({ totalRequests: 0 }));
-    }
-    const data = JSON.parse(fs.readFileSync(statsFilePath, 'utf8'));
-    return data;
-  } catch (e) {
-    return { totalRequests: 0 };
-  }
-}
-
-// Fungsi pembantu untuk menambah hitungan total request secara permanen
-function incrementGlobalRequests() {
-  try {
-    const data = getGlobalStats();
-    data.totalRequests += 1;
-    fs.writeFileSync(statsFilePath, JSON.stringify(data));
-    return data.totalRequests;
-  } catch (e) {
-    return 0;
-  }
-}
-
-// === KONFIGURASI PLAYLIST BANYAK MUSIK (FIXED) ===
+// === KONFIGURASI PLAYLIST BANYAK MUSIK ===
 const playlist = [
   {
     title: "PAMIT KERJO",
@@ -89,7 +61,7 @@ const endpointDirs = fs.readdirSync(apiPath).filter(f => fs.statSync(path.join(a
 
 // Middleware untuk memvalidasi API Key secara dinamis berdasarkan jenis endpoint (Free / Premium)
 const validateApiKey = (req, res, next) => {
-  if (req.path === '/apilist' || req.path === '/stats') {
+  if (req.path === '/apilist') {
     return next();
   }
   
@@ -142,18 +114,11 @@ const validateApiKey = (req, res, next) => {
     }
   }
   
-  incrementGlobalRequests();
   next();
 };
 
 // Pasang middleware validasi ke router API
 router.use(validateApiKey);
-
-// Endpoint statistik
-router.get('/stats', (req, res) => {
-  const stats = getGlobalStats();
-  res.json({ totalRequests: stats.totalRequests });
-});
 
 for (const category of endpointDirs) {
   const categoryPath = path.join(apiPath, category);
@@ -285,9 +250,7 @@ app.get('/', (req, res) => {
     .light-mode { color: #0f172a !important; }
     .light-mode #mainTitle { color: #0f172a !important; }
     .light-mode #mainDescription { color: #334155 !important; }
-    .light-mode #stat-battery-title,
     .light-mode #stat-endpoints-title,
-    .light-mode #stat-requests-title,
     .light-mode #stat-categories-title { color: #475569 !important; }
     .light-mode #siteFooter { color: #64748b !important; border-color: rgba(0,0,0,0.1); }
     .light-mode #no-results-title { color: #0f172a !important; }
@@ -423,7 +386,7 @@ app.get('/', (req, res) => {
         </header>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10 items-start">
-            <section class="lg:col-span-2 grid grid-cols-2 sm:grid-cols-3 gap-4">
+            <section class="lg:col-span-2 grid grid-cols-2 gap-4">
                 <div class="glass-panel p-4 rounded-2xl flex flex-col justify-between min-h-[110px]">
                     <span id="stat-endpoints-title" class="text-[11px] font-bold text-slate-400 font-['JetBrains_Mono'] tracking-wider uppercase">Total Endpoint</span>
                     <div class="flex items-baseline gap-2 mt-2">
@@ -437,14 +400,6 @@ app.get('/', (req, res) => {
                     <div class="flex items-baseline gap-2 mt-2">
                         <span id="totalCategories" class="text-3xl font-bold text-purple-400 tracking-tight font-['JetBrains_Mono']">0</span>
                         <span class="text-xs text-slate-500">dirs</span>
-                    </div>
-                </div>
-
-                <div class="glass-panel p-4 rounded-2xl flex flex-col justify-between min-h-[110px] col-span-2 sm:col-span-1">
-                    <span id="stat-requests-title" class="text-[11px] font-bold text-slate-400 font-['JetBrains_Mono'] tracking-wider uppercase">Total Hit Request</span>
-                    <div class="flex items-baseline gap-2 mt-2">
-                        <span id="totalRequests" class="text-3xl font-bold text-emerald-400 tracking-tight font-['JetBrains_Mono']">0</span>
-                        <span class="text-xs text-slate-500">hits</span>
                     </div>
                 </div>
             </section>
