@@ -735,11 +735,25 @@ function loadApis() {
                     <div>
                         <h4 class="font-bold text-[11px] uppercase tracking-wider text-slate-400 light-mode:text-slate-600 mb-3">Parameter</h4>
                         <form id="form-${catIdx}-${epIdx}" onsubmit="executeRequest(event, ${catIdx}, ${epIdx}, '${method}', '${path}')">
-                            <div class="space-y-4 mb-4">`; // Mengubah space-y-3 menjadi space-y-4 agar jarak deskripsi parameter lebih lega
+                            <div class="space-y-4 mb-4">`;
                 if (item.params) {
                     Object.keys(item.params).forEach(paramName => {
                         const isRequired = !queryParams.has(paramName) || queryParams.get(paramName) === '';
-                        const paramDesc = item.params[paramName] || `Masukkan ${paramName}`;
+                        
+                        // EKSTRAKSI AUTOMATIS CONTOH DATA BERDASARKAN BAGIAN URL ATAU PARAMS
+                        let exampleVal = '';
+                        if (queryParams.has(paramName)) {
+                            exampleVal = queryParams.get(paramName);
+                        } else if (item.path.includes(`${paramName}=`)) {
+                            // Mencari fallback value dari query string bawaan path
+                            const match = item.path.match(new RegExp(`[?&]${paramName}=([^&]+)`));
+                            if (match) exampleVal = decodeURIComponent(match[1]);
+                        }
+
+                        // Jika kosong atau berupa default placeholder, berikan fallback tulisan yang bagus
+                        if (!exampleVal || exampleVal === 'undefined') {
+                            exampleVal = paramName === 'query' ? 'alan walker' : (item.params[paramName] || 'value');
+                        }
 
                         html += `
                             <div>
@@ -747,9 +761,9 @@ function loadApis() {
                                     <label class="block text-xs font-semibold text-slate-300 light-mode:text-slate-700 code-font">
                                         ${paramName} ${isRequired ? '<span class="text-red-500">*</span>' : ''}
                                     </label>
-                                    <span class="text-[10px] text-slate-500 light-mode:text-slate-400 italic font-normal">${paramDesc}</span>
+                                    <span class="text-[10px] text-slate-500 light-mode:text-slate-400 italic font-normal">Contoh: ${exampleVal}</span>
                                 </div>
-                                <input type="text" name="${paramName}" oninput="updateLivePreview(${catIdx}, ${epIdx}, '${method}', '${path}')" class="w-full px-3 py-2 rounded-lg bg-black/40 light-mode:bg-white border border-white/10 light-mode:border-slate-300 text-white light-mode:text-slate-900 focus:outline-none focus:border-cyan-500 code-font text-sm" placeholder="Contoh: ${paramDesc}" ${isRequired ? 'required' : ''}>
+                                <input type="text" name="${paramName}" oninput="updateLivePreview(${catIdx}, ${epIdx}, '${method}', '${path}')" class="w-full px-3 py-2 rounded-lg bg-black/40 light-mode:bg-white border border-white/10 light-mode:border-slate-300 text-white light-mode:text-slate-900 focus:outline-none focus:border-cyan-500 code-font text-sm" placeholder="Contoh: ${exampleVal}" ${isRequired ? 'required' : ''}>
                             </div>`;
                     });
                 }
