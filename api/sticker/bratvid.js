@@ -34,7 +34,7 @@ router.get("/", async (req, res) => {
         // 3. Mengambil data dari upstream API Brat Video
         // Menambahkan parameter mode=gif (jika didukung upstream) atau melakukan stream binary GIF
         const targetUrl = `https://api.deline.web.id/maker/bratvid?text=${encodeURIComponent(text)}&mode=gif`;
-        
+
         const response = await axios({
             method: "get",
             url: targetUrl,
@@ -58,4 +58,6 @@ router.get("/", async (req, res) => {
     }
 });
 
+router.status = "ready"; 
+router.type = "free";
 module.exports = router;
