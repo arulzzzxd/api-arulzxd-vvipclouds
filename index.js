@@ -4,6 +4,33 @@ const fs = require('fs');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// ==================== TRACKING TOTAL REQUEST / BULAN ====================
+let totalRequestsThisMonth = 0;
+// Menyimpan string bulan & tahun saat ini, contoh: "Jun 2026"
+const getMonthYearString = () => {
+  const d = new Date();
+  return `${d.toLocaleString('en-US', { month: 'short' })} ${d.getFullYear()}`;
+};
+let currentMonthString = getMonthYearString();
+
+// Middleware Hitung Request Bulanan Secara Nyata
+app.use((req, res, next) => {
+  const thisMonth = getMonthYearString();
+  if (thisMonth !== currentMonthString) {
+    totalRequestsThisMonth = 0; // Reset jika sudah ganti bulan baru
+    currentMonthString = thisMonth;
+  }
+
+  // Hanya menghitung hit pada rute API riil (mengabaikan dashboard, script, css, dsb)
+  if (req.path.startsWith('/api') && req.path !== '/api/apilist') {
+    totalRequestsThisMonth++;
+  }
+  
+  next();
+});
+// =======================================================================
+
 app.use(express.static(path.join(__dirname)));
 app.use(express.json());
 
@@ -15,26 +42,10 @@ const favicon = "https://arulz-uploader.vercel.app/files/C5VYmq.jpg";
 const logo = "https://arulz-uploader.vercel.app/files/SnhJe3.png";
 const headertitle = `<img src="https://readme-typing-svg.demolab.com?font=Poppins&weight=700&size=28&pause=1000&color=00D4FF&center=true&vCenter=true&width=600&lines=Welcome+To+ArulzXD+API;Fast+%F0%9F%9A%80+Reliable+%E2%9A%A1;Free+REST+API+Services;Developer+Friendly+API" alt="Typing SVG" class="mx-auto" />`;
 const headerdescription = "Browse, inspect & fire requests against live endpoints._";
-const footer = "ﾂｩ Arulz-XD";
+const footer = "© Arulz-XD";
 
 // API KEY CONFIGURATION
 const VALID_API_KEY = "arulzxd-keys";
-
-// ==================== TRACKING TOTAL REQUEST / HARI ====================
-let totalRequestsToday = 0;
-let currentDayString = new Date().toDateString();
-
-// Middleware Hitung Request Harian
-app.use((req, res, next) => {
-  const today = new Date().toDateString();
-  if (today !== currentDayString) {
-    totalRequestsToday = 0; // Reset jika hari berganti
-    currentDayString = today;
-  }
-  totalRequestsToday++;
-  next();
-});
-// =======================================================================
 
 // === KONFIGURASI PLAYLIST BANYAK MUSIK ===
 const playlist = [
@@ -100,53 +111,62 @@ const validateApiKey = (req, res, next) => {
 
 router.use(validateApiKey);
 
-const endpointDirs = fs.readdirSync(apiPath).filter(f => fs.statSync(path.join(apiPath, f)).isDirectory());
-
-for (const category of endpointDirs) {
-  const categoryPath = path.join(apiPath, category);
-  const files = fs.readdirSync(categoryPath).filter(f => f.endsWith('.js'));
-  for (const file of files) {
-    const routeName = path.basename(file, '.js');
-    const route = require(path.join(categoryPath, file));
-    router.use(`/${category}/${routeName}`, route);
+// Membaca direktori kategori API jika ada
+let endpointDirs = [];
+if (fs.existsSync(apiPath)) {
+  endpointDirs = fs.readdirSync(apiPath).filter(f => fs.statSync(path.join(apiPath, f)).isDirectory());
+  
+  for (const category of endpointDirs) {
+    const categoryPath = path.join(apiPath, category);
+    const files = fs.readdirSync(categoryPath).filter(f => f.endsWith('.js'));
+    for (const file of files) {
+      const routeName = path.basename(file, '.js');
+      const route = require(path.join(categoryPath, file));
+      router.use(`/${category}/${routeName}`, route);
+    }
   }
 }
 
 function getEndpointsFromRouter(category, file) {
   const endpoints = [];
-  const route = require(path.join(apiPath, category, file));
-  const subRouter = route.stack ? route : route.router || route;
-  if (!subRouter || !subRouter.stack) return endpoints;
-  subRouter.stack.forEach(layer => {
-    if (layer.route) {
-      const methods = Object.keys(layer.route.methods).map(m => m.toUpperCase());
-      let params = { apikey: "" }; 
+  try {
+    const route = require(path.join(apiPath, category, file));
+    const subRouter = route.stack ? route : route.router || route;
+    if (!subRouter || !subRouter.stack) return endpoints;
+    
+    subRouter.stack.forEach(layer => {
+      if (layer.route) {
+        const methods = Object.keys(layer.route.methods).map(m => m.toUpperCase());
+        let params = { apikey: "" }; 
 
-      if (layer.route.stack && layer.route.stack.length) {
-        layer.route.stack.forEach(mw => {
-          const fnString = mw.handle.toString();
-          [...fnString.matchAll(/req\.query\.([a-zA-Z0-9_]+)/g)].forEach(match => {
-            if (match[1] !== 'apikey') params[match[1]] = "";
+        if (layer.route.stack && layer.route.stack.length) {
+          layer.route.stack.forEach(mw => {
+            const fnString = mw.handle.toString();
+            [...fnString.matchAll(/req\.query\.([a-zA-Z0-9_]+)/g)].forEach(match => {
+              if (match[1] !== 'apikey') params[match[1]] = "";
+            });
+            [...fnString.matchAll(/req\.body\.([a-zA-Z0-9_]+)/g)].forEach(match => {
+              params[match[1]] = "";
+            });
           });
-          [...fnString.matchAll(/req\.body\.([a-zA-Z0-9_]+)/g)].forEach(match => {
-            params[match[1]] = "";
-          });
+        }
+        endpoints.push({
+          name: `/${category}/${file.replace(/\.js$/,"")}`,
+          path: `/api/${category}/${file.replace(/\.js$/,"")}`,
+          desc: `Ref: /${category}/${file.replace(/\.js$/,"")}`,
+          status: "ready",
+          params,
+          methods
         });
       }
-      endpoints.push({
-        name: `/${category}/${file.replace(/\.js$/,"")}`,
-        path: `/api/${category}/${file.replace(/\.js$/,"")}`,
-        desc: `/${category}/${file.replace(/\.js$/,"")}`,
-        status: "ready",
-        params,
-        methods
-      });
-    }
-  });
+    });
+  } catch (e) {
+    console.error(`Gagal membaca file route: ${file}`, e);
+  }
   return endpoints;
 }
 
-// UPDATE: Menyisipkan total requests ke dalam response json
+// ROUTE: Menyisipkan totalRequestsToday (berisi hit bulanan) ke response json
 router.get('/apilist', (req, res) => {
   const categories = [];
 
@@ -178,7 +198,8 @@ router.get('/apilist', (req, res) => {
     ]
   });
 
-  res.json({ categories, totalRequestsToday });
+  // Variabel dikirim sebagai totalRequestsToday agar script.js bawaanmu langsung bisa membaca nilainya tanpa merubah frontend
+  res.json({ categories, totalRequestsToday: totalRequestsTodayMonth });
 });
 
 app.use('/api', router);
@@ -318,7 +339,7 @@ app.get('/', (req, res) => {
         </div>
 
         <div class="mb-6 p-3 bg-cyan-950/40 border border-cyan-500/30 rounded-xl light-mode:bg-cyan-50 light-mode:border-cyan-200">
-            <span class="text-[10px] font-bold text-cyan-400 light-mode:text-cyan-700 uppercase tracking-widest block mb-1">迫 Current API Key</span>
+            <span class="text-[10px] font-bold text-cyan-400 light-mode:text-cyan-700 uppercase tracking-widest block mb-1">🔑 Current API Key</span>
             <div class="flex items-center justify-between bg-black/40 rounded px-2 py-1.5 font-mono text-xs text-slate-200 border border-white/5 light-mode:bg-white light-mode:text-slate-800 light-mode:border-slate-200">
                 <span class="select-all">${VALID_API_KEY}</span>
                 <span class="text-[9px] bg-cyan-500/20 text-cyan-300 px-1 rounded light-mode:bg-cyan-100 light-mode:text-cyan-700 font-sans font-bold">FREE</span>
@@ -342,12 +363,11 @@ app.get('/', (req, res) => {
     <div class="max-w-5xl mx-auto px-4 py-8 relative z-10">
         <header id="api" class="mb-12 text-center">
             <div class="flex items-center justify-center gap-3 mb-2">
-                <span class="bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest animate-pulse light-mode:bg-cyan-100 light-mode:text-cyan-700">笳ONLINE</span>
+                <span class="bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest animate-pulse light-mode:bg-cyan-100 light-mode:text-cyan-700">🚀 ONLINE</span>
             </div>
             <div id="mainTitle" class="flex justify-center mb-4 min-h-[50px] items-center">${headertitle}</div>
             <p id="mainDescription" class="text-md md:text-lg font-medium tracking-wide text-slate-300 max-w-xl mx-auto">${headerdescription}</p>
             
-            <!-- UPDATE: Grid diubah menjadi 4 kolom di layar besar (sm:grid-cols-4) dan menambahkan statistik request -->
             <div class="mt-8 grid grid-cols-1 sm:grid-cols-4 gap-4 max-w-4xl mx-auto">
                 <div class="glass-panel flex flex-col items-center justify-center p-4 rounded-xl shadow-lg">
                     <div class="text-center mb-3 font-['Space_Grotesk']">
@@ -378,16 +398,16 @@ app.get('/', (req, res) => {
                     <span id="totalCategories" class="text-3xl font-black text-cyan-400 mt-1 light-mode:text-cyan-600">0</span>
                 </div>
 
-                <!-- BARU: STATISTIK TOTAL REQUEST/HARI -->
+                <!-- UPDATE: Label UI diubah menjadi Request / Bulan -->
                 <div class="glass-panel flex flex-col items-center justify-center p-4 rounded-xl shadow-lg">
-                    <span id="stat-requests-title" class="text-xs font-bold uppercase tracking-wider text-slate-400">Request / Hari</span>
+                    <span id="stat-requests-title" class="text-xs font-bold uppercase tracking-wider text-slate-400">Request / Bulan</span>
                     <span id="totalRequests" class="text-3xl font-black text-cyan-400 mt-1 light-mode:text-cyan-600">0</span>
                 </div>
             </div>
 
             <div class="glass-panel max-w-3xl mx-auto mt-4 p-3 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-3 border border-white/20">
                 <div class="flex items-center gap-2 text-sm text-cyan-400 light-mode:text-cyan-700 code-font">
-                    <span>迫</span> <span class="underline break-all font-semibold">https://simple-api-lagi.vercel.app/</span>
+                    <span>🌐</span> <span class="underline break-all font-semibold">https://simple-api-lagi.vercel.app/</span>
                 </div>
                 <a href="https://wa.me/6285122629940?text=Halo%20Arulz,%20saya%20ingin%20request%20fitur%20baru%20di%20REST%20API%20:" 
                    target="_blank" 
@@ -397,8 +417,8 @@ app.get('/', (req, res) => {
             </div>
 
             <div class="flex justify-center gap-4 mt-4 max-w-3xl mx-auto">
-                <a href="https://wa.me/6285122629940?text=Halo%20Arulz,%20boleh%20minta%20link%20Channel%20kamu%3F" target="_blank" class="flex-1 glass-panel py-2 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-white/10 light-mode:hover:bg-slate-100 transition-colors light-mode:text-slate-700 text-center block">町 Channel</a>
-                <a href="https://wa.me/6285122629940?text=Halo%20Arulz,%20boleh%20minta%20link%20Group%20kamu%3F" target="_blank" class="flex-1 glass-panel py-2 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-white/10 light-mode:hover:bg-slate-100 transition-colors light-mode:text-slate-700 text-center block">則 Group</a>
+                <a href="https://wa.me/6285122629940?text=Halo%20Arulz,%20boleh%20minta%20link%20Channel%20kamu%3F" target="_blank" class="flex-1 glass-panel py-2 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-white/10 light-mode:hover:bg-slate-100 transition-colors light-mode:text-slate-700 text-center block">📢 Channel</a>
+                <a href="https://wa.me/6285122629940?text=Halo%20Arulz,%20boleh%20minta%20link%20Group%20kamu%3F" target="_blank" class="flex-1 glass-panel py-2 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-white/10 light-mode:hover:bg-slate-100 transition-colors light-mode:text-slate-700 text-center block">👥 Group</a>
             </div>
 
             <div class="music-player-card glass-panel mt-8 max-w-2xl mx-auto rounded-2xl p-4 shadow-2xl relative overflow-hidden border border-white/10">
@@ -450,7 +470,7 @@ app.get('/', (req, res) => {
         </div>
 
         <div id="noResults" class="text-center py-12 hidden">
-            <div class="text-4xl mb-2">剥</div>
+            <div class="text-4xl mb-2">🔍</div>
             <h3 id="no-results-title" class="text-sm font-bold mb-1 text-white">Endpoint tidak ditemukan</h3>
             <p id="no-results-desc" class="text-xs text-slate-400 light-mode:text-slate-500">Coba gunakan kata kunci lain</p>
         </div>
