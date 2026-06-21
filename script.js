@@ -35,21 +35,15 @@ const i18n = {
         searchPlaceholder: "Cari endpoint berdasarkan nama, path, atau kategori...",
         noResultsTitle: "Endpoint tidak ditemukan",
         noResultsDesc: "Coba gunakan kata kunci lain",
-        batteryTitle: "Baterai Anda",
         endpointsTitle: "Total Endpoint",
         categoriesTitle: "Total Kategori",
-        requestsTitle: "Request / Bulan",
-        batteryDetecting: "Mendeteksi...",
-        batteryCharging: "Mengisi Daya",
-        batteryFull: "Penuh",
-        batteryDischarging: "Menguras Daya",
-        batteryLeft: "tersisa",
+        requestsTitle: "Total Hit Request",
         endpointsCount: "endpoints",
         btnExecute: "Eksekusi",
         btnClear: "Bersihkan",
         toastMediaCopy: "Media URL disalin ke papan klip!",
         toastMediaFail: "Gagal menyalin URL",
-        endpointNotAvailable: "⚠️ Endpoint ini tidak tersedia untuk pengujian",
+        endpointNotAvailable: "⚠️ Endpoint ini sedang mengalami gangguan/error",
         toastRequestWait: "Harap tunggu permintaan saat ini selesai",
         toastRequestSuccess: "Permintaan berhasil diselesaikan!",
         toastRequestFailed: "Permintaan gagal!"
@@ -58,21 +52,15 @@ const i18n = {
         searchPlaceholder: "Search endpoints by name, path, or category...",
         noResultsTitle: "No endpoints found",
         noResultsDesc: "Try a different search term",
-        batteryTitle: "Your Battery",
         endpointsTitle: "Total Endpoints",
         categoriesTitle: "Total Categories",
-        requestsTitle: "Requests / Month",
-        batteryDetecting: "Detecting...",
-        batteryCharging: "Charging",
-        batteryFull: "Fully charged",
-        batteryDischarging: "Discharging",
-        batteryLeft: "left",
+        requestsTitle: "Total Hit Requests",
         endpointsCount: "endpoints",
         btnExecute: "Execute",
         btnClear: "Clear",
         toastMediaCopy: "Media URL copied to clipboard!",
         toastMediaFail: "Failed to copy URL",
-        endpointNotAvailable: "⚠️ This endpoint is not available for testing",
+        endpointNotAvailable: "⚠️ This endpoint is currently experiencing errors",
         toastRequestWait: "Please wait for current request",
         toastRequestSuccess: "Request completed successfully!",
         toastRequestFailed: "Request failed!"
@@ -99,10 +87,10 @@ function updateThemeBackground(theme) {
 function initTheme() {
     const savedTheme = localStorage.getItem('theme') || 'dark';
     currentTheme = savedTheme;
-    
+
     const themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
     const themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
-    
+
     if (savedTheme === 'light') {
         body.classList.add('light-mode');
         body.classList.remove('text-slate-100');
@@ -123,7 +111,7 @@ function initTheme() {
 function toggleTheme() {
     const themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
     const themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
-    
+
     if (body.classList.contains('light-mode')) {
         body.classList.remove('light-mode');
         body.classList.remove('text-slate-900');
@@ -139,7 +127,7 @@ function toggleTheme() {
         themeToggleLightIcon?.classList.remove('hidden');
         currentTheme = 'light';
     }
-    
+
     localStorage.setItem('theme', currentTheme);
     updateThemeBackground(currentTheme);
     updateSocialBadges();
@@ -149,35 +137,30 @@ function toggleTheme() {
 function setLanguage(lang) {
     currentLang = lang;
     localStorage.setItem('lang', lang);
-    
+
     document.getElementById('lang-id').classList.toggle('active', lang === 'id');
     document.getElementById('lang-en').classList.toggle('active', lang === 'en');
-    
+
     document.getElementById('searchInput').placeholder = i18n[lang].searchPlaceholder;
     document.getElementById('no-results-title').textContent = i18n[lang].noResultsTitle;
     document.getElementById('no-results-desc').textContent = i18n[lang].noResultsDesc;
-    document.getElementById('stat-battery-title').textContent = i18n[lang].batteryTitle;
     document.getElementById('stat-endpoints-title').textContent = i18n[lang].endpointsTitle;
     document.getElementById('stat-categories-title').textContent = i18n[lang].categoriesTitle;
     document.getElementById('stat-requests-title').textContent = i18n[lang].requestsTitle;
-    
-    if (batteryMonitor) {
-        window.dispatchEvent(new Event('batteryupdate-hook'));
-    }
 
     const dateElement = document.getElementById('liveDate');
     if (dateElement && typeof moment !== 'undefined') {
         const now = moment().tz("Asia/Jakarta");
         dateElement.textContent = now.locale('id').format('dddd, D MMMM YYYY');
     }
-    
+
     if (apiData) loadApis();
 }
 
 function updateSocialBadges() {
     const isLightMode = body.classList.contains('light-mode');
     const socialBadges = document.querySelectorAll('.social-badge > div');
-    
+
     socialBadges.forEach(badge => {
         if (isLightMode) {
             badge.className = 'px-4 py-2 rounded-xl text-xs font-bold transition-colors text-center border bg-white/80 text-slate-900 hover:bg-slate-100 border-black/10 shadow-sm';
@@ -185,66 +168,6 @@ function updateSocialBadges() {
             badge.className = 'px-4 py-2 rounded-xl text-xs font-bold transition-colors text-center border bg-slate-900/40 text-slate-200 hover:bg-slate-800/60 border-white/10';
         }
     });
-}
-
-function initBatteryDetection() {
-    const batteryLevelElement = document.getElementById('batteryLevel');
-    const batteryPercentageElement = document.getElementById('batteryPercentage');
-    const batteryStatusElement = document.getElementById('batteryStatus');
-    const batteryContainer = document.getElementById('batteryContainer');
-    
-    if ('getBattery' in navigator) {
-        navigator.getBattery().then(function(battery) {
-            function updateBatteryInfo() {
-                const level = battery.level * 100;
-                const isCharging = battery.charging;
-                const roundedLevel = Math.round(level);
-                
-                batteryPercentageElement.textContent = `${roundedLevel}%`;
-                batteryLevelElement.style.width = `${level}%`;
-                
-                if (level > 60) {
-                    batteryLevelElement.className = 'battery-level bg-green-500';
-                } else if (level > 20) {
-                    batteryLevelElement.className = 'battery-level bg-yellow-500';
-                } else {
-                    batteryLevelElement.className = 'battery-level bg-red-500';
-                }
-                
-                if (isCharging) {
-                    batteryContainer.classList.add('charging');
-                    batteryStatusElement.textContent = i18n[currentLang].batteryCharging;
-                } else {
-                    batteryContainer.classList.remove('charging');
-                    if (battery.dischargingTime === Infinity) {
-                        batteryStatusElement.textContent = i18n[currentLang].batteryFull;
-                    } else {
-                        batteryStatusElement.textContent = i18n[currentLang].batteryDischarging;
-                    }
-                }
-            }
-            
-            updateBatteryInfo();
-            battery.addEventListener('levelchange', updateBatteryInfo);
-            battery.addEventListener('chargingchange', updateBatteryInfo);
-            window.addEventListener('batteryupdate-hook', updateBatteryInfo);
-            batteryMonitor = battery;
-            
-        }).catch(function() { fallbackBattery(); });
-    } else {
-        fallbackBattery();
-    }
-    
-    function fallbackBattery() {
-        batteryStatusElement.textContent = 'Simulated';
-        batteryPercentageElement.textContent = '85%';
-        batteryLevelElement.style.width = '85%';
-        batteryLevelElement.className = 'battery-level bg-green-400';
-    }
-}
-
-function cleanupBatteryMonitor() {
-    if (batteryMonitor) batteryMonitor = null;
 }
 
 function initDigitalClock() {
@@ -255,7 +178,7 @@ function initDigitalClock() {
 
     function updateClock() {
         if (typeof moment === 'undefined') return;
-        
+
         const now = moment().tz("Asia/Jakarta");
         clockElement.textContent = now.format('HH:mm:ss');
         dateElement.textContent = now.locale('id').format('dddd, D MMMM YYYY');
@@ -275,7 +198,6 @@ function updateMonthlyRequests(count = 0) {
     }
 }
 
-// Fungsi sinkronisasi stat request terbaru langsung dari file stats.json di backend
 function fetchStats() {
     fetch('/api/stats')
         .then(res => res.json())
@@ -291,7 +213,7 @@ function showToast(message, isError = false) {
     const toast = document.getElementById('toast');
     const toastMessage = document.getElementById('toastMessage');
     const toastIcon = document.getElementById('toastIcon');
-    
+
     toastMessage.textContent = message;
     if (isError) {
         toastIcon.innerHTML = '<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>';
@@ -310,7 +232,6 @@ function copyText(text, type = 'path') {
     });
 }
 
-// Perbaikan fungsi copyFromElement agar value parameter dinamis ikut tersalin
 function copyFromElement(elementId, type) {
     const el = document.getElementById(elementId);
     if (el) {
@@ -330,7 +251,7 @@ function updateLivePreview(catIdx, epIdx, method, basePath) {
 
     const queryStr = params.toString();
     const finalUrl = queryStr ? `${BASE_URL}${basePath}?${queryStr}` : `${BASE_URL}${basePath}`;
-    
+
     const urlContainer = document.getElementById(`live-url-${catIdx}-${epIdx}`);
     const curlContainer = document.getElementById(`live-curl-${catIdx}-${epIdx}`);
 
@@ -393,482 +314,551 @@ function openImageModal(imgSrc) {
         setTimeout(() => {
             modalImg.classList.remove('scale-95');
             modalImg.classList.add('scale-100');
-        }, 30);
+        }, 10);
     }
 }
 
-// Ditambahkan tutup modal zoom gambar
 function closeImageModal() {
     const modal = document.getElementById('imageModal');
     const modalImg = document.getElementById('modalTargetImg');
     if (modal && modalImg) {
         modalImg.classList.remove('scale-100');
         modalImg.classList.add('scale-95');
-        setTimeout(() => {
-            modal.classList.add('hidden');
-            modalImg.src = '';
-        }, 150);
+        setTimeout(() => { modal.classList.add('hidden'); }, 150);
     }
 }
 
-function createMediaPreview(url, contentType, originalUrl = '') {
-    const type = getContentType(url, contentType);
-    let previewHtml = '';
+function loadApis() {
+    const apiList = document.getElementById('apiList');
+    if (!apiList || !apiData) return;
+
+    apiList.innerHTML = '';
+    allApiElements = [];
+    totalEndpoints = 0;
+
+    const currentFilterBar = document.getElementById('categoryFilterBar');
+    const activeFilters = Array.from(currentFilterBar.querySelectorAll('.filter-btn')).map(b => b.id.replace('cat-filter-', ''));
     
-    switch(type) {
-        case 'image':
-            previewHtml = `<div class="media-preview flex justify-center"><img src="${url}" onclick="openImageModal('${url}')" class="media-image cursor-zoom-in hover:opacity-90 transition-all max-h-72 object-contain rounded-lg border border-white/5 shadow" alt="Response Image"></div>`;
-            break;
-        case 'video':
-            previewHtml = `<div class="media-preview"><video controls class="media-iframe"><source src="${url}">Your browser does not support the video tag.</video></div>`;
-            break;
-        case 'audio':
-            previewHtml = `<div class="media-preview"><audio controls class="w-full"><source src="${url}">Your browser does not support the audio tag.</audio></div>`;
-            break;
-        default:
-            previewHtml = `<div class="media-preview"><iframe src="${url}" class="media-iframe" frameborder="0"></iframe></div>`;
-    }
-    
-    const isLightMode = body.classList.contains('light-mode');
-    const btnClass = isLightMode 
-        ? 'px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-lg text-xs font-semibold flex items-center gap-1.5' 
-        : 'px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5';
-    
-    return `<div class="w-full">${previewHtml}<div class="flex gap-2 mt-3"><button type="button" onclick="copyText('${originalUrl || url}', 'Media URL')" class="${btnClass}">📋 Copy URL</button><a href="${url}" download class="${btnClass}">📥 Download</a></div></div>`;
-}
+    apiData.categories.forEach((cat, catIdx) => {
+        const lowerCatName = cat.name.toLowerCase();
+        if (lowerCatName !== 'other') totalEndpoints += cat.items.length;
 
-async function executeRequest(e, catIdx, epIdx, method, path) {
-    e.preventDefault();
-    if (isRequestInProgress) {
-        showToast(i18n[currentLang].toastRequestWait, true);
-        return;
-    }
+        const isLight = currentTheme === 'light';
+        const panelBgClass = isLight ? 'bg-white/80 border-slate-200 shadow-xs' : 'bg-slate-900/40 border-white/5';
+        const headerBgClass = isLight ? 'bg-slate-50 border-slate-200' : 'bg-slate-900/60 border-white/5';
 
-    const form = document.getElementById(`form-${catIdx}-${epIdx}`);
-    const responseDiv = document.getElementById(`response-${catIdx}-${epIdx}`);
-    const responseContent = document.getElementById(`response-content-${catIdx}-${epIdx}`);
-    const executeBtn = form.querySelector('button[type="submit"]');
-    
-    let spinner = executeBtn.querySelector('.local-spinner');
-    if (!spinner) {
-        spinner = document.createElement('span');
-        spinner.className = 'local-spinner ml-2';
-        executeBtn.appendChild(spinner);
-    }
-    
-    isRequestInProgress = true;
-    executeBtn.disabled = true;
-    executeBtn.classList.add('btn-loading');
-    spinner.classList.add('active');
-    
-    const formData = new FormData(form);
-    const params = new URLSearchParams();
-    for (const [key, value] of formData.entries()) {
-        if (value) params.append(key, value);
-    }
+        const catIcon = categoryIcons[lowerCatName] || categoryIcons['default'];
 
-    const fullPath = `${BASE_URL}${path.split('?')[0]}?${params.toString()}`;
-    let curlCommand = `curl -X ${method} "${fullPath}"`;
-    if (method !== 'GET') {
-        curlCommand = `curl -X ${method} "${BASE_URL}${path.split('?')[0]}" `;
-        const bodyParams = [];
-        for (const [key, value] of formData.entries()) {
-            if (value) bodyParams.push(`"${key}": "${value}"`);
-        }
-        if (bodyParams.length) {
-            curlCommand += `-H "Content-Type: application/json" -d '{${bodyParams.join(', ')}}'`;
-        }
-    }
-
-    responseDiv.classList.remove('hidden');
-    responseContent.innerHTML = '<div class="spinner mx-auto"></div>';
-
-    try {
-        const response = await fetch(fullPath);
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-
-        const contentType = response.headers.get("content-type");
-        let rawResponseText = "";
-        let isMedia = false;
-
-        if (contentType?.includes("application/json")) {
-            const data = await response.json();
-            rawResponseText = JSON.stringify(data, null, 2);
-            responseContent.innerHTML = `<pre id="raw-text-${catIdx}-${epIdx}" class="code-font text-sm overflow-auto text-cyan-400">${rawResponseText}</pre>`;
-        } else if (contentType?.startsWith("image/") || contentType?.startsWith("video/") || contentType?.startsWith("audio/") || contentType?.includes("application/pdf")) {
-            isMedia = true;
-            const blob = await response.blob();
-            const url = URL.createObjectURL(blob);
-            responseContent.innerHTML = createMediaPreview(url, contentType, fullPath);
-        } else {
-            rawResponseText = await response.text();
-            responseContent.innerHTML = `<pre id="raw-text-${catIdx}-${epIdx}" class="code-font text-sm overflow-auto">${rawResponseText}</pre>`;
-        }
-
-        const isLightMode = body.classList.contains('light-mode');
-        const btnStyle = isLightMode 
-            ? 'px-2.5 py-1 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded text-[11px] font-semibold transition-colors code-font border border-black/5'
-            : 'px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-white rounded text-[11px] font-semibold transition-colors code-font border border-white/5';
-
-        const actionContainer = document.createElement('div');
-        actionContainer.className = "flex flex-wrap gap-2 mb-3 border-b border-white/10 light-mode:border-slate-200 pb-3";
-
-        const copyUrlBtn = document.createElement('button');
-        copyUrlBtn.type = "button";
-        copyUrlBtn.className = btnStyle;
-        copyUrlBtn.innerHTML = "🔗 Copy URL Request";
-        copyUrlBtn.onclick = () => copyText(fullPath, "URL Request");
-        actionContainer.appendChild(copyUrlBtn);
-
-        const copyCurlBtn = document.createElement('button');
-        copyCurlBtn.type = "button";
-        copyCurlBtn.className = btnStyle;
-        copyCurlBtn.innerHTML = "💻 Copy cURL";
-        copyCurlBtn.onclick = () => copyText(curlCommand, "cURL Command");
-        actionContainer.appendChild(copyCurlBtn);
-
-        if (!isMedia) {
-            const copyResponseBtn = document.createElement('button');
-            copyResponseBtn.type = "button";
-            copyResponseBtn.className = btnStyle;
-            copyResponseBtn.innerHTML = "📋 Copy Response";
-            copyResponseBtn.onclick = () => copyText(rawResponseText, "Response");
-            actionContainer.appendChild(copyResponseBtn);
-        }
-
-        responseContent.insertBefore(actionContainer, responseContent.firstChild);
-        showToast(i18n[currentLang].toastRequestSuccess);
+        const catContainer = document.createElement('div');
+        catContainer.id = `cat-box-${lowerCatName}`;
+        catContainer.className = `glass-panel ${panelBgClass} rounded-2xl overflow-hidden shadow-md border transition-all duration-200`;
         
-        // Memperbarui UI counter request sesaat setelah pengetesan API berhasil
-        fetchStats();
-
-    } catch (error) {
-        responseContent.innerHTML = `<pre class="text-red-400 code-font text-sm">Error: ${error.message}</pre>`;
-        showToast(i18n[currentLang].toastRequestFailed, true);
-    } finally {
-        isRequestInProgress = false;
-        executeBtn.disabled = false;
-        executeBtn.classList.remove('btn-loading');
-        spinner.classList.remove('active');
-    }
-}
-
-function clearResponse(catIdx, epIdx) {
-    const responseDiv = document.getElementById(`response-${catIdx}-${epIdx}`);
-    if (responseDiv) {
-        responseDiv.classList.add('hidden');
-    }
-
-    const form = document.getElementById(`form-${catIdx}-${epIdx}`);
-    if (form) {
-        form.reset();
+        let headerHtml = `
+            <div onclick="toggleCategory(${catIdx})" class="p-4 flex items-center justify-between cursor-pointer border-b ${headerBgClass} select-none transition-colors">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-cyan-500/10 flex items-center justify-center border border-cyan-500/20 shadow-inner">
+                        ${catIcon}
+                    </div>
+                    <div>
+                        <h2 class="text-sm font-bold tracking-tight text-white light-mode:text-slate-900 font-['Space_Grotesk']">${cat.name}</h2>
+                        <p class="text-[10px] text-slate-400 font-['JetBrains_Mono'] mt-0.5">${cat.items.length} ${i18n[currentLang].endpointsCount}</p>
+                    </div>
+                </div>
+                <button class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-white transition-all light-mode:text-slate-500 light-mode:hover:text-slate-800">
+                    <svg id="cat-icon-${catIdx}" class="w-4 h-4 transition-transform duration-300 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+            </div>
+            <div id="cat-${catIdx}" class="p-4 space-y-4"></div>
+        `;
         
-        const urlContainer = document.getElementById('live-url-' + catIdx + '-' + epIdx);
-        if (urlContainer) {
-            const basePath = urlContainer.textContent.split('?')[0];
-            urlContainer.textContent = basePath;
+        catContainer.innerHTML = headerHtml;
+        const itemsContainer = catContainer.querySelector(`#cat-${catIdx}`);
+
+        cat.items.forEach((ep, epIdx) => {
+            const epId = `ep-card-${catIdx}-${epIdx}`;
+            const epWrapper = document.createElement('div');
+            epWrapper.id = epId;
+            epWrapper.className = "border border-white/5 light-mode:border-slate-200/60 rounded-xl overflow-hidden transition-all duration-200 bg-black/10 light-mode:bg-slate-50/50";
+
+            const method = (ep.methods && ep.methods[0]) || 'GET';
+            let badgeColor = "bg-cyan-500 text-slate-950 shadow-cyan-500/10";
+            if (method === 'POST') badgeColor = "bg-purple-500 text-white shadow-purple-500/10";
+            if (method === 'DELETE') badgeColor = "bg-red-500 text-white shadow-red-500/10";
+            if (method === 'PUT') badgeColor = "bg-amber-500 text-slate-950 shadow-amber-500/10";
+
+            // BADGE STATUS (READY / ERROR)
+            const isError = ep.status === "error";
+            const statusBadge = isError 
+                ? `<span class="px-2 py-0.5 rounded text-[9px] font-bold font-['JetBrains_Mono'] bg-red-500/20 text-red-400 border border-red-500/30">ERROR</span>`
+                : `<span class="px-2 py-0.5 rounded text-[9px] font-bold font-['JetBrains_Mono'] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">READY</span>`;
+
+            // BADGE PREMIUM / FREE
+            const isPremium = ep.type === "premium";
+            const typeBadge = isPremium
+                ? `<span class="px-2 py-0.5 rounded text-[9px] font-bold font-['JetBrains_Mono'] bg-amber-500 text-slate-950 border border-amber-500/40 shadow-xs">PREMIUM</span>`
+                : `<span class="px-2 py-0.5 rounded text-[9px] font-bold font-['JetBrains_Mono'] bg-slate-500/20 text-slate-400 border border-white/5 light-mode:border-slate-300">FREE</span>`;
+
+            let paramInputsHtml = '';
+            const paramKeys = Object.keys(ep.params || {});
+            
+            if (paramKeys.length > 0) {
+                paramInputsHtml = `<div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">`;
+                paramKeys.forEach(pKey => {
+                    const isApikeyParam = pKey === 'apikey';
+                    const placeholderText = isApikeyParam 
+                        ? (isPremium ? "Masukkan API Key Premium Anda" : "Masukkan API Key Free Anda")
+                        : `Parameter ${pKey}...`;
+                    const defaultValue = isApikeyParam ? "" : "";
+
+                    paramInputsHtml += `
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-bold font-['JetBrains_Mono'] text-slate-400 light-mode:text-slate-600 tracking-wide flex items-center gap-1">
+                                ${pKey} <span class="text-red-500 text-[9px]">*</span>
+                            </label>
+                            <input type="text" name="${pKey}" value="${defaultValue}" placeholder="${placeholderText}" oninput="updateLivePreview(${catIdx}, ${epIdx}, '${method}', '${ep.path}')" class="w-full bg-black/20 light-mode:bg-white border border-white/10 light-mode:border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-200 light-mode:text-slate-800 focus:outline-none focus:border-cyan-500/50 transition-colors font-['Space_Grotesk']" required />
+                        </div>
+                    `;
+                });
+                paramInputsHtml += `</div>`;
+            }
+
+            // Menonaktifkan button eksekusi jika status endpoint ERROR
+            const executeButtonHtml = isError
+                ? `<button type="button" disabled class="px-4 py-2 rounded-lg text-xs font-bold font-['JetBrains_Mono'] bg-slate-800 border border-white/5 text-slate-500 cursor-not-allowed flex items-center gap-1.5">${i18n[currentLang].btnExecute}</button>`
+                : `<button type="submit" class="px-4 py-2 rounded-lg text-xs font-bold font-['JetBrains_Mono'] bg-cyan-500 text-slate-950 hover:bg-cyan-400 border border-cyan-500 shadow-md shadow-cyan-500/10 transition-all active:scale-95 flex items-center gap-1.5">${i18n[currentLang].btnExecute}</button>`;
+
+            let innerEpHtml = `
+                <div onclick="toggleEndpoint(${catIdx}, ${epIdx})" class="p-3 flex flex-wrap items-center justify-between gap-3 cursor-pointer select-none bg-white/[0.02] light-mode:bg-black/[0.01] hover:bg-white/[0.05] light-mode:hover:bg-black/[0.03] transition-colors">
+                    <div class="flex items-center gap-3 min-w-0 flex-1">
+                        <span class="px-2 py-1 rounded text-[9px] font-bold font-['JetBrains_Mono'] tracking-wide shadow-xs ${badgeColor}">
+                            ${method}
+                        </span>
+                        <span class="text-xs font-bold font-['JetBrains_Mono'] text-slate-300 light-mode:text-slate-700 truncate tracking-tight">
+                            ${ep.name}
+                        </span>
+                    </div>
+                    <div class="flex items-center gap-2 flex-shrink-0">
+                        ${typeBadge}
+                        ${statusBadge}
+                        <svg id="ep-icon-${catIdx}-${epIdx}" class="w-3.5 h-3.5 text-slate-500 transition-transform duration-300 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </div>
+                </div>
+
+                <div id="ep-${catIdx}-${epIdx}" class="hidden p-4 border-t border-white/5 light-mode:border-slate-200/60 bg-black/5 light-mode:bg-white/30 space-y-4">
+                    <form id="form-${catIdx}-${epIdx}" onsubmit="fireRequest(event, ${catIdx}, ${epIdx}, '${method}', '${ep.path}', ${isError})">
+                        ${paramInputsHtml}
+                        <div class="flex items-center justify-between gap-3 pt-1">
+                            <div class="flex gap-2">
+                                ${executeButtonHtml}
+                                <button type="button" onclick="clearResponse(${catIdx}, ${epIdx})" class="px-4 py-2 rounded-lg text-xs font-bold font-['JetBrains_Mono'] border border-white/10 light-mode:border-slate-200 bg-slate-900/40 light-mode:bg-white text-slate-400 light-mode:text-slate-600 hover:text-slate-200 light-mode:hover:text-slate-900 hover:bg-slate-800/40 light-mode:hover:bg-slate-50 transition-all active:scale-95">
+                                    ${i18n[currentLang].btnClear}
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <div class="space-y-3 font-['JetBrains_Mono']">
+                        <div class="space-y-1">
+                            <div class="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center justify-between">
+                                <span>Request URL</span>
+                                <button onclick="copyFromElement('live-url-${catIdx}-${epIdx}', 'Request URL')" class="text-cyan-500 hover:text-cyan-400 transition-colors text-[9px] font-bold">COPY</button>
+                            </div>
+                            <div id="live-url-${catIdx}-${epIdx}" class="w-full bg-black/40 light-mode:bg-slate-100 border border-white/5 light-mode:border-slate-200/80 rounded-lg p-2.5 text-[11px] text-slate-400 light-mode:text-slate-600 break-all whitespace-pre-wrap select-all">
+                                ${BASE_URL}${ep.path}
+                            </div>
+                        </div>
+
+                        <div class="space-y-1">
+                            <div class="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center justify-between">
+                                <span>cURL Command</span>
+                                <button onclick="copyFromElement('live-curl-${catIdx}-${epIdx}', 'cURL')" class="text-cyan-500 hover:text-cyan-400 transition-colors text-[9px] font-bold">COPY</button>
+                            </div>
+                            <div id="live-curl-${catIdx}-${epIdx}" class="w-full bg-black/40 light-mode:bg-slate-100 border border-white/5 light-mode:border-slate-200/80 rounded-lg p-2.5 text-[11px] text-slate-400 light-mode:text-slate-600 break-all whitespace-pre-wrap select-all">
+                                curl -X ${method} "${BASE_URL}${ep.path}"
+                            </div>
+                        </div>
+
+                        <div id="res-box-${catIdx}-${epIdx}" class="hidden space-y-1.5 animate-fadeIn">
+                            <div class="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <span>Response Console</span>
+                                    <span id="res-status-code-${catIdx}-${epIdx}" class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-green-500/10 text-green-400 border border-green-500/20">200 OK</span>
+                                    <span id="res-time-${catIdx}-${epIdx}" class="text-[9px] text-slate-600 font-normal lowercase">120ms</span>
+                                </div>
+                                <button onclick="copyFromElement('raw-response-${catIdx}-${epIdx}', 'JSON Response')" class="text-cyan-500 hover:text-cyan-400 transition-colors text-[9px] font-bold">COPY JSON</button>
+                            </div>
+
+                            <div id="rendered-media-preview-${catIdx}-${epIdx}" class="hidden w-full bg-black/30 light-mode:bg-slate-50 rounded-xl p-3 border border-white/5 light-mode:border-slate-200 flex flex-col items-center justify-center gap-3"></div>
+
+                            <div class="relative group">
+                                <pre id="raw-response-${catIdx}-${epIdx}" class="w-full max-h-[320px] bg-[#020617] border border-white/10 light-mode:border-slate-200 rounded-lg p-3 text-[11px] text-emerald-400 font-['JetBrains_Mono'] overflow-y-auto scrollbar-thin select-text tracking-normal leading-relaxed"></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            epWrapper.innerHTML = innerEpHtml;
+            itemsContainer.appendChild(epWrapper);
+
+            allApiElements.push({
+                category: lowerCatName,
+                name: ep.name.toLowerCase(),
+                path: ep.path.toLowerCase(),
+                element: epWrapper
+            });
+        });
+
+        if (cat.items.length > 0) {
+            apiList.appendChild(catContainer);
+            if (!activeFilters.includes(lowerCatName)) {
+                totalCategories++;
+                const newFilterBtn = document.createElement('button');
+                newFilterBtn.id = `cat-filter-${lowerCatName}`;
+                newFilterBtn.className = "filter-btn";
+                newFilterBtn.onclick = () => filterCategory(lowerCatName);
+                newFilterBtn.textContent = cat.name;
+                currentFilterBar.appendChild(newFilterBtn);
+            }
         }
-        
-        const curlContainer = document.getElementById('live-curl-' + catIdx + '-' + epIdx);
-        if (curlContainer) {
-            const method = curlContainer.textContent.split(' ')[1] || 'GET';
-            const baseUrl = curlContainer.textContent.split('"')[1] || '';
-            curlContainer.textContent = 'curl -X ' + method + ' "' + baseUrl.split('?')[0] + '"';
-        }
-    }
-}
-
-function renderCategoryFilters() {
-    const container = document.getElementById('categoryFilters');
-    if (!container || !apiData || !apiData.categories) return;
-
-    let html = `<button class="filter-btn active" data-filter="all" onclick="filterByCategory('all')">semua (${totalEndpoints})</button>`;
-
-    apiData.categories.forEach(category => {
-        const catName = category.name.toLowerCase();
-        const count = category.items.length;
-        html += `<button class="filter-btn" data-filter="${catName}" onclick="filterByCategory('${catName}')">${catName} (${count})</button>`;
     });
 
-    container.innerHTML = html;
+    updateTotalEndpoints();
+    updateTotalCategories();
+    applyCategoryView();
 }
 
-function filterByCategory(catName) {
+function applyCategoryView() {
+    const categoriesBoxes = document.querySelectorAll('[id^="cat-box-"]');
+    categoriesBoxes.forEach(box => {
+        const currentId = box.id.replace('cat-box-', '');
+        if (activeCategory === 'all' || activeCategory === currentId) {
+            box.classList.remove('hidden');
+        } else {
+            box.classList.add('hidden');
+        }
+    });
+}
+
+function filterCategory(catName) {
     activeCategory = catName;
-    document.querySelectorAll('.filter-btn').forEach(btn => {
-        if (btn.dataset.filter === catName) {
+    const filterButtons = document.querySelectorAll('.filter-btn');
+    filterButtons.forEach(btn => {
+        if (btn.id === `cat-filter-${catName}`) {
             btn.classList.add('active');
         } else {
             btn.classList.remove('active');
         }
     });
+    applyCategoryView();
     performSearch();
 }
 
 function performSearch() {
-    const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
+    const query = document.getElementById('searchInput').value.toLowerCase().trim();
     const noResults = document.getElementById('noResults');
-    let hasVisibleItems = false;
+    let hasResults = false;
 
-    requestAnimationFrame(() => {
-        document.querySelectorAll('.category-group').forEach(category => {
-            const catName = category.dataset.category;
-            
-            if (activeCategory !== 'all' && catName !== activeCategory) {
-                category.classList.add('hidden');
-                return;
-            }
+    const categoriesBoxes = document.querySelectorAll('[id^="cat-box-"]');
+    
+    categoriesBoxes.forEach(box => {
+        const catName = box.id.replace('cat-box-', '');
+        const isCatMatchesFilter = (activeCategory === 'all' || activeCategory === catName);
+        let validItemsInBox = 0;
 
-            let categoryHasVisibleItems = false;
-            const items = category.querySelectorAll('.api-item');
-            
-            for (let i = 0; i < items.length; i++) {
-                const item = items[i];
-                const matches = item.dataset.path.includes(searchTerm) || 
-                                item.dataset.alias.includes(searchTerm) || 
-                                item.dataset.description.includes(searchTerm) ||
-                                item.dataset.category.includes(searchTerm);
-                if (matches) {
-                    item.classList.remove('hidden');
-                    categoryHasVisibleItems = true;
-                    hasVisibleItems = true;
+        allApiElements.forEach(item => {
+            if (item.category === catName) {
+                const isMatchQuery = item.name.includes(query) || item.path.includes(query);
+                if (isCatMatchesFilter && isMatchQuery) {
+                    item.element.classList.remove('hidden');
+                    validItemsInBox++;
+                    hasResults = true;
                 } else {
-                    item.classList.add('hidden');
+                    item.element.classList.add('hidden');
                 }
             }
-            
-            category.classList.toggle('hidden', !categoryHasVisibleItems);
         });
-        
-        noResults.classList.toggle('hidden', hasVisibleItems);
+
+        if (isCatMatchesFilter && validItemsInBox > 0) {
+            box.classList.remove('hidden');
+        } else {
+            box.classList.add('hidden');
+        }
     });
+
+    if (hasResults) {
+        noResults.classList.add('hidden');
+    } else {
+        noResults.classList.remove('hidden');
+    }
 }
 
-function loadApis() {
-    const apiList = document.getElementById('apiList');
-    if (!apiData || !apiData.categories) {
-        apiList.innerHTML = '<p class="text-center">No API data loaded.</p>';
+function fireRequest(event, catIdx, epIdx, method, path, isError) {
+    event.preventDefault();
+
+    if (isError) {
+        showToast(i18n[currentLang].endpointNotAvailable, true);
         return;
     }
-    
-    totalEndpoints = 0;
-    totalCategories = apiData.categories.length;
-    apiData.categories.forEach(category => { totalEndpoints += category.items.length; });
-    
-    updateTotalEndpoints();
-    updateTotalCategories();
-    renderCategoryFilters();
-    
-    const isLightMode = body.classList.contains('light-mode');
-    const pathColorClass = isLightMode ? 'text-cyan-700' : 'text-cyan-200';
-    const subTextColorClass = isLightMode ? 'text-slate-600' : 'opacity-70';
 
-    let html = '';
-    apiData.categories.forEach((category, catIdx) => {
-        const catNameLower = category.name.toLowerCase();
-        
-        let iconSvg = categoryIcons.default;
-        for (const [key, svg] of Object.entries(categoryIcons)) {
-            if (catNameLower.includes(key)) {
-                iconSvg = svg;
-                break;
-            }
+    if (isRequestInProgress) {
+        showToast(i18n[currentLang].toastRequestWait, true);
+        return;
+    }
+
+    isRequestInProgress = true;
+    const startTime = performance.now();
+
+    const form = document.getElementById(`form-${catIdx}-${epIdx}`);
+    const resBox = document.getElementById(`res-box-${catIdx}-${epIdx}`);
+    const codeEl = document.getElementById(`res-status-code-${catIdx}-${epIdx}`);
+    const timeEl = document.getElementById(`res-time-${catIdx}-${epIdx}`);
+    const responseEl = document.getElementById(`raw-response-${catIdx}-${epIdx}`);
+    const mediaPreview = document.getElementById(`rendered-media-preview-${catIdx}-${epIdx}`);
+
+    resBox.classList.remove('hidden');
+    responseEl.textContent = 'Firing payload, downloading buffers headers...';
+    responseEl.className = "w-full max-h-[320px] bg-[#020617] border border-white/10 rounded-lg p-3 text-[11px] text-slate-400 font-['JetBrains_Mono'] overflow-y-auto";
+    mediaPreview.classList.add('hidden');
+    mediaPreview.innerHTML = '';
+
+    const formData = new FormData(form);
+    let fetchUrl = `${BASE_URL}${path}`;
+    let fetchOptions = { method: method };
+
+    if (method === 'GET') {
+        const params = new URLSearchParams();
+        for (const [key, value] of formData.entries()) {
+            if (value) params.append(key, value);
         }
+        if (params.toString()) fetchUrl += `?${params.toString()}`;
+    } else {
+        const bodyObj = {};
+        for (const [key, value] of formData.entries()) {
+            if (value) bodyObj[key] = value;
+        }
+        fetchOptions.headers = { 'Content-Type': 'application/json' };
+        fetchOptions.body = JSON.stringify(bodyObj);
+    }
 
-        html += `
-        <div class="category-group" data-category="${catNameLower}">
-            <div class="glass-panel border rounded-xl overflow-hidden shadow-lg mb-4">
-                <button onclick="toggleCategory(${catIdx})" class="w-full px-4 py-4 flex items-center justify-between hover:bg-white/5 light-mode:hover:bg-black/5 transition-colors">
-                    <div class="flex items-center gap-4">
-                        <div class="w-12 h-12 flex items-center justify-center bg-slate-950/40 light-mode:bg-slate-200/50 rounded-xl border border-white/10 light-mode:border-slate-300 shadow-inner flex-shrink-0">
-                            ${iconSvg}
-                        </div>
-                        <div class="text-left">
-                            <h3 class="font-bold text-sm tracking-widest text-cyan-400 light-mode:text-cyan-600 uppercase font-['Space_Grotesk']">${category.name}</h3>
-                            <p class="text-[11px] code-font ${subTextColorClass}">${category.items.length} ${i18n[currentLang].endpointsCount}</p>
-                        </div>
-                    </div>
-                    <svg id="cat-icon-${catIdx}" class="w-5 h-5 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                    </svg>
-                </button>
-                <div id="cat-${catIdx}" class="hidden">`;
-        
-        category.items.forEach((item, epIdx) => {
-            const method = item.methods && item.methods.length ? item.methods[0] : 'GET';
-            const pathParts = item.path.split('?');
-            const path = pathParts[0];
-            const queryParams = new URLSearchParams(pathParts[1] || '');
-            let statusClass = item.status === 'update' ? 'status-update' : (item.status === 'error' ? 'status-error' : 'status-ready');
+    fetch(fetchUrl, fetchOptions)
+        .then(async (res) => {
+            const endTime = performance.now();
+            const duration = Math.round(endTime - startTime);
+            timeEl.textContent = `${duration}ms`;
 
-            html += `
-            <div class="api-item border-t border-white/10 light-mode:border-slate-200" 
-                data-method="${method}" data-path="${path}" data-alias="${item.name.toLowerCase()}" data-description="${item.desc.toLowerCase()}" data-category="${category.name.toLowerCase()}">
-                <button onclick="toggleEndpoint(${catIdx}, ${epIdx})" class="w-full px-4 py-3 flex items-center justify-between hover:bg-white/5 light-mode:hover:bg-black/5 transition-colors">
-                    <div class="flex items-center gap-3 flex-1 min-w-0">
-                        <span class="bg-cyan-500 light-mode:bg-cyan-600 text-slate-950 light-mode:text-white px-2 py-0.5 rounded text-[10px] flex-shrink-0 code-font font-black">${method}</span>
-                        <div class="text-left flex-1 min-w-0">
-                            <p class="code-font font-semibold text-[13px] ${pathColorClass} truncate">${path}</p>
-                            <div class="flex items-center gap-2 mt-1">
-                                <p class="text-xs ${subTextColorClass} truncate">${item.name}</p>
-                                <span class="px-1.5 py-0.5 text-[9px] rounded-sm ${statusClass} flex-shrink-0 uppercase tracking-wider font-bold">${item.status || 'ready'}</span>
-                            </div>
-                        </div>
-                    </div>
-                </button>
-                <div id="ep-${catIdx}-${epIdx}" class="hidden bg-slate-950/40 light-mode:bg-slate-50/50 px-4 py-4 border-t border-white/10 light-mode:border-slate-200 backdrop-blur-sm">
-                    <p class="text-xs mb-4 ${isLightMode ? 'text-slate-700' : 'opacity-80'}">${item.desc}</p>
-                    
-                    <div class="mb-4">
-                        <div class="flex items-center justify-between mb-2">
-                            <h4 class="font-bold text-[11px] uppercase tracking-wider text-slate-400 light-mode:text-slate-600 code-font">ENDPOINT / REQUEST URL</h4>
-                            <button type="button" onclick="copyFromElement('live-url-${catIdx}-${epIdx}', 'URL')" class="px-3 py-1 bg-white/5 hover:bg-white/10 light-mode:bg-slate-200 light-mode:hover:bg-slate-300 border border-white/10 light-mode:border-slate-300 rounded-lg text-[10px] transition-all active:scale-95 code-font text-slate-300 light-mode:text-slate-800">Copy URL</button>
-                        </div>
-                        <div class="bg-slate-900/40 light-mode:bg-slate-200/60 border border-white/10 light-mode:border-slate-300 px-4 py-3 rounded-xl backdrop-blur-md shadow-inner">
-                            <code id="live-url-${catIdx}-${epIdx}" class="code-font text-xs text-cyan-400 light-mode:text-cyan-700 font-medium break-all">${BASE_URL}${path}</code>
-                        </div>
-                    </div>
-
-                    <div class="mb-4">
-                        <div class="flex items-center justify-between mb-2">
-                            <h4 class="font-bold text-[11px] uppercase tracking-wider text-slate-400 light-mode:text-slate-600 code-font">cURL Command</h4>
-                            <button type="button" onclick="copyFromElement('live-curl-${catIdx}-${epIdx}', 'cURL')" class="px-3 py-1 bg-white/5 hover:bg-white/10 light-mode:bg-slate-200 light-mode:hover:bg-slate-300 border border-white/10 light-mode:border-slate-300 rounded-lg text-[10px] transition-all active:scale-95 code-font text-slate-300 light-mode:text-slate-800">Copy cURL</button>
-                        </div>
-                        <div class="bg-slate-900/40 light-mode:bg-slate-200/60 border border-white/10 light-mode:border-slate-300 px-4 py-3 rounded-xl backdrop-blur-md shadow-inner">
-                            <code id="live-curl-${catIdx}-${epIdx}" class="code-font text-xs text-slate-300 light-mode:text-slate-700 block overflow-x-auto whitespace-pre">curl -X ${method} "${BASE_URL}${path}"</code>
-                        </div>
-                    </div>`;
-
-            if (item.status === 'ready') {
-                html += `
-                    <div>
-                        <h4 class="font-bold text-[11px] uppercase tracking-wider text-slate-400 light-mode:text-slate-600 mb-3">Parameter</h4>
-                        <form id="form-${catIdx}-${epIdx}" onsubmit="executeRequest(event, ${catIdx}, ${epIdx}, '${method}', '${path}')">
-                            <div class="space-y-3 mb-4">`;
-                if (item.params) {
-                    Object.keys(item.params).forEach(paramName => {
-                        const isRequired = !queryParams.has(paramName) || queryParams.get(paramName) === '';
-                        html += `
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-300 light-mode:text-slate-700 mb-1.5 code-font">
-                                    ${paramName} ${isRequired ? '<span class="text-red-500">*</span>' : ''}
-                                </label>
-                                <input type="text" name="${paramName}" oninput="updateLivePreview(${catIdx}, ${epIdx}, '${method}', '${path}')" class="w-full px-3 py-2 rounded-lg bg-black/40 light-mode:bg-white border border-white/10 light-mode:border-slate-300 text-white light-mode:text-slate-900 focus:outline-none focus:border-cyan-500 code-font text-sm" placeholder="${item.params[paramName]}" ${isRequired ? 'required' : ''}>
-                            </div>`;
-                    });
-                }
-                html += `
-                            </div>
-                            <div class="flex gap-3">
-                                <button type="submit" class="px-5 py-2 bg-cyan-500 light-mode:bg-cyan-600 hover:bg-cyan-400 light-mode:hover:bg-cyan-500 text-slate-950 light-mode:text-white rounded-md font-bold text-xs tracking-wider transition-all flex items-center justify-center">EKSEKUSI</button>
-                                <button type="button" onclick="clearResponse(${catIdx}, ${epIdx})" class="px-5 py-2 bg-transparent border border-white/20 light-mode:border-slate-300 hover:border-white/40 light-mode:hover:bg-slate-100 text-slate-300 light-mode:text-slate-700 rounded-md font-bold text-xs transition-colors">BERSIHKAN</button>
-                            </div>
-                        </form>
-
-                        <div id="response-${catIdx}-${epIdx}" class="hidden mt-6 space-y-4">
-                            <div>
-                                <h5 class="text-[11px] uppercase tracking-wider font-bold mb-2 text-slate-400 light-mode:text-slate-500">Response</h5>
-                                <div class="bg-slate-950/80 light-mode:bg-slate-100 border border-white/10 light-mode:border-slate-300 p-3 rounded-lg min-h-[100px] overflow-x-auto" id="response-content-${catIdx}-${epIdx}"></div>
-                            </div>
-                        </div>
-                    </div>`;
+            codeEl.textContent = `${res.status} ${res.statusText || 'OK'}`;
+            if (res.ok) {
+                codeEl.className = "px-1.5 py-0.5 rounded text-[9px] font-bold bg-green-500/10 text-emerald-400 border border-green-500/20";
             } else {
-                html += `<div class="px-4 py-3 bg-red-500/10 border border-red-500/20 rounded-lg text-xs text-red-500 font-medium">${i18n[currentLang].endpointNotAvailable}</div>`;
+                codeEl.className = "px-1.5 py-0.5 rounded text-[9px] font-bold bg-red-500/10 text-red-400 border border-red-500/20";
             }
-            html += `</div></div>`;
+
+            const contentType = res.headers.get('content-type') || '';
+            
+            if (contentType.includes('application/json')) {
+                const json = await res.json();
+                responseEl.textContent = JSON.stringify(json, null, 4);
+                responseEl.className = "w-full max-h-[320px] bg-[#020617] border border-white/10 rounded-lg p-3 text-[11px] text-emerald-400 font-['JetBrains_Mono'] overflow-y-auto";
+                
+                let mediaUrl = json.url || (json.result && (json.result.url || json.result.media || json.result.download)) || json.download || json.media;
+                if (typeof mediaUrl === 'string' && (mediaUrl.startsWith('http://') || mediaUrl.startsWith('https://'))) {
+                    renderMediaPreview(mediaUrl, contentType, mediaPreview);
+                }
+            } else if (contentType.includes('image/') || contentType.includes('video/') || contentType.includes('audio/')) {
+                responseEl.textContent = `[Binary Resource Buffer Data]\nContent-Type: ${contentType}\nResource URL: ${fetchUrl}`;
+                responseEl.className = "w-full max-h-[320px] bg-[#020617] border border-white/10 rounded-lg p-3 text-[11px] text-cyan-400 font-['JetBrains_Mono'] overflow-y-auto";
+                renderMediaPreview(fetchUrl, contentType, mediaPreview);
+            } else {
+                const text = await res.text();
+                responseEl.textContent = text.substring(0, 5000);
+                responseEl.className = "w-full max-h-[320px] bg-[#020617] border border-white/10 rounded-lg p-3 text-[11px] text-amber-400 font-['JetBrains_Mono'] overflow-y-auto";
+            }
+
+            if (res.ok) {
+                showToast(i18n[currentLang].toastRequestSuccess);
+            } else {
+                showToast(i18n[currentLang].toastRequestFailed, true);
+            }
+            fetchStats();
+        })
+        .catch(err => {
+            const endTime = performance.now();
+            timeEl.textContent = `${Math.round(endTime - startTime)}ms`;
+            codeEl.textContent = 'NET_ERR';
+            codeEl.className = "px-1.5 py-0.5 rounded text-[9px] font-bold bg-red-500/10 text-red-400 border border-red-500/20";
+            responseEl.textContent = `Local Connection Failure Error:\n${err.message}`;
+            responseEl.className = "w-full max-h-[320px] bg-[#020617] border border-white/10 rounded-lg p-3 text-[11px] text-red-400 font-['JetBrains_Mono'] overflow-y-auto";
+            showToast(i18n[currentLang].toastRequestFailed, true);
+        })
+        .finally(() => {
+            isRequestInProgress = false;
         });
-        html += `</div></div></div>`;
-    });
-    apiList.innerHTML = html;
-    allApiElements = Array.from(document.querySelectorAll('.api-item'));
 }
 
-function initMultiMusicPlayer() {
-    const playlist = window.musicPlaylist || [];
-    if (!playlist.length) return;
+function renderMediaPreview(url, contentType, container) {
+    const detected = getContentType(url, contentType);
+    container.innerHTML = '';
+    
+    let el = null;
+    if (detected === 'image') {
+        el = document.createElement('img');
+        el.src = url;
+        el.className = "max-w-full max-h-[200px] rounded-lg object-contain shadow-md cursor-zoom-in border border-white/10";
+        el.onclick = () => openImageModal(url);
+    } else if (detected === 'video') {
+        el = document.createElement('video');
+        el.src = url;
+        el.controls = true;
+        el.className = "w-full max-h-[220px] rounded-lg shadow-md border border-white/10";
+    } else if (detected === 'audio') {
+        el = document.createElement('audio');
+        el.src = url;
+        el.controls = true;
+        el.className = "w-full outline-none mt-1";
+    }
 
-    let currentTrackIdx = 0;
-    const audio = document.getElementById('audioElement');
-    const playBtn = document.getElementById('playBtn');
+    if (el) {
+        container.classList.remove('hidden');
+        container.appendChild(el);
+
+        const copyMediaBtn = document.createElement('button');
+        copyMediaBtn.className = "px-3 py-1 bg-cyan-500 text-slate-950 font-bold font-['JetBrains_Mono'] rounded text-[10px] hover:bg-cyan-400 transition-all active:scale-95 shadow-sm";
+        copyMediaBtn.textContent = "COPY URL MEDIA";
+        copyMediaBtn.onclick = (e) => {
+            e.stopPropagation();
+            navigator.clipboard.writeText(url)
+                .then(() => showToast(i18n[currentLang].toastMediaCopy))
+                .catch(() => showToast(i18n[currentLang].toastMediaFail, true));
+        };
+        container.appendChild(copyMediaBtn);
+    }
+}
+
+function clearResponse(catIdx, epIdx) {
+    const resBox = document.getElementById(`res-box-${catIdx}-${epIdx}`);
+    const mediaPreview = document.getElementById(`rendered-media-preview-${catIdx}-${epIdx}`);
+    const responseEl = document.getElementById(`raw-response-${catIdx}-${epIdx}`);
+    const form = document.getElementById(`form-${catIdx}-${epIdx}`);
+
+    if (resBox) resBox.classList.add('hidden');
+    if (mediaPreview) {
+        mediaPreview.classList.add('hidden');
+        mediaPreview.innerHTML = '';
+    }
+    if (responseEl) responseEl.textContent = '';
+    if (form) form.reset();
+    updateLivePreview(catIdx, epIdx, 'GET', `/api/any`);
+}
+
+// === MUSIK CONTROLLER SYSTEM (FIXED TRACK COMPONENT) ===
+let currentMusicIdx = 0;
+let audioPlayer = new Audio();
+let isMusicPlaying = false;
+
+function initPlaylistPlayer() {
+    if (typeof playlistData === 'undefined' || !playlistData.length) return;
+    loadMusicTrack(0);
+
+    audioPlayer.addEventListener('timeupdate', () => {
+        const progress = (audioPlayer.currentTime / audioPlayer.duration) * 100;
+        const bar = document.getElementById('musicProgressBar');
+        if (bar) bar.style.width = `${progress || 0}%`;
+
+        const curTimeEl = document.getElementById('musicCurrentTime');
+        if (curTimeEl) curTimeEl.textContent = formatMusicTime(audioPlayer.currentTime);
+    });
+
+    audioPlayer.addEventListener('loadedmetadata', () => {
+        const durEl = document.getElementById('musicDuration');
+        if (durEl) durEl.textContent = formatMusicTime(audioPlayer.duration);
+        document.getElementById('musicLoadingSpinner').style.opacity = '0';
+    });
+
+    audioPlayer.addEventListener('waiting', () => {
+        document.getElementById('musicLoadingSpinner').style.opacity = '1';
+    });
+
+    audioPlayer.addEventListener('playing', () => {
+        document.getElementById('musicLoadingSpinner').style.opacity = '0';
+    });
+
+    audioPlayer.addEventListener('ended', () => {
+        playNextMusic();
+    });
+}
+
+function loadMusicTrack(index) {
+    currentMusicIdx = index;
+    const track = playlistData[index];
+    
+    document.getElementById('musicTitle').textContent = track.title;
+    document.getElementById('musicArtist').textContent = track.artist;
+    document.getElementById('musicCover').src = track.cover;
+    
+    document.getElementById('musicLoadingSpinner').style.opacity = '1';
+    audioPlayer.src = track.url;
+    audioPlayer.load();
+
+    if (isMusicPlaying) {
+        audioPlayer.play().catch(e => console.log("Autoplay blocked:", e));
+    }
+}
+
+function togglePlayPause() {
     const playIcon = document.getElementById('playIcon');
-    const progressBar = document.getElementById('progressBar');
-    const progressContainer = document.getElementById('progressContainer');
-    const currentTimeEl = document.getElementById('currentTime');
-    const totalDurationEl = document.getElementById('totalDuration');
-    const coverImg = document.getElementById('musicCoverImg');
-    const titleEl = document.getElementById('musicTitle');
-    const artistEl = document.getElementById('musicArtist');
-    const playlistPanel = document.getElementById('playlistPanel');
+    const pauseIcon = document.getElementById('pauseIcon');
 
-    function formatTime(secs) {
-        if (isNaN(secs)) return "0:00";
-        const mins = Math.floor(secs / 60);
-        const remainingSecs = Math.floor(secs % 60);
-        return `${mins}:${remainingSecs < 10 ? '0' : ''}${remainingSecs}`;
-    }
-
-    function loadTrack(index) {
-        currentTrackIdx = index;
-        const track = playlist[index];
-        audio.src = track.url;
-        titleEl.textContent = track.title;
-        artistEl.textContent = track.artist;
-        coverImg.src = track.cover;
-        progressBar.style.width = '0%';
-        currentTimeEl.textContent = '0:00';
-        renderPlaylistItems();
-    }
-
-    function renderPlaylistItems() {
-        playlistPanel.innerHTML = '';
-        playlist.forEach((track, idx) => {
-            const isActive = idx === currentTrackIdx;
-            const itemBtn = document.createElement('button');
-            itemBtn.className = `w-full text-left px-3 py-2 text-xs rounded-xl flex items-center justify-between transition-all ${isActive ? 'bg-cyan-500/10 border border-cyan-500/30 text-cyan-500 light-mode:text-cyan-700 font-bold' : 'hover:bg-white/5 light-mode:hover:bg-black/5 text-slate-400 light-mode:text-slate-600'}`;
-            itemBtn.innerHTML = `<div class="flex items-center gap-2 truncate"><span class="opacity-50 text-[10px] code-font">${String(idx + 1).padStart(2, '0')}</span><span class="truncate">${track.title} <span class="opacity-60 font-normal">- ${track.artist}</span></span></div>${isActive ? '<span class="text-[9px] tracking-wider text-cyan-500 bg-cyan-500/10 px-1.5 py-0.5 rounded animate-pulse font-bold">PLAYING</span>' : ''}`;
-            itemBtn.addEventListener('click', () => {
-                loadTrack(idx);
-                audio.play().catch(e => console.log(e));
-            });
-            playlistPanel.appendChild(itemBtn);
+    if (isMusicPlaying) {
+        audioPlayer.pause();
+        playIcon.classList.remove('hidden');
+        pauseIcon.classList.add('hidden');
+        isMusicPlaying = false;
+    } else {
+        audioPlayer.play().then(() => {
+            playIcon.classList.add('hidden');
+            pauseIcon.classList.remove('hidden');
+            isMusicPlaying = true;
+        }).catch(err => {
+            showToast("Gagal memutar audio / diblokir browser", true);
         });
     }
-
-    playBtn.addEventListener('click', () => { audio.paused ? audio.play() : audio.pause(); });
-    audio.addEventListener('play', () => {
-        playIcon.innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
-        coverImg.classList.add('scale-105', 'rotate-3');
-    });
-    audio.addEventListener('pause', () => {
-        playIcon.innerHTML = '<path d="M8 5v14l11-7z"/>';
-        coverImg.classList.remove('scale-105', 'rotate-3');
-    });
-    audio.addEventListener('timeupdate', () => {
-        if (audio.duration) {
-            progressBar.style.width = `${(audio.currentTime / audio.duration) * 100}%`;
-            currentTimeEl.textContent = formatTime(audio.currentTime);
-        }
-    });
-    audio.addEventListener('loadedmetadata', () => { totalDurationEl.textContent = formatTime(audio.duration); });
-    progressContainer.addEventListener('click', (e) => { if (audio.duration) audio.currentTime = (e.offsetX / progressContainer.clientWidth) * audio.duration; });
-    document.getElementById('prevBtn').addEventListener('click', () => { loadTrack(currentTrackIdx - 1 < 0 ? playlist.length - 1 : currentTrackIdx - 1); audio.play(); });
-    document.getElementById('nextBtn').addEventListener('click', () => { loadTrack(currentTrackIdx + 1 >= playlist.length ? 0 : currentTrackIdx + 1); audio.play(); });
-    audio.addEventListener('ended', () => { loadTrack(currentTrackIdx + 1 >= playlist.length ? 0 : currentTrackIdx + 1); audio.play(); });
-    document.getElementById('playlistToggleBtn').addEventListener('click', () => { playlistPanel.classList.toggle('hidden'); });
-
-    loadTrack(0);
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-    const savedLang = localStorage.getItem('lang') || 'id';
-    
+function playNextMusic() {
+    let nextIdx = currentMusicIdx + 1;
+    if (nextIdx >= playlistData.length) nextIdx = 0;
+    loadMusicTrack(nextIdx);
+    if (!isMusicPlaying) togglePlayPause();
+}
+
+function seekAudio(event) {
+    const bg = document.getElementById('progressBarBg');
+    if (!bg || !audioPlayer.duration) return;
+
+    const rect = bg.getBoundingClientRect();
+    const clickX = event.clientX - rect.left;
+    const percentage = clickX / rect.width;
+    audioPlayer.currentTime = percentage * audioPlayer.duration;
+}
+
+function formatMusicTime(seconds) {
+    if (isNaN(seconds)) return "0:00";
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+}
+
+// === INITIALIZATION RUNNER ===
+document.addEventListener('DOMContentLoaded', () => {
     initTheme();
-    initBatteryDetection();
-    initDigitalClock(); 
-    initMultiMusicPlayer();
+    const savedLang = localStorage.getItem('lang') || 'id';
     setLanguage(savedLang);
-    
-    // Sinkronisasi data awal stat request saat web dimuat pertama kali
+    initDigitalClock();
+    initPlaylistPlayer();
     fetchStats();
 
     const bioMenuBtn = document.getElementById('bioMenuBtn');
@@ -886,7 +876,7 @@ document.addEventListener('DOMContentLoaded', function() {
         menuOverlay.addEventListener('click', closeSidebarMenu);
         bioDropdown.addEventListener('click', (e) => { e.stopPropagation(); });
     }
-    
+
     fetch('/api/apilist')
         .then(res => res.json())
         .then(data => {
@@ -905,5 +895,3 @@ document.getElementById('searchInput').addEventListener('input', function() {
     clearTimeout(searchTimeout);
     searchTimeout = setTimeout(performSearch, 150);
 });
-
-window.addEventListener('beforeunload', cleanupBatteryMonitor);
