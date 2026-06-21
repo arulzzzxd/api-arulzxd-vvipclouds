@@ -942,6 +942,54 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 });
 
+// ... KODE SCRIPT.JS KAMU YANG DI ATAS SEBELUMNYA ...
+
+    // Bagian akhir dari DOMContentLoaded yang sudah ada di script.js kamu:
+    if (bioMenuBtn && bioDropdown && menuOverlay) {
+        bioMenuBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            bioDropdown.style.transform = 'translateX(0)';
+            menuOverlay.classList.remove('hidden');
+        });
+        if (closeMenuBtn) closeMenuBtn.addEventListener('click', closeSidebarMenu);
+        menuOverlay.addEventListener('click', closeSidebarMenu);
+        bioDropdown.addEventListener('click', (e) => { e.stopPropagation(); });
+    }
+
+    fetch('/api/apilist')
+        .then(res => res.json())
+        .then(data => {
+            apiData = data;
+            loadApis();
+        })
+        .catch(err => {
+            document.getElementById('apiList').innerHTML = `<div class="text-center p-8 bg-red-900/20 border border-red-700 rounded-lg"><div class="text-4xl mb-4">⚠️</div><h3 class="font-bold text-lg mb-2">Failed to load API data</h3></div>`;
+        });
+
+
+    // ==========================================================
+    // TAROH KODE KAMU DI SINI (TEPAT SEBELUM TUTUP DOMContentLoaded)
+    // ==========================================================
+    
+    // Pastikan ID di bawah ini sama dengan ID/Class yang ada di HTML index.js kamu
+    const uploaderBtn = document.getElementById('uploaderMenuBtn'); 
+    const pastebinBtn = document.getElementById('pastebinMenuBtn'); 
+
+    if (uploaderBtn) {
+        uploaderBtn.addEventListener('click', () => {
+            window.open('https://arulz-uploader.vercel.app/', '_blank'); 
+        });
+    }
+
+    if (pastebinBtn) {
+        pastebinBtn.addEventListener('click', () => {
+            window.open('https://arulz-pastecode.vercel.app/', '_blank');
+        });
+    }
+    // ==========================================================
+
+});
+
 themeToggleBtn.addEventListener('click', toggleTheme);
 
 let searchTimeout;
