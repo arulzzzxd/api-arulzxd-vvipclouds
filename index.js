@@ -128,6 +128,8 @@ if (fs.existsSync(apiPath)) {
 
 function getEndpointsFromRouter(category, file) {
   const endpoints = [];
+  const cleanName = file.replace(/\.js$/, ""); // Mengambil nama file bersih murni
+  
   try {
     const route = require(path.join(apiPath, category, file));
     const subRouter = route.stack ? route : route.router || route;
@@ -149,10 +151,12 @@ function getEndpointsFromRouter(category, file) {
             });
           });
         }
+        
+        // FIX: Properti name diatur agar murni memunculkan nama endpoint-nya saja
         endpoints.push({
-          name: `/${category}/${file.replace(/\.js$/,"")}`,
-          path: `/api/${category}/${file.replace(/\.js$/,"")}`,
-          desc: `Ref: /${category}/${file.replace(/\.js$/,"")}`,
+          name: `${cleanName}`, 
+          path: `/api/${category}/${cleanName}`,
+          desc: `Fitur REST API ${cleanName} pada kategori ${category}`,
           status: "ready",
           params,
           methods
@@ -186,9 +190,9 @@ router.get('/apilist', (req, res) => {
     name: "OTHER",
     items: [
       {
-        name: "/apilist",
+        name: "apilist",
         path: "/api/apilist",
-        desc: "/apilist",
+        desc: "Melihat daftar list data objek JSON seluruh endpoint",
         status: "ready",
         params: {},
         methods: ["GET"]
@@ -196,7 +200,6 @@ router.get('/apilist', (req, res) => {
     ]
   });
 
-  // totalRequestsThisMonth dimasukkan ke totalRequestsToday agar kompatibel dengan script.js bawaan
   res.json({ categories, totalRequestsToday: totalRequestsThisMonth });
 });
 
