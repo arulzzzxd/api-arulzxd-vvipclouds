@@ -16,38 +16,17 @@ const themeBg = document.getElementById('themeBg');
 // Pemetaan Ikon Kategori (SVG Kuning/Cyan)
 const categoryIcons = {
     'ai': '<svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 text-cyan-400"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73A2 2 0 1 1 12 2zm-2 10a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm4 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/></svg>',
-
     'download': '<svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 text-cyan-400"><path d="M12 16l-5-5h3V4h4v7h3l-5 5zm9 4H3v-2h18v2z"/></svg>',
-
     'search': '<svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 text-cyan-400"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>',
-
     'image': '<svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 text-cyan-400"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>',
-
     'tools': '<svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 text-cyan-400"><path d="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.1L9 6 6 9 1.8 4.7C.5 7.1.9 10.1 2.9 12.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1.1-1.4z"/></svg>',
-
     'maker': '<svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 text-cyan-400"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>',
-
     'stalker': '<svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 text-cyan-400"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>',
-
     'canvas': '<svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 text-cyan-400"><path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z"/></svg>',
-
     'security': '<svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 text-cyan-400"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>',
-
     'news': '<svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 text-cyan-400"><path d="M21 3H3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 16H5V5h14v14zm-9-2h8v-2h-8v2zm0-4h8v-2h-8v2zm0-4h8V7h-8v2zm-4 8h2v-8H6v8z"/></svg>',
-
     'random': '<svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 text-cyan-400"><path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/></svg>',
-
     'islam': '<svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 text-cyan-400"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>',
-
-    // GAME
-    'game': '<svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 text-cyan-400"><path d="M7 8h10a4 4 0 0 1 4 4v4a3 3 0 0 1-5.12 2.12L13.76 16H10.24l-2.12 2.12A3 3 0 0 1 3 16v-4a4 4 0 0 1 4-4zm0 3v2H5v2h2v2h2v-2h2v-2H9v-2H7zm9 1a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm3 2a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z"/></svg>',
-
-    // QUOTES
-    'quotes': '<svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 text-cyan-400"><path d="M7 17H3V9h6v6c0 1.1-.9 2-2 2zm10 0h-4V9h6v6c0 1.1-.9 2-2 2z"/></svg>',
-
-    // STICKER
-    'sticker': '<svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 text-cyan-400"><path d="M5 3h10l4 4v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zm9 1v4h4M8 11a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm8 0a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm-4 5c2.2 0 4-1.3 4-3H8c0 1.7 1.8 3 4 3z"/></svg>',
-
     'default': '<svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 text-cyan-400"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>'
 };
 
@@ -389,7 +368,8 @@ function createMediaPreview(url, contentType, originalUrl = '') {
     
     switch(type) {
         case 'image':
-            previewHtml = `<div class="media-preview"><img src="${url}" class="media-image" alt="Response Image"></div>`;
+            // Ditambahkan class 'cursor-pointer hover:opacity-90 transition-all' agar user tau gambar bisa diklik dan diperbesar
+            previewHtml = `<div class="media-preview"><img src="${url}" onclick="openImageModal('${url}')" class="media-image cursor-pointer hover:opacity-90 transition-all" alt="Response Image"></div>`;
             break;
         case 'video':
             previewHtml = `<div class="media-preview"><video controls class="media-iframe"><source src="${url}">Your browser does not support the video tag.</video></div>`;
@@ -510,6 +490,19 @@ async function executeRequest(e, catIdx, epIdx, method, path) {
 
         responseContent.insertBefore(actionContainer, responseContent.firstChild);
         showToast(i18n[currentLang].toastRequestSuccess);
+        
+        // Memperbarui hitungan total request di dashboard secara real-time tanpa reload halaman
+        setTimeout(() => {
+            fetch('/api/apilist')
+                .then(res => res.json())
+                .then(data => {
+                    const reqEl = document.getElementById('totalRequests');
+                    if (reqEl && data.totalRequestsToday) {
+                        reqEl.textContent = data.totalRequestsToday;
+                    }
+                }).catch(() => {});
+        }, 400);
+
     } catch (error) {
         responseContent.innerHTML = `<pre class="text-red-400 code-font text-sm">Error: ${error.message}</pre>`;
         showToast(i18n[currentLang].toastRequestFailed, true);
@@ -669,8 +662,6 @@ function loadApis() {
             const queryParams = new URLSearchParams(pathParts[1] || '');
             let statusClass = item.status === 'update' ? 'status-update' : (item.status === 'error' ? 'status-error' : 'status-ready');
 
-            // PERBAIKAN STRUKTUR TEKS ACCORDION LIST:
-            // Menampilkan item.desc sebagai Judul Utama Tebal Warna Cyan, lalu Path di bawahnya.
             html += `
             <div class="api-item border-t border-white/10 light-mode:border-slate-200" 
                 data-method="${method}" data-path="${path}" data-alias="${item.name.toLowerCase()}" data-description="${item.desc.toLowerCase()}" data-category="${category.name.toLowerCase()}">
@@ -829,6 +820,51 @@ function initMultiMusicPlayer() {
     loadTrack(0);
 }
 
+// ==================== SYSTEM MODAL IMAGE PREVIEW POP-UP ====================
+function createModalElement() {
+    if (document.getElementById('imageModalWrapper')) return;
+
+    const modalHtml = `
+    <div id="imageModalWrapper" class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md hidden opacity-0 transition-all duration-300" onclick="closeImageModal()">
+        <button class="absolute top-4 right-4 p-2 bg-slate-900/60 hover:bg-slate-800 text-white border border-white/10 rounded-xl transition-all" onclick="closeImageModal()">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+        </button>
+        <div class="max-w-4xl max-h-[85vh] overflow-hidden rounded-xl shadow-2xl border border-white/10 bg-slate-950/40" onclick="event.stopPropagation()">
+            <img id="modalTargetImg" src="" class="w-full h-full object-contain max-h-[85vh] rounded-xl select-none" alt="Enlarged view">
+        </div>
+    </div>`;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+}
+
+window.openImageModal = function(imgSrc) {
+    createModalElement();
+    const wrapper = document.getElementById('imageModalWrapper');
+    const targetImg = document.getElementById('modalTargetImg');
+    
+    if (wrapper && targetImg) {
+        targetImg.src = imgSrc;
+        wrapper.classList.remove('hidden');
+        // Trigger reflow untuk animasi fade-in Tailwind
+        setTimeout(() => {
+            wrapper.classList.add('opacity-100');
+        }, 10);
+    }
+};
+
+window.closeImageModal = function() {
+    const wrapper = document.getElementById('imageModalWrapper');
+    if (wrapper) {
+        wrapper.classList.remove('opacity-100');
+        setTimeout(() => {
+            wrapper.classList.add('hidden');
+        }, 300);
+    }
+};
+// ===========================================================================
+
 document.addEventListener('DOMContentLoaded', function() {
     const savedLang = localStorage.getItem('lang') || 'id';
     
@@ -837,6 +873,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initDigitalClock(); 
     initMultiMusicPlayer();
     setLanguage(savedLang);
+    createModalElement(); // Inisialisasi modal saat DOM siap
     
     const bioMenuBtn = document.getElementById('bioMenuBtn');
     const bioDropdown = document.getElementById('bioDropdown');
@@ -859,6 +896,12 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(data => {
             apiData = data;
             loadApis();
+            
+            // Set total request awal saat dashboard dibuka pertama kali
+            const reqEl = document.getElementById('totalRequests');
+            if (reqEl && data.totalRequestsToday !== undefined) {
+                reqEl.textContent = data.totalRequestsToday;
+            }
         })
         .catch(err => {
             document.getElementById('apiList').innerHTML = `<div class="text-center p-8 bg-red-900/20 border border-red-700 rounded-lg"><div class="text-4xl mb-4">⚠️</div><h3 class="font-bold text-lg mb-2">Failed to load API data</h3></div>`;
