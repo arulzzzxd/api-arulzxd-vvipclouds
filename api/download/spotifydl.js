@@ -167,5 +167,5 @@ router.get('/', async (req, res) => {
 });
 
 router.status = "ready"; 
-router.type = "premium";
+router.type = "free";
 module.exports = router;
