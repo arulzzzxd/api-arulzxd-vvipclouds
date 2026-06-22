@@ -5,7 +5,8 @@ const fetch = require("node-fetch");
 const router = express.Router();
 
 const BRAT_IMAGE_URL = "https://files.catbox.moe/wlvb0g.png";
-const BRAT_FONT_URL = "https://raw.githubusercontent.com/Ditzzx-vibecoder/Assets/main/Brat/Poppins.ttf";
+const BRAT_FONT_URL =
+"https://raw.githubusercontent.com/arulzzzxd/database/main/font/Poppins.ttf";
 
 const CANVAS = {
     width: 1254,
@@ -262,7 +263,7 @@ function drawCenteredText(ctx, text) {
 
 let fontLoaded = false;
 
-async function bratGojo(text) {
+async function bratAnime(text) {
     if (!fontLoaded) {
         const fontBuffer =
             await downloadBuffer(
@@ -310,37 +311,39 @@ async function bratGojo(text) {
 }
 
 router.get("/", async (req, res) => {
-    try {
-        const { text } = req.query.text;
+try {
+const text = req.query.text?.trim();
 
-        if (!text) {
-            return res.status(400).json({
-                status: false,
-                creator: "ArulzXD",
-                message:
-                    "Masukkan parameter text"
-            });
-        }
-
-        const image =
-            await bratGojo(text);
-
-        res.setHeader(
-            "Content-Type",
-            "image/png"
-        );
-
-        res.send(image);
-
-    } catch (err) {
-        res.status(500).json({
+    if (!text) {
+        return res.status(400).json({
             status: false,
             creator: "ArulzXD",
-            message: err.message
+            message: "Masukkan parameter text"
         });
     }
+
+    const image = await bratAnime(text);
+
+    res.setHeader(
+        "Content-Type",
+        "image/png"
+    );
+
+    return res.end(image);
+
+} catch (err) {
+    console.error(err);
+
+    return res.status(500).json({
+        status: false,
+        creator: "ArulzXD",
+        message: err.message
+    });
+}
+
 });
 
-router.status = "error"; 
+router.status = "ready";
 router.type = "free";
+
 module.exports = router;
