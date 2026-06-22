@@ -16,7 +16,7 @@ const logo = "https://arulz-uploader.vercel.app/files/SnhJe3.png";
 // Mengubah headertitle menjadi tag img SVG
 const headertitle = `<img src="https://readme-typing-svg.demolab.com?font=Poppins&weight=700&size=28&pause=1000&color=00D4FF&center=true&vCenter=true&width=600&lines=Welcome+To+ArulzXD+API;Fast+%F0%9F%9A%80+Reliable+%E2%9A%A1;Free+REST+API+Services;Developer+Friendly+API" alt="Typing SVG" class="mx-auto" />`;
 const headerdescription = "Browse, inspect & fire requests against live endpoints._";
-const footer = "ﾂｩ Arulz-XD";
+const footer = "© Arulz-XD";
 
 // API KEY CONFIGURATION
 const VALID_API_KEY = "arulzxd-keys"; // Key Free
@@ -469,12 +469,12 @@ app.get('/', (req, res) => {
             </div>
 
             <div class="flex justify-center gap-4 mt-4 max-w-3xl mx-auto">
-                <a href="https://wa.me/6285122629940?text=Halo%20Arulz,%20boleh%20minta%20link%20Channel%20kamu%3F" 
+                <a href="https://whatsapp.com/channel/0029VbAwdIyJJhzRMpjUcS3P" 
                    target="_blank" 
                    class="flex-1 glass-panel py-2 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-white/10 light-mode:hover:bg-slate-100 transition-colors light-mode:text-slate-700 text-center block">
                    💬 Channel
                 </a>
-                <a href="https://wa.me/6285122629940?text=Halo%20Arulz,%20boleh%20minta%20link%20Group%20kamu%3F" 
+                <a href="https://chat.whatsapp.com/LBeGqVsmDBb6j29ysuusd9" 
                    target="_blank" 
                    class="flex-1 glass-panel py-2 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-white/10 light-mode:hover:bg-slate-100 transition-colors light-mode:text-slate-700 text-center block">
                    👥 Group
