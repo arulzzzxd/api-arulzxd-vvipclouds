@@ -2,18 +2,39 @@ const express = require("express");
 const fs = require('fs');
 const path = require("path");
 const axios = require("axios");
-const { exec } = require('child_process');
-// Menggunakan @napi-rs/canvas
+const GIFEncoder = require('gifencoder'); // Menggantikan FFmpeg CLI
 const { createCanvas, GlobalFonts } = require('@napi-rs/canvas');
 
 const router = express.Router();
 
+// Helper untuk membuat struktur gif di memory buffer tanpa simpan file disk
+function createGifBuffer(width, height, delay, ctxts) {
+  const encoder = new GIFEncoder(width, height);
+  const stream = encoder.createReadStream();
+  encoder.start();
+  encoder.setRepeat(0);   // 0 = loop forever
+  encoder.setDelay(delay);  // delay dalam ms
+  encoder.setTransparent(0x00000000); // transparan jika diperlukan
+
+  ctxts.forEach(ctx => {
+    encoder.addFrame(ctx);
+  });
+
+  encoder.finish();
+
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    stream.on('data', (chunk) => chunks.push(chunk));
+    stream.on('end', () => resolve(Buffer.concat(chunks)));
+    stream.on('error', (err) => reject(err));
+  });
+}
+
 // ==========================================
-// CORE FUNCTIONS (MENGGUNAKAN @NAPI-RS/CANVAS)
+// CORE FUNCTIONS (MENGGUNAKAN MEMORY ONLY)
 // ==========================================
 
-async function create_frame(text, color, pathna) {
-  const width = 400, height = 400;
+function create_frame_context(text, color, width = 400, height = 400) {
   const canvas = createCanvas(width, height);
   const ctx = canvas.getContext('2d');
   ctx.clearRect(0, 0, width, height);
@@ -46,73 +67,22 @@ async function create_frame(text, color, pathna) {
     ctx.fillText(line, width / 2, startY);
     startY += fsize;
   });
-  return canvas.toBuffer('image/png');
+  return ctx;
 }
 
 async function generateAttp(text) {
-  const lokasina = path.join(__dirname, 'temp_frames');
-  if (!fs.existsSync(lokasina)) fs.mkdirSync(lokasina);
   const colors = ['red', 'green', 'blue', 'yellow', 'purple', 'orange'];
-  const fpaths = [];
-  for (let i = 0; i < colors.length; i++) {
-    const fpath = path.join(lokasina, `frame_${i}.png`);
-    const buf = await create_frame(text, colors[i], fpath);
-    fs.writeFileSync(fpath, buf);
-    fpaths.push(fpath);
-  }
-  return new Promise((resolve, reject) => {
-    const output_gif = path.join(__dirname, 'attp.gif');
-    const ffmpeg_cmd = `ffmpeg -y -framerate 10 -i ${lokasina}/frame_%d.png -vf "scale=400:400:flags=lanczos" ${output_gif}`;
-    exec(ffmpeg_cmd, (error) => {
-      fpaths.forEach((file) => { if(fs.existsSync(file)) fs.unlinkSync(file); });
-      if(fs.existsSync(lokasina)) fs.rmdirSync(lokasina);
-      if (error) return reject(error);
-      const buffna = fs.readFileSync(output_gif);
-      fs.unlinkSync(output_gif);
-      resolve(buffna);
-    });
-  });
+  const contexts = colors.map(color => create_frame_context(text, color));
+  // framerate 10 = delay 100ms
+  return await createGifBuffer(400, 400, 100, contexts);
 }
 
 async function generateTtp(text) {
-  const width = 400, height = 400;
-  const canvas = createCanvas(width, height);
-  const ctx = canvas.getContext('2d');
-  ctx.clearRect(0, 0, width, height);
-
-  let fsize = 80;
-  if (text.length > 10) fsize = 60;
-  if (text.length > 20) fsize = 40;
-
-  ctx.font = `bold ${fsize}px Arial`;
-  ctx.fillStyle = 'white';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-
-  const words = text.split(' ');
-  const lines = [];
-  let line = '';
-  words.forEach((word) => {
-    const test_line = line + word + ' ';
-    const test_width = ctx.measureText(test_line).width;
-    if (test_width > width - 40) {
-      lines.push(line.trim());
-      line = word + ' ';
-    } else { line = test_line; }
-  });
-  lines.push(line.trim());
-
-  const total_height = lines.length * fsize;
-  let startY = (height - total_height) / 2 + fsize / 2;
-  lines.forEach((line) => {
-    ctx.fillText(line, width / 2, startY);
-    startY += fsize;
-  });
-  return canvas.toBuffer('image/png');
+  const ctx = create_frame_context(text, 'white');
+  return ctx.canvas.toBuffer('image/png');
 }
 
-async function create_frame_v2(text, color, pathna) {
-  const width = 400, height = 400;
+function create_frame_v2_context(text, color, width = 400, height = 400) {
   const canvas = createCanvas(width, height);
   const ctx = canvas.getContext('2d');
   const gradient = ctx.createLinearGradient(0, 0, width, height);
@@ -151,31 +121,14 @@ async function create_frame_v2(text, color, pathna) {
     ctx.fillText(line, width / 2, startY);
     startY += fsize;
   });
-  fs.writeFileSync(pathna, canvas.toBuffer('image/png'));
+  return ctx;
 }
 
 async function generateAttp_v2(text) {
-  const lokasina = path.join(__dirname, 'temp_frames_v2');
-  if (!fs.existsSync(lokasina)) fs.mkdirSync(lokasina);
   const colors = ['#FF5733', '#33FF57', '#3357FF', '#FF33A1', '#F1C40F', '#8E44AD'];
-  const fpaths = [];
-  for (let i = 0; i < colors.length; i++) {
-    const fpath = path.join(lokasina, `frame_${i}.png`);
-    await create_frame_v2(text, colors[i], fpath);
-    fpaths.push(fpath);
-  }
-  return new Promise((resolve, reject) => {
-    const output_gif = path.join(__dirname, 'attp_v2.gif');
-    const ffmpeg_cmd = `ffmpeg -y -framerate 12 -i ${lokasina}/frame_%d.png -vf "scale=400:400:flags=lanczos" ${output_gif}`;
-    exec(ffmpeg_cmd, (error) => {
-      fpaths.forEach((file) => { if(fs.existsSync(file)) fs.unlinkSync(file); });
-      if(fs.existsSync(lokasina)) fs.rmdirSync(lokasina);
-      if (error) return reject(error);
-      const buffna = fs.readFileSync(output_gif);
-      fs.unlinkSync(output_gif);
-      resolve(buffna);
-    });
-  });
+  const contexts = colors.map(color => create_frame_v2_context(text, color));
+  // framerate 12 = delay ~83ms
+  return await createGifBuffer(400, 400, 83, contexts);
 }
 
 async function generateTtp_v2(text) {
@@ -219,8 +172,7 @@ async function generateTtp_v2(text) {
   return canvas.toBuffer('image/png');
 }
 
-async function create_frame_v3(text, color, pathna) {
-  const width = 400, height = 400;
+function create_frame_v3_context(text, color, width = 400, height = 400) {
   const canvas = createCanvas(width, height);
   const ctx = canvas.getContext('2d');
   for (let x = 0; x < width; x += 40) {
@@ -261,31 +213,14 @@ async function create_frame_v3(text, color, pathna) {
     ctx.fillText(line, width / 2, startY);
     startY += fsize;
   });
-  fs.writeFileSync(pathna, canvas.toBuffer('image/png'));
+  return ctx;
 }
 
 async function generateAttp_v3(text) {
-  const lokasina = path.join(__dirname, 'temp_frames_v3');
-  if (!fs.existsSync(lokasina)) fs.mkdirSync(lokasina);
   const colors = ['#FF4500', '#32CD32', '#1E90FF', '#FFD700', '#FF1493', '#00CED1'];
-  const fpaths = [];
-  for (let i = 0; i < colors.length; i++) {
-    const fpath = path.join(lokasina, `frame_${i}.png`);
-    await create_frame_v3(text, colors[i], fpath);
-    fpaths.push(fpath);
-  }
-  return new Promise((resolve, reject) => {
-    const output_gif = path.join(__dirname, 'attp_v3.gif');
-    const ffmpeg_cmd = `ffmpeg -y -framerate 15 -i ${lokasina}/frame_%d.png -vf "scale=400:400:flags=lanczos" ${output_gif}`;
-    exec(ffmpeg_cmd, (error) => {
-      fpaths.forEach((file) => { if(fs.existsSync(file)) fs.unlinkSync(file); });
-      if(fs.existsSync(lokasina)) fs.rmdirSync(lokasina);
-      if (error) return reject(error);
-      const buffna = fs.readFileSync(output_gif);
-      fs.unlinkSync(output_gif);
-      resolve(buffna);
-    });
-  });
+  const contexts = colors.map(color => create_frame_v3_context(text, color));
+  // framerate 15 = delay ~66ms
+  return await createGifBuffer(400, 400, 66, contexts);
 }
 
 async function generateTtp_v3(text) {
@@ -336,8 +271,7 @@ async function generateTtp_v3(text) {
   return canvas.toBuffer('image/png');
 }
 
-async function create_frame_v4(text, color, pathna, frameIndex) {
-  const width = 400, height = 400;
+function create_frame_v4_context(text, color, frameIndex, width = 400, height = 400) {
   const canvas = createCanvas(width, height);
   const ctx = canvas.getContext('2d');
   const gradient = ctx.createRadialGradient(width / 2, height / 2, 10, width / 2, height / 2, 200);
@@ -390,31 +324,14 @@ async function create_frame_v4(text, color, pathna, frameIndex) {
     ctx.fillText(line, width / 2, startY);
     startY += fsize;
   });
-  fs.writeFileSync(pathna, canvas.toBuffer('image/png'));
+  return ctx;
 }
 
 async function generateAttp_v4(text) {
-  const lokasina = path.join(__dirname, 'temp_frames_v4');
-  if (!fs.existsSync(lokasina)) fs.mkdirSync(lokasina);
   const colors = ['#FF6347', '#40E0D0', '#9370DB', '#FFD700', '#00FF7F', '#FF69B4'];
-  const fpaths = [];
-  for (let i = 0; i < colors.length; i++) {
-    const fpath = path.join(lokasina, `frame_${i}.png`);
-    await create_frame_v4(text, colors[i], fpath, i);
-    fpaths.push(fpath);
-  }
-  return new Promise((resolve, reject) => {
-    const output_gif = path.join(__dirname, 'attp_v4.gif');
-    const ffmpeg_cmd = `ffmpeg -y -framerate 20 -i ${lokasina}/frame_%d.png -vf "scale=400:400:flags=lanczos" ${output_gif}`;
-    exec(ffmpeg_cmd, (error) => {
-      fpaths.forEach((file) => { if(fs.existsSync(file)) fs.unlinkSync(file); });
-      if(fs.existsSync(lokasina)) fs.rmdirSync(lokasina);
-      if (error) return reject(error);
-      const buffna = fs.readFileSync(output_gif);
-      fs.unlinkSync(output_gif);
-      resolve(buffna);
-    });
-  });
+  const contexts = colors.map((color, idx) => create_frame_v4_context(text, color, idx));
+  // framerate 20 = delay 50ms
+  return await createGifBuffer(400, 400, 50, contexts);
 }
 
 async function generateTtp_v4(text) {
@@ -467,20 +384,18 @@ async function generateTtp_v4(text) {
 }
 
 async function generateTtp_v5(text) {
-    const font_path = path.join(__dirname, 'lib', 'Baloo-Bold.ttf');
+    // Pada Vercel, kita gunakan folder sistem /tmp untuk write file font runtime jika belum ada
+    const font_path = path.join('/tmp', 'Baloo-Bold.ttf');
     const font_url = 'https://files.catbox.moe/abepcw.ttf';
 
-    const dl_font = async () => {
-        if (!fs.existsSync(font_path)) {
-            const response = await axios.get(font_url, { responseType: 'arraybuffer' });
-            fs.mkdirSync(path.join(__dirname, 'lib'), { recursive: true });
-            fs.writeFileSync(font_path, Buffer.from(response.data));
-        }
-    };
-
-    await dl_font();
+    if (!fs.existsSync(font_path)) {
+        const response = await axios.get(font_url, { responseType: 'arraybuffer' });
+        fs.writeFileSync(font_path, Buffer.from(response.data));
+    }
     
-    GlobalFonts.registerFromPath(font_path, 'Baloo');
+    try {
+      GlobalFonts.registerFromPath(font_path, 'Baloo');
+    } catch(e) {}
 
     const width = 512, height = 512, maxWidth = 480;
     let fontSize = 100;
@@ -525,12 +440,11 @@ async function generateTtp_v5(text) {
         ctx.fillText(line, width / 2, startY + i * lineHeight);
     });
 
-    const buffer = canvas.toBuffer('image/png');
-    return buffer;
+    return canvas.toBuffer('image/png');
 }
 
 // ==========================================
-// EXPRESS ROUTER ENDPOINT (HTML REMOVED)
+// EXPRESS ROUTER ENDPOINT (HTML DIBUANG)
 // ==========================================
 
 router.get("/", async (req, res) => {
@@ -538,7 +452,7 @@ router.get("/", async (req, res) => {
     const text = req.query.text;
     const type = req.query.type || 'ttp';
 
-    // Jika parameter text kosong, berikan response bad request JSON
+    // Tanpa HTML, langsung lempar status 400 jika teks kosong
     if (!text) {
       return res.status(400).json({
         status: false,
@@ -557,28 +471,28 @@ router.get("/", async (req, res) => {
         buffer = await generateAttp(text);
         contentType = "image/gif";
         break;
-      case 'ttpv2':
+      case 'ttp_v2':
         buffer = await generateTtp_v2(text);
         break;
-      case 'attpv2':
+      case 'attp_v2':
         buffer = await generateAttp_v2(text);
         contentType = "image/gif";
         break;
-      case 'ttpv3':
+      case 'ttp_v3':
         buffer = await generateTtp_v3(text);
         break;
-      case 'attpv3':
+      case 'attp_v3':
         buffer = await generateAttp_v3(text);
         contentType = "image/gif";
         break;
-      case 'ttpv4':
+      case 'ttp_v4':
         buffer = await generateTtp_v4(text);
         break;
-      case 'attpv4':
+      case 'attp_v4':
         buffer = await generateAttp_v4(text);
         contentType = "image/gif";
         break;
-      case 'ttpv5':
+      case 'ttp_v5':
         buffer = await generateTtp_v5(text);
         break;
       default:
@@ -592,7 +506,6 @@ router.get("/", async (req, res) => {
     return res.send(buffer);
 
   } catch (error) {
-    // Menangani error dan mengirimkan status 500 (Internal Server Error) secara konsisten
     return res.status(500).json({
       status: false,
       creator: "ArulzXD",
