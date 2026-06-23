@@ -40,13 +40,10 @@ const categoryIcons = {
 
     'islam': '<svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 text-cyan-400"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>',
 
-    // GAME
     'game': '<svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 text-cyan-400"><path d="M7 8h10a4 4 0 0 1 4 4v4a3 3 0 0 1-5.12 2.12L13.76 16H10.24l-2.12 2.12A3 3 0 0 1 3 16v-4a4 4 0 0 1 4-4zm0 3v2H5v2h2v2h2v-2h2v-2H9v-2H7zm9 1a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm3 2a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z"/></svg>',
 
-    // QUOTES
     'quotes': '<svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 text-cyan-400"><path d="M7 17H3V9h6v6c0 1.1-.9 2-2 2zm10 0h-4V9h6v6c0 1.1-.9 2-2 2z"/></svg>',
 
-    // STICKER
     'sticker': '<svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 text-cyan-400"><path d="M5 3h10l4 4v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zm9 1v4h4M8 11a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm8 0a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm-4 5c2.2 0 4-1.3 4-3H8c0 1.7 1.8 3 4 3z"/></svg>',
 
     'default': '<svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 text-cyan-400"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>'
@@ -74,7 +71,6 @@ const i18n = {
         toastRequestWait: "Harap tunggu permintaan saat ini selesai",
         toastRequestSuccess: "Permintaan berhasil diselesaikan!",
         toastRequestFailed: "Permintaan gagal!",
-        // Tambahan i18n Baru untuk Status Waktu Baterai
         batterySimulated: "Simulasi"
     },
     en: {
@@ -98,7 +94,6 @@ const i18n = {
         toastRequestWait: "Please wait for current request",
         toastRequestSuccess: "Request completed successfully!",
         toastRequestFailed: "Request failed!",
-        // Tambahan i18n Baru untuk Status Waktu Baterai
         batterySimulated: "Simulated"
     }
 };
@@ -188,7 +183,6 @@ function setLanguage(lang) {
         window.dispatchEvent(new Event('batteryupdate-hook'));
     }
 
-    // Perbarui bahasa teks tanggal secara real-time saat bahasa diubah
     const dateElement = document.getElementById('liveDate');
     if (dateElement && typeof moment !== 'undefined') {
         const now = moment().tz("Asia/Jakarta");
@@ -336,9 +330,9 @@ function initBatteryDetection() {
                     }
                 }
             }
-            
             simulatedLevel = newLevel;
             localStorage.setItem('simulatedBattery', newLevel.toString());
+            
             const roundedLevel = Math.round(newLevel);
             batteryPercentageElement.textContent = `${roundedLevel}%`;
             batteryLevelElement.style.width = `${newLevel}%`;
@@ -370,682 +364,668 @@ function cleanupBatteryMonitor() {
         batteryMonitor = null;
         boundUpdateBatteryInfo = null;
     }
-    
     if (batteryInterval) {
         clearInterval(batteryInterval);
         batteryInterval = null;
     }
 }
 
-// ==================== FITUR JAM & TANGGAL MOMENT-TIMEZONE ====================
 function initDigitalClock() {
     const clockElement = document.getElementById('liveClock');
     const dateElement = document.getElementById('liveDate');
-
     if (!clockElement || !dateElement) return;
 
     function updateClock() {
         if (typeof moment === 'undefined') return;
-
         const now = moment().tz("Asia/Jakarta");
         clockElement.textContent = now.format('HH:mm:ss');
-        
         if (currentLang === 'id') {
             dateElement.textContent = now.locale('id').format('dddd, D MMMM YYYY');
         } else {
             dateElement.textContent = now.locale('en').format('dddd, MMMM D, YYYY');
         }
     }
-
     updateClock();
     setInterval(updateClock, 1000);
 }
 
-function updateTotalEndpoints() { document.getElementById('totalEndpoints').textContent = totalEndpoints; }
-function updateTotalCategories() { document.getElementById('totalCategories').textContent = totalCategories; }
-
-function showToast(message, isError = false) {
+function showToast(message, type = 'success') {
     const toast = document.getElementById('toast');
     const toastMessage = document.getElementById('toastMessage');
     const toastIcon = document.getElementById('toastIcon');
 
+    if (!toast || !toastMessage) return;
+
     toastMessage.textContent = message;
-    if (isError) {
-        toastIcon.innerHTML = '<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>';
-    } else {
+
+    if (type === 'success') {
+        toast.className = 'toast show bg-emerald-500 text-white font-mono shadow-xl border border-emerald-400/20';
         toastIcon.innerHTML = '<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>';
-    }
-    toast.classList.add('show');
-    setTimeout(() => toast.classList.remove('show'), 3000);
-}
-
-function copyText(text, type = 'path') {
-    navigator.clipboard.writeText(text).then(() => {
-        showToast(`${type} berhasil disalin ke papan klip!`);
-    }).catch(() => {
-        showToast('Gagal menyalin text', true);
-    });
-}
-
-function copyFromElement(elementId, type) {
-    const el = document.getElementById(elementId);
-    if (el) {
-        copyText(el.innerText || el.textContent, type);
-    }
-}
-
-function updateLivePreview(catIdx, epIdx, method, basePath) {
-    const form = document.getElementById(`form-${catIdx}-${epIdx}`);
-    if (!form) return;
-
-    const formData = new FormData(form);
-    const params = new URLSearchParams();
-    for (const [key, value] of formData.entries()) {
-        if (value) params.append(key, value);
+    } else {
+        toast.className = 'toast show bg-rose-500 text-white font-mono shadow-xl border border-rose-400/20';
+        toastIcon.innerHTML = '<path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>';
     }
 
-    const queryStr = params.toString();
-    const finalUrl = queryStr ? `${BASE_URL}${basePath}?${queryStr}` : `${BASE_URL}${basePath}`;
-
-    const urlContainer = document.getElementById(`live-url-${catIdx}-${epIdx}`);
-    const curlContainer = document.getElementById(`live-curl-${catIdx}-${epIdx}`);
-
-    if (urlContainer) urlContainer.textContent = finalUrl;
-    if (curlContainer) {
-        if (method === 'GET') {
-            curlContainer.textContent = `curl -X GET "${finalUrl}"`;
-        } else {
-            const bodyParams = [];
-            for (const [key, value] of formData.entries()) {
-                if (value) bodyParams.push(`"${key}": "${value}"`);
-            }
-            const dataString = bodyParams.length ? ` -H "Content-Type: application/json" -d '{${bodyParams.join(', ')}}'` : '';
-            curlContainer.textContent = `curl -X ${method} "${BASE_URL}${basePath}"${dataString}`;
-        }
-    }
-}
-
-function toggleCategory(index) {
-    const content = document.getElementById(`cat-${index}`);
-    const icon = document.getElementById(`cat-icon-${index}`);
-    content.classList.toggle('hidden');
-    icon.style.transform = content.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(180deg)';
-}
-
-function closeSidebarMenu() {
-    const bioDropdown = document.getElementById('bioDropdown');
-    const menuOverlay = document.getElementById('menuOverlay');
-    if (bioDropdown) bioDropdown.style.transform = 'translateX(100%)';
-    if (menuOverlay) menuOverlay.classList.add('hidden');
-}
-
-function toggleEndpoint(catIdx, epIdx) {
-    const content = document.getElementById(`ep-${catIdx}-${epIdx}`);
-    const icon = document.getElementById(`ep-icon-${catIdx}-${epIdx}`);
-    content.classList.toggle('hidden');
-    icon.style.transform = content.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(180deg)', '';
-}
-
-function getContentType(url, contentType) {
-    if (contentType) {
-        if (contentType.includes('image/')) return 'image';
-        if (contentType.includes('video/')) return 'video';
-        if (contentType.includes('audio/')) return 'audio';
-        if (contentType.includes('application/pdf')) return 'pdf';
-    }
-    if (url.includes('.jpg') || url.includes('.png') || url.includes('.jpeg')) return 'image';
-    if (url.includes('.mp4')) return 'video';
-    if (url.includes('.mp3')) return 'audio';
-    if (url.includes('.pdf')) return 'pdf';
-    return 'unknown';
-}
-
-function createMediaPreview(url, contentType, originalUrl = '') {
-    const type = getContentType(url, contentType);
-    let previewHtml = '';
-
-    switch(type) {
-        case 'image':
-            previewHtml = `<div class="media-preview cursor-zoom-in"><img src="${url}" class="media-image transition-transform duration-200 hover:brightness-90" alt="Response Image"></div>`;
-            break;
-        case 'video':
-            previewHtml = `<div class="media-preview"><video controls class="media-iframe"><source src="${url}">Your browser does not support the video tag.</video></div>`;
-            break;
-        case 'audio':
-            previewHtml = `<div class="media-preview"><audio controls class="w-full"><source src="${url}">Your browser does not support the audio tag.</audio></div>`;
-            break;
-        default:
-            previewHtml = `<div class="media-preview"><iframe src="${url}" class="media-iframe" frameborder="0"></iframe></div>`;
-    }
-
-    const isLightMode = body.classList.contains('light-mode');
-    const btnClass = isLightMode 
-        ? 'px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-lg text-xs font-semibold flex items-center gap-1.5' 
-        : 'px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5';
-
-    return `<div class="w-full">${previewHtml}<div class="flex gap-2 mt-3"><button type="button" onclick="copyText('${originalUrl || url}', 'Media URL')" class="${btnClass}">📋 Copy URL</button><a href="${url}" download class="${btnClass}">📥 Download</a></div></div>`;
-}
-
-async function executeRequest(e, catIdx, epIdx, method, path) {
-    e.preventDefault();
-    if (isRequestInProgress) {
-        showToast(i18n[currentLang].toastRequestWait, true);
-        return;
-    }
-
-    const form = document.getElementById(`form-${catIdx}-${epIdx}`);
-    const responseDiv = document.getElementById(`response-${catIdx}-${epIdx}`);
-    const responseContent = document.getElementById(`response-content-${catIdx}-${epIdx}`);
-    const executeBtn = form.querySelector('button[type="submit"]');
-
-    let spinner = executeBtn.querySelector('.local-spinner');
-    if (!spinner) {
-        spinner = document.createElement('span');
-        spinner.className = 'local-spinner ml-2';
-        executeBtn.appendChild(spinner);
-    }
-
-    isRequestInProgress = true;
-    executeBtn.disabled = true;
-    executeBtn.classList.add('btn-loading');
-    spinner.classList.add('active');
-
-    const formData = new FormData(form);
-    const params = new URLSearchParams();
-    for (const [key, value] of formData.entries()) {
-        if (value) params.append(key, value);
-    }
-
-    const fullPath = `${BASE_URL}${path.split('?')[0]}?${params.toString()}`;
-    let curlCommand = `curl -X ${method} "${fullPath}"`;
-    if (method !== 'GET') {
-        curlCommand = `curl -X ${method} "${BASE_URL}${path.split('?')[0]}" `;
-        const bodyParams = [];
-        for (const [key, value] of formData.entries()) {
-            if (value) bodyParams.push(`"${key}": "${value}"`);
-        }
-        if (bodyParams.length) {
-            curlCommand += `-H "Content-Type: application/json" -d '{${bodyParams.join(', ')}}'`;
-        }
-    }
-
-    responseDiv.classList.remove('hidden');
-    responseContent.innerHTML = '<div class="spinner mx-auto"></div>';
-
-    try {
-        const response = await fetch(fullPath);
-
-        if (response.status === 403 || response.status === 503) {
-            const data = await response.json();
-            responseContent.innerHTML = `<pre class="text-red-400 code-font text-sm overflow-auto">${JSON.stringify(data, null, 2)}</pre>`;
-            showToast(data.message || "Akses Ditolak!", true);
-            return;
-        }
-
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-
-        const contentType = response.headers.get("content-type");
-        let rawResponseText = "";
-        let isMedia = false;
-
-        if (contentType?.includes("application/json")) {
-            const data = await response.json();
-            rawResponseText = JSON.stringify(data, null, 2);
-            responseContent.innerHTML = `<pre id="raw-text-${catIdx}-${epIdx}" class="code-font text-sm overflow-auto text-cyan-400">${rawResponseText}</pre>`;
-        } else if (contentType?.startsWith("image/") || contentType?.startsWith("video/") || contentType?.startsWith("audio/") || contentType?.includes("application/pdf")) {
-            isMedia = true;
-            const blob = await response.blob();
-            const url = URL.createObjectURL(blob);
-            responseContent.innerHTML = createMediaPreview(url, contentType, fullPath);
-        } else {
-            rawResponseText = await response.text();
-            responseContent.innerHTML = `<pre id="raw-text-${catIdx}-${epIdx}" class="code-font text-sm overflow-auto">${rawResponseText}</pre>`;
-        }
-
-        const isLightMode = body.classList.contains('light-mode');
-        const btnStyle = isLightMode 
-            ? 'px-2.5 py-1 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded text-[11px] font-semibold transition-colors code-font border border-black/5'
-            : 'px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-white rounded text-[11px] font-semibold transition-colors code-font border border-white/5';
-
-        const actionContainer = document.createElement('div');
-        actionContainer.className = "flex flex-wrap gap-2 mb-3 border-b border-white/10 light-mode:border-slate-200 pb-3";
-
-        const copyUrlBtn = document.createElement('button');
-        copyUrlBtn.type = "button";
-        copyUrlBtn.className = btnStyle;
-        copyUrlBtn.innerHTML = "🔗 Copy URL Request";
-        copyUrlBtn.onclick = () => copyText(fullPath, "URL Request");
-        actionContainer.appendChild(copyUrlBtn);
-
-        const copyCurlBtn = document.createElement('button');
-        copyCurlBtn.type = "button";
-        copyCurlBtn.className = btnStyle;
-        copyCurlBtn.innerHTML = "💻 Copy cURL";
-        copyCurlBtn.onclick = () => copyText(curlCommand, "cURL Command");
-        actionContainer.appendChild(copyCurlBtn);
-
-        if (!isMedia) {
-            const copyResponseBtn = document.createElement('button');
-            copyResponseBtn.type = "button";
-            copyResponseBtn.className = btnStyle;
-            copyResponseBtn.innerHTML = "📋 Copy Response";
-            copyResponseBtn.onclick = () => copyText(rawResponseText, "Response");
-            actionContainer.appendChild(copyResponseBtn);
-        }
-
-        responseContent.insertBefore(actionContainer, responseContent.firstChild);
-        showToast(i18n[currentLang].toastRequestSuccess);
-    } catch (error) {
-        responseContent.innerHTML = `<pre class="text-red-400 code-font text-sm">Error: ${error.message}</pre>`;
-        showToast(i18n[currentLang].toastRequestFailed, true);
-    } finally {
-        isRequestInProgress = false;
-        executeBtn.disabled = false;
-        executeBtn.classList.remove('btn-loading');
-        spinner.classList.remove('active');
-    }
-}
-
-function clearResponse(catIdx, epIdx) {
-    const responseDiv = document.getElementById(`response-${catIdx}-${epIdx}`);
-    if (responseDiv) {
-        responseDiv.classList.add('hidden');
-    }
-
-    const form = document.getElementById(`form-${catIdx}-${epIdx}`);
-    if (form) {
-        form.reset(); 
-
-        const urlContainer = document.getElementById(`live-url-${catIdx}-${epIdx}`);
-        if (urlContainer) {
-            const basePath = urlContainer.textContent.split('?')[0];
-            urlContainer.textContent = basePath;
-        }
-
-        const curlContainer = document.getElementById(`live-curl-${catIdx}-${epIdx}`);
-        if (curlContainer) {
-            const method = curlContainer.textContent.split(' ')[1] || 'GET';
-            const baseUrl = curlContainer.textContent.split('"')[1] || '';
-            curlContainer.textContent = `curl -X ${method} "${baseUrl.split('?')[0]}"`;
-        }
-    }
-}
-
-function renderCategoryFilters() {
-    const container = document.getElementById('categoryFilters');
-    if (!container || !apiData || !apiData.categories) return;
-
-    let html = `<button class="filter-btn active" data-filter="all" onclick="filterByCategory('all')">semua (${totalEndpoints})</button>`;
-
-    apiData.categories.forEach(category => {
-        const catName = category.name.toLowerCase();
-        const count = category.items.length;
-        html += `<button class="filter-btn" data-filter="${catName}" onclick="filterByCategory('${catName}')">${catName} (${count})</button>`;
-    });
-
-    container.innerHTML = html;
-}
-
-function filterByCategory(catName) {
-    activeCategory = catName;
-    document.querySelectorAll('.filter-btn').forEach(btn => {
-        if (btn.dataset.filter === catName) {
-            btn.classList.add('active');
-        } else {
-            btn.classList.remove('active');
-        }
-    });
-    performSearch();
-}
-
-function performSearch() {
-    const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
-    const noResults = document.getElementById('noResults');
-    let hasVisibleItems = false;
-
-    requestAnimationFrame(() => {
-        document.querySelectorAll('.category-group').forEach(category => {
-            const catName = category.dataset.category;
-
-            if (activeCategory !== 'all' && catName !== activeCategory) {
-                category.classList.add('hidden');
-                return;
-            }
-
-            let categoryHasVisibleItems = false;
-            const items = category.querySelectorAll('.api-item');
-
-            for (let i = 0; i < items.length; i++) {
-                const item = items[i];
-                const matches = item.dataset.path.includes(searchTerm) || 
-                                item.dataset.alias.includes(searchTerm) || 
-                                item.dataset.description.includes(searchTerm) ||
-                                item.dataset.category.includes(searchTerm);
-                if (matches) {
-                    item.classList.remove('hidden');
-                    categoryHasVisibleItems = true;
-                    hasVisibleItems = true;
-                } else {
-                    item.classList.add('hidden');
-                }
-            }
-
-            category.classList.toggle('hidden', !categoryHasVisibleItems);
-        });
-
-        noResults.classList.toggle('hidden', hasVisibleItems);
-    });
+    setTimeout(() => {
+        toast.classList.remove('show');
+    }, 3000);
 }
 
 function loadApis() {
-    const apiList = document.getElementById('apiList');
-    if (!apiData || !apiData.categories) {
-        apiList.innerHTML = '<p class="text-center">No API data loaded.</p>';
-        return;
-    }
+    if (!apiData || !apiData.categories) return;
+
+    const listContainer = document.getElementById('apiList');
+    const filtersContainer = document.getElementById('categoryFilters');
     
+    const savedFilter = activeCategory;
+    listContainer.innerHTML = '';
+    filtersContainer.innerHTML = `<button class="filter-btn ${savedFilter === 'all' ? 'active' : ''}" data-category="all">All</button>`;
+
     totalEndpoints = 0;
     totalCategories = apiData.categories.length;
-    apiData.categories.forEach(category => { totalEndpoints += category.items.length; });
-    
-    updateTotalEndpoints();
-    updateTotalCategories();
-    renderCategoryFilters();
-    
-    const isLightMode = body.classList.contains('light-mode');
-    const pathColorClass = isLightMode ? 'text-cyan-700' : 'text-cyan-200';
-    const subTextColorClass = isLightMode ? 'text-slate-600' : 'opacity-70';
 
-    let html = '';
-    apiData.categories.forEach((category, catIdx) => {
-        const catNameLower = category.name.toLowerCase();
+    apiData.categories.forEach(cat => {
+        const catId = cat.name.toLowerCase();
         
-        let iconSvg = categoryIcons.default;
-        for (const [key, svg] of Object.entries(categoryIcons)) {
-            if (catNameLower.includes(key)) {
-                iconSvg = svg;
-                break;
-            }
+        const filterBtn = document.createElement('button');
+        filterBtn.className = `filter-btn ${savedFilter === catId ? 'active' : ''}`;
+        filterBtn.setAttribute('data-category', catId);
+        filterBtn.textContent = cat.name;
+        filtersContainer.appendChild(filterBtn);
+
+        if (savedFilter !== 'all' && savedFilter !== catId) {
+            totalEndpoints += cat.items.length;
+            return;
         }
 
-        html += `
-        <div class="category-group" data-category="${catNameLower}">
-            <div class="glass-panel border rounded-xl overflow-hidden shadow-lg mb-4">
-                <button onclick="toggleCategory(${catIdx})" class="w-full px-4 py-4 flex items-center justify-between hover:bg-white/5 light-mode:hover:bg-black/5 transition-colors">
-                    <div class="flex items-center gap-4">
-                        <div class="w-12 h-12 flex items-center justify-center bg-slate-950/40 light-mode:bg-slate-200/50 rounded-xl border border-white/10 light-mode:border-slate-300 shadow-inner flex-shrink-0">
-                            ${iconSvg}
-                        </div>
-                        <div class="text-left">
-                            <h3 class="font-bold text-sm tracking-widest text-cyan-400 light-mode:text-cyan-600 uppercase font-['Space_Grotesk']">${category.name}</h3>
-                            <p class="text-[11px] code-font ${subTextColorClass}">${category.items.length} ${i18n[currentLang].endpointsCount}</p>
-                        </div>
-                    </div>
-                    <svg id="cat-icon-${catIdx}" class="w-5 h-5 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                    </svg>
-                </button>
-                <div id="cat-${catIdx}" class="hidden">`;
+        const catSection = document.createElement('div');
+        catSection.className = 'glass-panel rounded-2xl p-4 md:p-6 shadow-lg border border-white/5 font-mono';
         
-        category.items.forEach((item, epIdx) => {
-            const method = item.methods && item.methods.length ? item.methods[0] : 'GET';
-            const pathParts = item.path.split('?');
-            const path = pathParts[0];
-            const queryParams = new URLSearchParams(pathParts[1] || '');
+        const icon = categoryIcons[catId] || categoryIcons['default'];
+        
+        let sectionHtml = `
+            <div class="flex items-center gap-3 border-b border-white/5 pb-4 mb-4 select-none">
+                <div class="p-2 bg-cyan-500/10 rounded-xl border border-cyan-500/20">${icon}</div>
+                <div>
+                    <h2 class="font-bold text-base tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400">${cat.name}</h2>
+                    <p class="text-[10px] text-slate-400 uppercase tracking-wider mt-0.5">${cat.items.length} ${i18n[currentLang].endpointsCount}</p>
+                </div>
+            </div>
+            <div class="space-y-4">
+        `;
+
+        cat.items.forEach((item, idx) => {
+            totalEndpoints++;
+            const uniqueId = `${catId}-${idx}`;
+            const primaryMethod = item.methods && item.methods.length ? item.methods[0].toUpperCase() : 'GET';
             
-            let statusClass = "status-ready";
-            if (item.status === 'update') statusClass = 'status-update';
-            if (item.status === 'error' || item.status === 'perbaikan') statusClass = 'status-error';
+            let methodColor = 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
+            if (primaryMethod === 'POST') methodColor = 'bg-amber-500/10 text-amber-400 border-amber-500/20';
+            if (primaryMethod === 'DELETE') methodColor = 'bg-rose-500/10 text-rose-400 border-rose-500/20';
+            if (primaryMethod === 'PUT') methodColor = 'bg-blue-500/10 text-blue-400 border-blue-500/20';
 
-            let statusText = "READY"; 
-            if (item.status === 'update') {
-                statusText = "UPDATE";
-            } else if (item.status === 'error' || item.status === 'perbaikan') {
-                statusText = "MAINTENANCE";
-            }
-
-            let badgeTypeHtml = '';
+            let typeBadge = '';
             if (item.type === 'premium') {
-                badgeTypeHtml = `<span class="px-1.5 py-0.5 text-[9px] rounded-sm bg-amber-500/20 text-amber-400 border border-amber-500/30 font-bold uppercase tracking-wider animate-pulse">👑 PREMIUM</span>`;
+                typeBadge = `<span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 uppercase border border-amber-400/20 shadow-sm animate-pulse">VIP</span>`;
             } else {
-                badgeTypeHtml = `<span class="px-1.5 py-0.5 text-[9px] rounded-sm bg-blue-500/20 text-blue-400 border border-blue-500/30 font-bold uppercase tracking-wider">FREE</span>`;
+                typeBadge = `<span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 uppercase border border-white/5">FREE</span>`;
             }
 
-            html += `
-            <div class="api-item border-t border-white/10 light-mode:border-slate-200" 
-                data-method="${method}" data-path="${path}" data-alias="${item.name.toLowerCase()}" data-description="${item.desc.toLowerCase()}" data-category="${category.name.toLowerCase()}">
-                <button onclick="toggleEndpoint(${catIdx}, ${epIdx})" class="w-full px-4 py-3 flex items-center justify-between hover:bg-white/5 light-mode:hover:bg-black/5 transition-colors">
-                    <div class="flex items-center gap-3 flex-1 min-w-0">
-                        <span class="bg-cyan-500 light-mode:bg-cyan-600 text-slate-950 light-mode:text-white px-2 py-0.5 rounded text-[10px] flex-shrink-0 code-font font-black">${method}</span>
-                        <div class="text-left flex-1 min-w-0">
-                            <p class="code-font font-semibold text-[13px] ${pathColorClass} truncate">${path}</p>
-                            <div class="flex items-center gap-2 mt-1">
-                                <p class="text-xs ${subTextColorClass} truncate">${item.name}</p>
-                                <span class="px-1.5 py-0.5 text-[9px] rounded-sm ${statusClass} flex-shrink-0 uppercase tracking-wider font-bold">${statusText}</span>
-                                ${badgeTypeHtml}
+            let statusBadge = '';
+            if (item.status === 'perbaikan' || item.status === 'error') {
+                statusBadge = `<span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-rose-500/10 text-rose-400 uppercase border border-rose-500/20">FIXING</span>`;
+            } else {
+                statusBadge = `<span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 uppercase border border-emerald-500/20">READY</span>`;
+            }
+
+            sectionHtml += `
+                <div class="api-item p-3.5 rounded-xl border border-white/5 bg-slate-900/20 hover:bg-slate-900/40 transition-all" data-name="${item.name.toLowerCase()}" data-path="${item.path.toLowerCase()}" data-desc="${item.desc.toLowerCase()}">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 cursor-pointer" onclick="toggleEndpointDetails('${uniqueId}')">
+                        <div class="flex items-center gap-2.5 overflow-hidden flex-1">
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded border ${methodColor} tracking-wider min-w-[50px] text-center">${primaryMethod}</span>
+                            <span class="text-xs font-bold text-slate-200 truncate hover:text-cyan-400 transition-colors">${item.name}</span>
+                        </div>
+                        <div class="flex items-center gap-2 select-none md:justify-end">
+                            ${typeBadge}
+                            ${statusBadge}
+                            <svg id="icon-${uniqueId}" class="w-4 h-4 text-slate-500 transform transition-transform duration-200" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                        </div>
+                    </div>
+
+                    <div id="details-${uniqueId}" class="hidden mt-4 pt-4 border-t border-white/5 space-y-4">
+                        <div class="space-y-2">
+                            <label class="text-[11px] font-bold text-slate-400 block">ENDPOINT URL</label>
+                            <div class="flex items-center gap-2">
+                                <input type="text" value="${BASE_URL}${item.path}" readonly class="w-full text-xs p-2.5 rounded-xl bg-slate-950/40 text-cyan-400 border border-white/5 outline-none font-mono selection:bg-cyan-500/30" />
                             </div>
                         </div>
-                    </div>
-                </button>
-                <div id="ep-${catIdx}-${epIdx}" class="hidden bg-slate-950/40 light-mode:bg-slate-50/50 px-4 py-4 border-t border-white/10 light-mode:border-slate-200 backdrop-blur-sm">
-                    <p class="text-xs mb-4 ${isLightMode ? 'text-slate-700' : 'opacity-80'}">${item.desc}</p>
-                    
-                    <div class="mb-4">
-                        <div class="flex items-center justify-between mb-2">
-                            <h4 class="font-bold text-[11px] uppercase tracking-wider text-slate-400 light-mode:text-slate-600 code-font">ENDPOINT / REQUEST URL</h4>
-                            <button type="button" onclick="copyFromElement('live-url-${catIdx}-${epIdx}', 'URL')" class="px-3 py-1 bg-white/5 hover:bg-white/10 light-mode:bg-slate-200 light-mode:hover:bg-slate-300 border border-white/10 light-mode:border-slate-300 rounded-lg text-[10px] transition-all active:scale-95 code-font text-slate-300 light-mode:text-slate-800">Copy URL</button>
-                        </div>
-                        <div class="bg-slate-900/40 light-mode:bg-slate-200/60 border border-white/10 light-mode:border-slate-300 px-4 py-3 rounded-xl backdrop-blur-md shadow-inner">
-                            <code id="live-url-${catIdx}-${epIdx}" class="code-font text-xs text-cyan-400 light-mode:text-cyan-700 font-medium break-all">${BASE_URL}${path}</code>
-                        </div>
-                    </div>
 
-                    <div class="mb-4">
-                        <div class="flex items-center justify-between mb-2">
-                            <h4 class="font-bold text-[11px] uppercase tracking-wider text-slate-400 light-mode:text-slate-600 code-font">cURL Command</h4>
-                            <button type="button" onclick="copyFromElement('live-curl-${catIdx}-${epIdx}', 'cURL')" class="px-3 py-1 bg-white/5 hover:bg-white/10 light-mode:bg-slate-200 light-mode:hover:bg-slate-300 border border-white/10 light-mode:border-slate-300 rounded-lg text-[10px] transition-all active:scale-95 code-font text-slate-300 light-mode:text-slate-800">Copy cURL</button>
-                        </div>
-                        <div class="bg-slate-900/40 light-mode:bg-slate-200/60 border border-white/10 light-mode:border-slate-300 px-4 py-3 rounded-xl backdrop-blur-md shadow-inner">
-                            <code id="live-curl-${catIdx}-${epIdx}" class="code-font text-xs text-slate-300 light-mode:text-slate-700 block overflow-x-auto whitespace-pre">curl -X ${method} "${BASE_URL}${path}"</code>
-                        </div>
-                    </div>`;
+                        <form id="form-${uniqueId}" onsubmit="fireRequest(event, '${uniqueId}', '${item.path}', '${primaryMethod}')" class="space-y-3">
+                            <div class="space-y-2.5">
+                                <label class="text-[11px] font-bold text-slate-400 block">PARAMETERS</label>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            `;
 
-            if (item.status === 'ready' || item.status === 'update') {
-                html += `
-                    <div>
-                        <h4 class="font-bold text-[11px] uppercase tracking-wider text-slate-400 light-mode:text-slate-600 mb-3">Parameter</h4>
-                        <form id="form-${catIdx}-${epIdx}" onsubmit="executeRequest(event, ${catIdx}, ${epIdx}, '${method}', '${path}')">
-                            <div class="space-y-4 mb-4">`;
-                
-                if (item.params) {
-                    Object.keys(item.params).forEach(paramName => {
-                        const isRequired = !queryParams.has(paramName) || queryParams.get(paramName) === '';
-                        let paramDesc = item.params[paramName];
+            if (item.params && Object.keys(item.params).length > 0) {
+                Object.keys(item.params).forEach(pKey => {
+                    const pType = item.params[pKey];
+                    // FITUR BARU: Deteksi jika nama parameter mengandung file atau tipenya file
+                    if (pType === 'file' || pKey.toLowerCase() === 'file') {
+                        sectionHtml += `
+                            <div class="space-y-1 md:col-span-2">
+                                <span class="text-[10px] text-slate-400 font-bold block">${pKey.toUpperCase()} <span class="text-amber-400 text-[9px]">(File Upload)</span></span>
+                                <input type="file" name="${pKey}" id="input-${uniqueId}-${pKey}" required class="w-full text-xs p-2 rounded-xl bg-slate-950/40 text-slate-200 border border-white/5 file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-mono file:bg-cyan-500/10 file:text-cyan-400 file:hover:bg-cyan-500/20 focus:outline-none focus:border-cyan-400 transition-all" />
+                            </div>
+                        `;
+                    } else {
+                        let defaultVal = '';
+                        if (pKey === 'apikey') defaultVal = localStorage.getItem('api_key_cache') || 'arulzxd-keys';
+                        
+                        sectionHtml += `
+                            <div class="space-y-1">
+                                <span class="text-[10px] text-slate-400 font-bold block">${pKey.toUpperCase()}</span>
+                                <input type="text" name="${pKey}" id="input-${uniqueId}-${pKey}" value="${defaultVal}" placeholder="Masukkan ${pKey}..." required class="w-full text-xs p-2.5 rounded-xl bg-slate-950/40 text-slate-200 border border-white/5 focus:outline-none focus:border-cyan-400 transition-all placeholder:text-slate-600 light-mode:placeholder:text-slate-400" autocomplete="off" />
+                            </div>
+                        `;
+                    }
+                });
+            } else {
+                sectionHtml += `<p class="text-xs text-slate-500 italic p-1">No parameters required.</p>`;
+            }
 
-                        if (!paramDesc || paramDesc.toLowerCase() === paramName.toLowerCase()) {
-                            paramDesc = `${paramName}`;
-                        }
-
-                        html += `
-                            <div>
-                                <div class="flex items-center justify-between mb-1.5">
-                                    <label class="block text-xs font-semibold text-slate-300 light-mode:text-slate-700 code-font">
-                                        ${paramName} ${isRequired ? '<span class="text-red-500">*</span>' : ''}
-                                    </label>
-                                    <span class="text-[10px] text-slate-500 light-mode:text-slate-400 italic font-normal">${paramDesc}</span>
+            sectionHtml += `
                                 </div>
-                                <input type="text" name="${paramName}" oninput="updateLivePreview(${catIdx}, ${epIdx}, '${method}', '${path}')" class="w-full px-3 py-2 rounded-lg bg-black/40 light-mode:bg-white border border-white/10 light-mode:border-slate-300 text-white light-mode:text-slate-900 focus:outline-none focus:border-cyan-500 code-font text-sm" placeholder="${paramDesc}" ${isRequired ? 'required' : ''}>
-                            </div>`;
-                    });
-                }
-                html += `
                             </div>
-                            <div class="flex gap-3">
-                                <button type="submit" class="px-5 py-2 bg-cyan-500 light-mode:bg-cyan-600 hover:bg-cyan-400 light-mode:hover:bg-cyan-500 text-slate-950 light-mode:text-white rounded-md font-bold text-xs tracking-wider transition-all flex items-center justify-center">EKSEKUSI</button>
-                                <button type="button" onclick="clearResponse(${catIdx}, ${epIdx})" class="px-5 py-2 bg-transparent border border-white/20 light-mode:border-slate-300 hover:border-white/40 light-mode:hover:bg-slate-100 text-slate-300 light-mode:text-slate-700 rounded-md font-bold text-xs transition-colors">BERSIHKAN</button>
+
+                            <div class="flex gap-2.5 pt-1">
+                                <button type="submit" class="text-xs font-bold px-4 py-2.5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-xl shadow-md shadow-cyan-500/10 hover:from-cyan-400 hover:to-blue-400 transition-all flex items-center gap-2 active:scale-95">
+                                    ⚡ ${i18n[currentLang].btnExecute}
+                                </button>
+                                <button type="button" onclick="clearRequest('${uniqueId}')" class="text-xs font-bold px-4 py-2.5 bg-white/5 border border-white/5 text-slate-300 hover:bg-white/10 rounded-xl transition-all active:scale-95">
+                                    🗑️ ${i18n[currentLang].btnClear}
+                                </button>
                             </div>
                         </form>
 
-                        <div id="response-${catIdx}-${epIdx}" class="hidden mt-6 space-y-4">
-                            <div>
-                                <h5 class="text-[11px] uppercase tracking-wider font-bold mb-2 text-slate-400 light-mode:text-slate-500">Response</h5>
-                                <div class="bg-slate-950/80 light-mode:bg-slate-100 border border-white/10 light-mode:border-slate-300 p-3 rounded-lg min-h-[100px] overflow-x-auto" id="response-content-${catIdx}-${epIdx}"></div>
+                        <div id="response-container-${uniqueId}" class="hidden space-y-2 animate-fadeIn">
+                            <div class="flex justify-between items-center select-none">
+                                <label class="text-[11px] font-bold text-slate-400 tracking-wide flex items-center gap-1.5">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> RESPONSE DATA
+                                </label>
+                                <span id="runtime-${uniqueId}" class="text-[10px] font-mono font-bold text-slate-500">0ms</span>
                             </div>
+                            <div class="relative group">
+                                <div class="absolute right-3 top-3 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                                    <button onclick="copyResponseText('${uniqueId}')" class="p-1.5 bg-slate-900/80 rounded-lg border border-white/10 text-[10px] text-slate-300 hover:text-white backdrop-blur-sm shadow">COPY</button>
+                                </div>
+                                <pre id="response-${uniqueId}" class="text-[11px] p-4 rounded-xl bg-slate-950 border border-white/5 overflow-x-auto max-h-[350px] text-emerald-400 font-mono scrollbar-hide select-text selection:bg-emerald-500/20"></pre>
+                            </div>
+                            <div id="media-preview-${uniqueId}" class="hidden p-3 bg-white/5 rounded-xl border border-white/5 flex flex-col items-center gap-3 animate-fadeIn"></div>
                         </div>
-                    </div>`;
-            } else {
-                html += `<div class="px-4 py-3 bg-red-500/10 border border-red-500/20 rounded-lg text-xs text-red-500 font-medium">${i18n[currentLang].endpointNotAvailable}</div>`;
-            }
-            html += `</div></div>`;
+                    </div>
+                </div>
+            `;
         });
-        html += `</div></div></div>`;
+
+        sectionHtml += `</div>`;
+        catSection.innerHTML = sectionHtml;
+        listContainer.appendChild(catSection);
     });
-    apiList.innerHTML = html;
+
+    document.getElementById('totalEndpoints').textContent = totalEndpoints;
+    document.getElementById('totalCategories').textContent = totalCategories;
+
+    setupFilterListeners();
     allApiElements = Array.from(document.querySelectorAll('.api-item'));
 }
 
-function initMultiMusicPlayer() {
-    const playlist = window.musicPlaylist || [];
-    if (!playlist.length) return;
+function toggleEndpointDetails(id) {
+    const details = document.getElementById(`details-${id}`);
+    const icon = document.getElementById(`icon-${id}`);
+    if (!details || !icon) return;
+
+    const isHidden = details.classList.contains('hidden');
+    
+    document.querySelectorAll('[id^="details-"]').forEach(el => el.classList.add('hidden'));
+    document.querySelectorAll('[id^="icon-"]').forEach(el => el.classList.remove('rotate-180'));
+
+    if (isHidden) {
+        details.classList.remove('hidden');
+        icon.classList.add('rotate-180');
+        details.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+}
+
+function fireRequest(e, id, path, method) {
+    e.preventDefault();
+    if (isRequestInProgress) {
+        showToast(i18n[currentLang].toastRequestWait, 'error');
+        return;
+    }
+
+    const form = document.getElementById(`form-${id}`);
+    const responseContainer = document.getElementById(`response-container-${id}`);
+    const responsePre = document.getElementById(`response-${id}`);
+    const runtimeSpan = document.getElementById(`runtime-${id}`);
+    const mediaPreview = document.getElementById(`media-preview-${id}`);
+
+    if (!form || !responseContainer || !responsePre || !runtimeSpan) return;
+
+    isRequestInProgress = true;
+    responseContainer.classList.remove('hidden');
+    responsePre.textContent = 'Sending request...\nConnecting to api router layer...';
+    responsePre.className = 'text-[11px] p-4 rounded-xl bg-slate-950 border border-white/5 overflow-x-auto max-h-[350px] text-cyan-400 font-mono';
+    mediaPreview.classList.add('hidden');
+    mediaPreview.innerHTML = '';
+
+    const formDataInputs = new FormData(form);
+    
+    // Simpan API Key ke cache lokal agar user tidak perlu mengetik ulang nanti
+    if (formDataInputs.has('apikey')) {
+        localStorage.setItem('api_key_cache', formDataInputs.get('apikey'));
+    }
+
+    let requestUrl = `${BASE_URL}${path}`;
+    let fetchOptions = { method: method };
+    
+    // FITUR UTAMA BARU: Deteksi pengiriman File Fisik (Multipart FormData vs Query Parameters)
+    let hasFileInput = false;
+    const fileElements = form.querySelectorAll('input[type="file"]');
+    fileElements.forEach(el => {
+        if (el.files.length > 0) hasFileInput = true;
+    });
+
+    if (hasFileInput && (method === 'POST' || method === 'PUT')) {
+        // Jika ada input file pada form POST, kirim form langsung sebagai FormData binary
+        fetchOptions.body = formDataInputs;
+        // Jangan set Header Content-Type karena browser akan otomatis mengaturnya termasuk multipart boundary
+    } else {
+        // Jika parameter query string biasa
+        const params = new URLSearchParams();
+        for (const [key, value] of formDataInputs.entries()) {
+            params.append(key, value);
+        }
+        if (method === 'GET' || method === 'DELETE') {
+            if (params.toString()) requestUrl += `?${params.toString()}`;
+        } else {
+            fetchOptions.headers = { 'Content-Type': 'application/json' };
+            const jsonBody = {};
+            for (const [key, value] of formDataInputs.entries()) {
+                jsonBody[key] = value;
+            }
+            fetchOptions.body = JSON.stringify(jsonBody);
+        }
+    }
+
+    const startTime = performance.now();
+
+    fetch(requestUrl, fetchOptions)
+        .then(async (res) => {
+            const endTime = performance.now();
+            const duration = Math.round(endTime - startTime);
+            runtimeSpan.textContent = `${duration}ms`;
+
+            const contentType = res.headers.get('content-type') || '';
+            
+            if (contentType.includes('application/json')) {
+                const data = await res.json();
+                responsePre.textContent = JSON.stringify(data, null, 2);
+                responsePre.className = 'text-[11px] p-4 rounded-xl bg-slate-950 border border-white/5 overflow-x-auto max-h-[350px] text-emerald-400 font-mono scrollbar-hide';
+                showToast(i18n[currentLang].toastRequestSuccess, 'success');
+                
+                // Integrasi auto-render preview jika response JSON mengandung url gambar/audio/video valid
+                handleMediaAutopreview(data, mediaPreview);
+            } else if (contentType.includes('image/')) {
+                responsePre.textContent = `[Binary Image Data]\nStatus: ${res.status} ${res.statusText}\nType: ${contentType}`;
+                responsePre.className = 'text-[11px] p-4 rounded-xl bg-slate-950 border border-white/5 overflow-x-auto max-h-[350px] text-amber-400 font-mono';
+                
+                mediaPreview.classList.remove('hidden');
+                mediaPreview.innerHTML = `
+                    <div class="text-xs font-bold text-slate-400 border-b border-white/5 pb-2 w-full text-center uppercase tracking-wider">Image Resource Output</div>
+                    <img src="${requestUrl}" class="max-h-60 rounded-lg shadow-inner object-contain cursor-zoom-in border border-white/10 bg-slate-950" onclick="openImageLightbox('${requestUrl}')"/>
+                    <button onclick="copyToClipboard('${requestUrl}')" class="text-[10px] font-bold px-3 py-1.5 bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 rounded-lg hover:bg-cyan-500/20 transition-all">COPY IMAGE URL</button>
+                `;
+                showToast(i18n[currentLang].toastRequestSuccess, 'success');
+            } else if (contentType.includes('audio/')) {
+                responsePre.textContent = `[Binary Audio Resource]\nStatus: ${res.status} ${res.statusText}\nSize: Connected Buffer stream`;
+                responsePre.className = 'text-[11px] p-4 rounded-xl bg-slate-950 border border-white/5 overflow-x-auto max-h-[350px] text-amber-400 font-mono';
+                
+                mediaPreview.classList.remove('hidden');
+                mediaPreview.innerHTML = `
+                    <div class="text-xs font-bold text-slate-400 border-b border-white/5 pb-2 w-full text-center uppercase tracking-wider">Audio Output Stream</div>
+                    <audio src="${requestUrl}" controls class="w-full max-w-md mt-1"></audio>
+                `;
+                showToast(i18n[currentLang].toastRequestSuccess, 'success');
+            } else {
+                const textData = await res.text();
+                responsePre.textContent = textData.substring(0, 5000) + (textData.length > 5000 ? '\n... [Truncated due to size]' : '');
+                responsePre.className = 'text-[11px] p-4 rounded-xl bg-slate-950 border border-white/5 overflow-x-auto max-h-[350px] text-slate-300 font-mono scrollbar-hide';
+                showToast(i18n[currentLang].toastRequestSuccess, 'success');
+            }
+        })
+        .catch(err => {
+            const endTime = performance.now();
+            runtimeSpan.textContent = `${Math.round(endTime - startTime)}ms`;
+            responsePre.textContent = `Error: ${err.message}\nPossible network error, connection refusal, or invalid endpoint handler.`;
+            responsePre.className = 'text-[11px] p-4 rounded-xl bg-slate-950 border border-white/5 overflow-x-auto max-h-[350px] text-rose-400 font-mono';
+            showToast(i18n[currentLang].toastRequestFailed, 'error');
+        })
+        .finally(() => {
+            isRequestInProgress = false;
+        });
+}
+
+function handleMediaAutopreview(data, container) {
+    if (!data || typeof data !== 'object') return;
+    
+    // Cari field target media potensial secara rekursif singkat
+    let mediaUrl = null;
+    let type = null;
+    
+    const targets = ['url', 'result', 'link', 'file', 'image', 'audio', 'video', 'output'];
+    
+    for (let key of targets) {
+        if (data[key] && typeof data[key] === 'string' && (data[key].startsWith('http://') || data[key].startsWith('https://'))) {
+            mediaUrl = data[key];
+            break;
+        }
+    }
+    
+    if (!mediaUrl && data.result && typeof data.result === 'object') {
+        for (let key of targets) {
+            if (data.result[key] && typeof data.result[key] === 'string' && (data.result[key].startsWith('http://') || data.result[key].startsWith('https://'))) {
+                mediaUrl = data.result[key];
+                break;
+            }
+        }
+    }
+
+    if (!mediaUrl) return;
+
+    const lower = mediaUrl.toLowerCase();
+    if (lower.match(/\.(jpeg|jpg|gif|png|webp|svg)/)) type = 'img';
+    if (lower.match(/\.(mp3|wav|ogg|m4a)/)) type = 'audio';
+    if (lower.match(/\.(mp4|webm|mkv)/)) type = 'video';
+
+    if (!type) return;
+
+    container.classList.remove('hidden');
+    container.innerHTML = `<div class="text-xs font-bold text-slate-400 border-b border-white/5 pb-2 w-full text-center uppercase tracking-wider">Detected Media Result Preview</div>`;
+
+    if (type === 'img') {
+        container.innerHTML += `
+            <img src="${mediaUrl}" class="max-h-60 rounded-lg shadow border border-white/10 object-contain cursor-zoom-in bg-slate-950" onclick="openImageLightbox('${mediaUrl}')" />
+            <button onclick="copyToClipboard('${mediaUrl}')" class="text-[10px] font-bold px-3 py-1.5 bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 rounded-lg hover:bg-cyan-500/20 transition-all">COPY URL</button>
+        `;
+    } else if (type === 'audio') {
+        container.innerHTML += `
+            <audio src="${mediaUrl}" controls class="w-full max-w-md mt-1"></audio>
+            <button onclick="copyToClipboard('${mediaUrl}')" class="text-[10px] font-bold px-3 py-1.5 bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 rounded-lg hover:bg-cyan-500/20 transition-all">COPY URL</button>
+        `;
+    } else if (type === 'video') {
+        container.innerHTML += `
+            <video src="${mediaUrl}" controls class="max-h-60 rounded-lg w-full max-w-md bg-black"></video>
+            <button onclick="copyToClipboard('${mediaUrl}')" class="text-[10px] font-bold px-3 py-1.5 bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 rounded-lg hover:bg-cyan-500/20 transition-all">COPY URL</button>
+        `;
+    }
+}
+
+function clearRequest(id) {
+    const responseContainer = document.getElementById(`response-container-${id}`);
+    const mediaPreview = document.getElementById(`media-preview-${id}`);
+    const form = document.getElementById(`form-${id}`);
+
+    if (responseContainer) responseContainer.classList.add('hidden');
+    if (mediaPreview) {
+        mediaPreview.classList.add('hidden');
+        mediaPreview.innerHTML = '';
+    }
+    if (form) {
+        form.reset();
+        // Kembalikan apikey bawaan setelah direset
+        const keyInput = form.querySelector('input[name="apikey"]');
+        if (keyInput) {
+            keyInput.value = localStorage.getItem('api_key_cache') || 'arulzxd-keys';
+        }
+    }
+}
+
+function copyResponseText(id) {
+    const pre = document.getElementById(`response-${id}`);
+    if (pre) {
+        copyToClipboard(pre.textContent);
+    }
+}
+
+function copyToClipboard(text) {
+    if (!navigator.clipboard) {
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        textArea.style.top = "0";
+        textArea.style.left = "0";
+        textArea.style.position = "fixed";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        try {
+            document.execCommand('copy');
+            showToast(i18n[currentLang].toastMediaCopy, 'success');
+        } catch (err) {
+            showToast(i18n[currentLang].toastMediaFail, 'error');
+        }
+        document.body.removeChild(textArea);
+        return;
+    }
+    navigator.clipboard.writeText(text).then(() => {
+        showToast(i18n[currentLang].toastMediaCopy, 'success');
+    }).catch(() => {
+        showToast(i18n[currentLang].toastMediaFail, 'error');
+    });
+}
+
+function openImageLightbox(src) {
+    const lightbox = document.getElementById('imageLightbox');
+    const img = document.getElementById('lightboxImage');
+    if (!lightbox || !img) return;
+
+    img.src = src;
+    lightbox.classList.remove('hidden');
+    setTimeout(() => {
+        lightbox.classList.add('show-lightbox');
+    }, 10);
+    document.body.style.overflow = 'hidden';
+}
+
+function closeImageLightbox() {
+    const lightbox = document.getElementById('imageLightbox');
+    if (!lightbox) return;
+
+    lightbox.classList.remove('show-lightbox');
+    setTimeout(() => {
+        lightbox.classList.add('hidden');
+    }, 300);
+    document.body.style.overflow = '';
+}
+
+function setupFilterListeners() {
+    const filterButtons = document.querySelectorAll('#categoryFilters .filter-btn');
+    filterButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            filterButtons.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            activeCategory = this.getAttribute('data-category');
+            loadApis();
+            performSearch();
+        });
+    });
+}
+
+function performSearch() {
+    const query = document.getElementById('searchInput').value.toLowerCase().trim();
+    const noResults = document.getElementById('noResults');
+    let matchingCount = 0;
+
+    allApiElements.forEach(item => {
+        const name = item.getAttribute('data-name');
+        const path = item.getAttribute('data-path');
+        const desc = item.getAttribute('data-desc');
+
+        const matchesQuery = !query || name.includes(query) || path.includes(query) || desc.includes(query);
+        
+        if (matchesQuery) {
+            item.classList.remove('hidden');
+            matchingCount++;
+        } else {
+            item.classList.add('hidden');
+        }
+    });
+
+    // Sembunyikan bagian container utama (kategori) yang kosong akibat filter pencarian
+    const categoryPanels = document.querySelectorAll('#apiList > div');
+    categoryPanels.forEach(panel => {
+        const totalItems = panel.querySelectorAll('.api-item').length;
+        const hiddenItems = panel.querySelectorAll('.api-item.hidden').length;
+        if (totalItems === hiddenItems) {
+            panel.classList.add('hidden');
+        } else {
+            panel.classList.remove('hidden');
+        }
+    });
+
+    if (matchingCount === 0 && allApiElements.length > 0) {
+        noResults.classList.remove('hidden');
+    } else {
+        noResults.classList.add('hidden');
+    }
+}
+
+// ==================== RADIO MUSIC PLAYER CORE FUNCTIONALITY ====================
+function initRadioMusicPlayer() {
+    const playlistData = window.musicPlaylistData || [];
+    if (!playlistData.length) return;
 
     let currentTrackIdx = 0;
-    const audio = document.getElementById('audioElement');
-    const playBtn = document.getElementById('playBtn');
-    const playIcon = document.getElementById('playIcon');
-    const progressBar = document.getElementById('progressBar');
-    const progressContainer = document.getElementById('progressContainer');
-    const currentTimeEl = document.getElementById('currentTime');
-    const totalDurationEl = document.getElementById('totalDuration');
-    const coverImg = document.getElementById('musicCoverImg');
+    let isPlaying = false;
+    const audioObj = new Audio();
+
+    const playBtn = document.getElementById('musicPlayBtn');
+    const prevBtn = document.getElementById('musicPrevBtn');
+    const nextBtn = document.getElementById('musicNextBtn');
     const titleEl = document.getElementById('musicTitle');
     const artistEl = document.getElementById('musicArtist');
-    const playlistPanel = document.getElementById('playlistPanel');
+    const coverEl = document.getElementById('musicCover');
+    const progressBg = document.getElementById('musicProgressContainer');
+    const progressBar = document.getElementById('musicProgressBar');
+    const timeCurrent = document.getElementById('musicTimeCurrent');
+    const timeTotal = document.getElementById('musicTimeTotal');
+    const statusLabel = document.getElementById('musicStatus');
 
     function formatTime(secs) {
-        if (isNaN(secs)) return "0:00";
-        const mins = Math.floor(secs / 60);
-        const remainingSecs = Math.floor(secs % 60);
-        return `${mins}:${remainingSecs < 10 ? '0' : ''}${remainingSecs}`;
+        if (isNaN(secs)) return "00:00";
+        const m = Math.floor(secs / 60).toString().padStart(2, '0');
+        const s = Math.floor(secs % 60).toString().padStart(2, '0');
+        return `${m}:${s}`;
     }
 
-    function loadTrack(index) {
-        currentTrackIdx = index;
-        const track = playlist[index];
-        audio.src = track.url;
+    function loadTrack(idx) {
+        const track = playlistData[idx];
+        audioObj.src = track.url;
         titleEl.textContent = track.title;
         artistEl.textContent = track.artist;
-        coverImg.src = track.cover;
+        coverEl.src = track.cover;
         progressBar.style.width = '0%';
-        currentTimeEl.textContent = '0:00';
-        renderPlaylistItems();
+        timeCurrent.textContent = '00:00';
+        timeTotal.textContent = '00:00';
     }
 
-    function renderPlaylistItems() {
-        playlistPanel.innerHTML = '';
-        playlist.forEach((track, idx) => {
-            const isActive = idx === currentTrackIdx;
-            const itemBtn = document.createElement('button');
-            itemBtn.className = `w-full text-left px-3 py-2 text-xs rounded-xl flex items-center justify-between transition-all ${isActive ? 'bg-cyan-500/10 border border-cyan-500/30 text-cyan-500 light-mode:text-cyan-700 font-bold' : 'hover:bg-white/5 light-mode:hover:bg-black/5 text-slate-400 light-mode:text-slate-600'}`;
-            itemBtn.innerHTML = `<div class="flex items-center gap-2 truncate"><span class="opacity-50 text-[10px] code-font">${String(idx + 1).padStart(2, '0')}</span><span class="truncate">${track.title} <span class="opacity-60 font-normal">- ${track.artist}</span></span></div>${isActive ? '<span class="text-[9px] tracking-wider text-cyan-500 bg-cyan-500/10 px-1.5 py-0.5 rounded animate-pulse font-bold">PLAYING</span>' : ''}`;
-            itemBtn.addEventListener('click', () => {
-                loadTrack(idx);
-                audio.play().catch(e => console.log(e));
-            });
-            playlistPanel.appendChild(itemBtn);
+    function playTrack() {
+        audioObj.play().then(() => {
+            isPlaying = true;
+            playBtn.textContent = 'PAUSE';
+            playBtn.classList.add('bg-cyan-500/20');
+            statusLabel.textContent = 'PLAYING';
+            statusLabel.className = 'text-[10px] px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-full font-bold uppercase tracking-wide';
+        }).catch(err => {
+            console.error("Audio playback error:", err);
+            statusLabel.textContent = 'ERROR';
         });
     }
 
-    playBtn.addEventListener('click', () => { audio.paused ? audio.play() : audio.pause(); });
-    audio.addEventListener('play', () => {
-        playIcon.innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
-        coverImg.classList.add('scale-105', 'rotate-3');
-    });
-    audio.addEventListener('pause', () => {
-        playIcon.innerHTML = '<path d="M8 5v14l11-7z"/>';
-        coverImg.classList.remove('scale-105', 'rotate-3');
-    });
-    audio.addEventListener('timeupdate', () => {
-        if (audio.duration) {
-            progressBar.style.width = `${(audio.currentTime / audio.duration) * 100}%`;
-            currentTimeEl.textContent = formatTime(audio.currentTime);
-        }
-    });
-    audio.addEventListener('loadedmetadata', () => { totalDurationEl.textContent = formatTime(audio.duration); });
-    progressContainer.addEventListener('click', (e) => { if (audio.duration) audio.currentTime = (e.offsetX / progressContainer.clientWidth) * audio.duration; });
-    document.getElementById('prevBtn').addEventListener('click', () => { loadTrack(currentTrackIdx - 1 < 0 ? playlist.length - 1 : currentTrackIdx - 1); audio.play(); });
-    document.getElementById('nextBtn').addEventListener('click', () => { loadTrack(currentTrackIdx + 1 >= playlist.length ? 0 : currentTrackIdx + 1); audio.play(); });
-    audio.addEventListener('ended', () => { loadTrack(currentTrackIdx + 1 >= playlist.length ? 0 : currentTrackIdx + 1); audio.play(); });
-    document.getElementById('playlistToggleBtn').addEventListener('click', () => { playlistPanel.classList.toggle('hidden'); });
-
-    loadTrack(0);
-}
-
-function initImageLightbox() {
-    const lightbox = document.getElementById('imageLightbox');
-    const lightboxImg = document.getElementById('lightboxImage');
-    const closeBtn = document.getElementById('closeLightbox');
-
-    if (!lightbox || !lightboxImg) return;
-
-    document.getElementById('apiList').addEventListener('click', (e) => {
-        if (e.target.tagName === 'IMG' && e.target.classList.contains('media-image')) {
-            e.preventDefault();
-            lightboxImg.src = e.target.src;
-
-            lightbox.classList.remove('hidden');
-            requestAnimationFrame(() => {
-                lightbox.classList.remove('opacity-0');
-                lightbox.classList.add('opacity-100');
-                lightboxImg.classList.remove('scale-95');
-                lightboxImg.classList.add('scale-100');
-            });
-        }
-    });
-
-    function hideLightbox() {
-        lightbox.classList.remove('opacity-100');
-        lightbox.classList.add('opacity-0');
-        lightboxImg.classList.remove('scale-100');
-        lightboxImg.classList.add('scale-95');
-        setTimeout(() => {
-            lightbox.classList.add('hidden');
-            lightboxImg.src = '';
-        }, 300);
+    function pauseTrack() {
+        audioObj.pause();
+        isPlaying = false;
+        playBtn.textContent = 'PLAY';
+        playBtn.classList.remove('bg-cyan-500/20');
+        statusLabel.textContent = 'PAUSED';
+        statusLabel.className = 'text-[10px] px-2 py-0.5 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-full font-bold uppercase tracking-wide';
     }
 
-    if (closeBtn) closeBtn.addEventListener('click', hideLightbox);
-    lightbox.addEventListener('click', (e) => {
-        if (e.target === lightbox || e.target.id === 'closeLightbox') {
-            hideLightbox();
-        }
+    playBtn.addEventListener('click', () => {
+        if (isPlaying) pauseTrack();
+        else playTrack();
     });
 
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && !lightbox.classList.contains('hidden')) {
-            hideLightbox();
-        }
+    prevBtn.addEventListener('click', () => {
+        currentTrackIdx = (currentTrackIdx - 1 + playlistData.length) % playlistData.length;
+        loadTrack(currentTrackIdx);
+        if (isPlaying) playTrack();
     });
+
+    nextBtn.addEventListener('click', () => {
+        currentTrackIdx = (currentTrackIdx + 1) % playlistData.length;
+        loadTrack(currentTrackIdx);
+        if (isPlaying) playTrack();
+    });
+
+    audioObj.addEventListener('timeupdate', () => {
+        if (!audioObj.duration) return;
+        const pct = (audioObj.currentTime / audioObj.duration) * 100;
+        progressBar.style.width = `${pct}%`;
+        timeCurrent.textContent = formatTime(audioObj.currentTime);
+        timeTotal.textContent = formatTime(audioObj.duration);
+    });
+
+    audioObj.addEventListener('ended', () => {
+        currentTrackIdx = (currentTrackIdx + 1) % playlistData.length;
+        loadTrack(currentTrackIdx);
+        playTrack();
+    });
+
+    progressBg.addEventListener('click', (e) => {
+        if (!audioObj.duration) return;
+        const rect = progressBg.getBoundingClientRect();
+        const clickX = e.clientX - rect.left;
+        const width = rect.width;
+        audioObj.currentTime = (clickX / width) * audioObj.duration;
+    });
+
+    // Inisialisasi lagu pertama
+    loadTrack(currentTrackIdx);
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-    const savedLang = localStorage.getItem('lang') || 'id';
-
+// DomContentLoaded Listener
+document.addEventListener('DOMContentLoaded', () => {
     initTheme();
     initBatteryDetection();
     initDigitalClock();
-    initMultiMusicPlayer();
-    initImageLightbox(); 
-    setLanguage(savedLang);
+    initRadioMusicPlayer();
 
+    // Setup Drawer menu sidebar
     const bioMenuBtn = document.getElementById('bioMenuBtn');
+    const closeBioMenu = document.getElementById('closeBioMenu');
     const bioDropdown = document.getElementById('bioDropdown');
-    const closeMenuBtn = document.getElementById('closeMenuBtn');
     const menuOverlay = document.getElementById('menuOverlay');
+    const closeMenuBtn = document.getElementById('closeBioMenu');
+
+    function closeSidebarMenu() {
+        bioDropdown.classList.add('translate-x-full');
+        menuOverlay.classList.add('hidden');
+    }
 
     if (bioMenuBtn && bioDropdown && menuOverlay) {
         bioMenuBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            bioDropdown.style.transform = 'translateX(0)';
+            bioDropdown.classList.remove('translate-x-full');
             menuOverlay.classList.remove('hidden');
         });
         if (closeMenuBtn) closeMenuBtn.addEventListener('click', closeSidebarMenu);
@@ -1053,6 +1033,7 @@ document.addEventListener('DOMContentLoaded', function() {
         bioDropdown.addEventListener('click', (e) => { e.stopPropagation(); });
     }
 
+    // Ambil data endpoints dari server api list
     fetch('/api/apilist')
         .then(res => res.json())
         .then(data => {
@@ -1077,6 +1058,12 @@ document.addEventListener('DOMContentLoaded', function() {
             window.open('https://arulz-pastecode.vercel.app/', '_blank');
         });
     }
+
+    // Event Listener untuk Lightbox preview gambar close
+    const lightbox = document.getElementById('imageLightbox');
+    if (lightbox) {
+        lightbox.addEventListener('click', closeImageLightbox);
+    }
 });
 
 themeToggleBtn.addEventListener('click', toggleTheme);
@@ -1086,5 +1073,3 @@ document.getElementById('searchInput').addEventListener('input', function() {
     clearTimeout(searchTimeout);
     searchTimeout = setTimeout(performSearch, 150);
 });
-
-window.addEventListener('beforeunload', cleanupBatteryMonitor);
