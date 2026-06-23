@@ -136,7 +136,7 @@ for (const category of endpointDirs) {
   }
 }
 
-// PERBAIKAN: Menambahkan properti type agar tersinkronisasi ke dokumentasi frontend
+// PERBAIKAN: Menambahkan dukungan POST parameter parser & multi-methods
 function getEndpointsFromRouter(category, file) {
   const endpoints = [];
   const route = require(path.join(apiPath, category, file));
@@ -152,9 +152,11 @@ function getEndpointsFromRouter(category, file) {
       if (layer.route.stack && layer.route.stack.length) {
         layer.route.stack.forEach(mw => {
           const fnString = mw.handle.toString();
+          // Deteksi parameter req.query (untuk rute GET)
           [...fnString.matchAll(/req\.query\.([a-zA-Z0-9_]+)/g)].forEach(match => {
             if (match[1] !== 'apikey') params[match[1]] = "";
           });
+          // Deteksi parameter req.body (untuk rute POST)
           [...fnString.matchAll(/req\.body\.([a-zA-Z0-9_]+)/g)].forEach(match => {
             params[match[1]] = "";
           });
@@ -165,7 +167,7 @@ function getEndpointsFromRouter(category, file) {
         path: `/api/${category}/${file.replace(/\.js$/,"")}`,
         desc: `/${category}/${file.replace(/\.js$/,"")}`,
         status: route.status || "ready",
-        type: route.type || "free", // <-- Menyimpan properti tipe akses (free/premium)
+        type: route.type || "free", // Menyimpan properti tipe akses (free/premium)
         params,
         methods
       });
@@ -339,12 +341,17 @@ app.get('/', (req, res) => {
     .light-mode .filter-btn:hover {
         background: rgba(0,0,0,0.08);
     }
-    .scrollbar-hide::-webkit-scrollbar { display: none; }
-    .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+    .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+    }
+    .scrollbar-hide {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
     </style>
 </head>
 <body class="min-h-screen antialiased bg-[#030712] text-slate-100 relative">
-<div id="themeBg" class="fixed inset-0 -z-10 bg-dots-dark"></div>
+    <div id="themeBg" class="fixed inset-0 -z-10 bg-dots-dark"></div>
     <div id="toast" class="toast z-50">
         <div class="flex items-center gap-3">
             <svg id="toastIcon" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -353,7 +360,6 @@ app.get('/', (req, res) => {
             <span id="toastMessage" class="font-medium">Action completed</span>
         </div>
     </div>
-
     <div class="fixed top-6 right-6 z-40">
         <button id="bioMenuBtn" class="flex items-center justify-center w-12 h-12 rounded-xl glass-panel text-slate-300 hover:text-white shadow-lg transition-all active:scale-95 focus:outline-none light-mode:text-slate-700 light-mode:hover:text-slate-900">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
@@ -361,188 +367,192 @@ app.get('/', (req, res) => {
             </svg>
         </button>
     </div>
-
-    <div id="bioDropdown" class="fixed top-0 right-0 h-full w-72 bg-[#08111e]/95 backdrop-blur-lg border-l border-white/10 transform translate-x-full transition-transform duration-300 ease-in-out z-50 shadow-2xl flex flex-col p-6 font-['Space_Grotesk'] light-mode:bg-white/95 light-mode:border-slate-200">
-        <div class="flex items-center justify-between mb-4">
-            <div class="flex gap-0 border border-black p-0.5 bg-[#111]">
-                <button id="lang-id" class="lang-btn active" onclick="setLanguage('id')">ID</button>
-                <button id="lang-en" class="lang-btn" onclick="setLanguage('en')">EN</button>
+    <div id="bioDropdown" class="fixed top-0 right-0 h-full w-72 bg-[#08111e]/95 backdrop-blur-lg border-l border-white/10 transform translate-x-full transition-transform duration-300 z-50 p-6 flex flex-col justify-between shadow-2xl">
+        <div class="flex flex-col gap-6">
+            <div class="flex items-center justify-between">
+                <h3 class="font-bold text-lg text-cyan-400 font-mono">⚡ DEVELOPER INFO</h3>
+                <button id="closeBioBtn" class="text-slate-400 hover:text-white transition-colors focus:outline-none text-xl p-1 font-mono">✕</button>
             </div>
-            
-            <div class="flex items-center gap-2">
-                <button id="themeToggle" class="flex items-center justify-center w-8 h-8 rounded-lg transition-all active:scale-95 focus:outline-none border border-white/20 bg-slate-900/50 text-white light-mode:bg-slate-100 light-mode:border-slate-300 light-mode:text-slate-900">
-                    <svg id="theme-toggle-dark-icon" class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
-                    </svg>
-                    <svg id="theme-toggle-light-icon" class="w-4 h-4 hidden" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd" clip-rule="evenodd"></path>
-                    </svg>
+            <div class="flex flex-col items-center gap-3 bg-white/5 p-4 rounded-2xl border border-white/5 light-mode:bg-black/5 light-mode:border-black/5">
+                <img src="${logo}" alt="Profile" class="w-20 h-20 rounded-full border-2 border-cyan-400 object-cover shadow-lg shadow-cyan-500/20" />
+                <div class="text-center">
+                    <h4 class="font-bold text-md text-slate-100 light-mode:text-slate-900">Arulz-XD</h4>
+                    <p class="text-xs text-cyan-400 font-mono mt-0.5">Fullstack Developer</p>
+                </div>
+            </div>
+            <div class="flex flex-col gap-2 font-mono text-xs">
+                <div class="p-3 bg-white/5 rounded-xl border border-white/5 flex justify-between items-center light-mode:bg-black/5 light-mode:border-black/5">
+                    <span class="text-slate-400">Library</span>
+                    <span class="text-slate-200 font-bold">Express.js</span>
+                </div>
+                <div class="p-3 bg-white/5 rounded-xl border border-white/5 flex justify-between items-center light-mode:bg-black/5 light-mode:border-black/5">
+                    <span class="text-slate-400">Language</span>
+                    <span class="text-slate-200 font-bold">JavaScript (Node)</span>
+                </div>
+                <div class="p-3 bg-white/5 rounded-xl border border-white/5 flex flex-col gap-2 light-mode:bg-black/5 light-mode:border-black/5">
+                    <span class="text-slate-400">Free Api Key:</span>
+                    <div class="flex gap-1 items-center bg-black/30 p-2 rounded-lg justify-between border border-white/5 light-mode:bg-white/50">
+                        <code class="text-cyan-400 font-bold select-all overflow-x-auto scrollbar-hide mr-1">${VALID_API_KEY}</code>
+                        <button onclick="navigator.clipboard.writeText('${VALID_API_KEY}').then(() => window.showToast('API Key copied!'))" class="p-1 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 rounded-md transition-colors">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="flex flex-col gap-2 font-mono text-xs mt-2">
+                <span class="text-slate-400 pl-1 mb-1 block">Quick Utilities</span>
+                <button id="uploaderMenuBtn" class="w-full py-2.5 px-4 bg-gradient-to-r from-purple-600/30 to-indigo-600/30 hover:from-purple-600/50 hover:to-indigo-600/50 border border-purple-500/20 text-purple-300 font-bold rounded-xl transition-all active:scale-[0.98] flex items-center justify-center gap-2">
+                    📥 File Uploader
                 </button>
-
-                <button id="closeMenuBtn" class="text-white hover:text-red-400 transition-colors p-1.5 border border-white/10 rounded bg-slate-900/40 light-mode:text-slate-700 light-mode:bg-slate-100 light-mode:border-slate-300 light-mode:hover:text-red-500">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
+                <button id="pastebinMenuBtn" class="w-full py-2.5 px-4 bg-gradient-to-r from-emerald-600/30 to-teal-600/30 hover:from-emerald-600/50 hover:to-teal-600/50 border border-emerald-500/20 text-emerald-300 font-bold rounded-xl transition-all active:scale-[0.98] flex items-center justify-center gap-2 mt-1">
+                    📋 Code Pastebin
                 </button>
             </div>
         </div>
-
-        <div class="mb-4 p-3 bg-cyan-950/40 border border-cyan-500/30 rounded-xl light-mode:bg-cyan-50 light-mode:border-cyan-200">
-            <span class="text-[10px] font-bold text-cyan-400 light-mode:text-cyan-700 uppercase tracking-widest block mb-1">🔑 Current API Key</span>
-            <div class="flex items-center justify-between bg-black/40 rounded px-2 py-1.5 font-mono text-xs text-slate-200 border border-white/5 light-mode:bg-white light-mode:text-slate-800 light-mode:border-slate-200">
-                <span class="select-all">${VALID_API_KEY}</span>
-                <button onclick="copyText('${VALID_API_KEY}', 'API Key Free')" class="p-1 text-slate-400 hover:text-cyan-400 transition-colors" title="Copy API Key">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
-                    </svg>
-                </button>
+        <div class="flex flex-col gap-3 font-mono">
+            <div class="flex justify-between items-center gap-2 bg-black/20 p-2 rounded-xl border border-white/5 light-mode:bg-white/50">
+                <button id="lang-id" onclick="setLanguage('id')" class="flex-1 text-center py-1.5 rounded-lg text-xs font-bold transition-all border border-transparent">ID</button>
+                <button id="lang-en" onclick="setLanguage('en')" class="flex-1 text-center py-1.5 rounded-lg text-xs font-bold transition-all border border-transparent">EN</button>
             </div>
+            <button id="themeToggle" class="w-full py-2.5 bg-white/5 hover:bg-white/10 rounded-xl border border-white/5 font-bold text-xs text-slate-300 transition-colors flex items-center justify-center gap-2 light-mode:bg-black/5 light-mode:border-black/5 light-mode:text-slate-700">
+                <span id="theme-toggle-dark-icon" class="flex items-center gap-2">☀️ Light Mode</span>
+                <span id="theme-toggle-light-icon" class="hidden flex items-center gap-2">🌙 Dark Mode</span>
+            </button>
         </div>
-
-        <nav class="flex flex-col gap-5 text-sm font-bold tracking-wider uppercase text-gray-300 light-mode:text-slate-700 flex-1 overflow-y-auto scrollbar-hide">
-            <a href="#api" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-2">HOME</a>
-            <a href="#apiList" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-2">DOCUMENTATION</a>
-            <a href="https://arulz-uploader.vercel.app/" target="_blank" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-2">FILE UPLOADER</a>
-            <a href="https://arulz-pastecode.vercel.app/" target="_blank" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-2">PASTECODE</a>
-            <hr class="border-white/10 my-2 light-mode:border-slate-200">
-            <a href="#" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-2 text-xs opacity-80">BUG REPORT</a>
-            <a href="https://wa.me/6285122629940" target="_blank" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-2 text-xs opacity-80">OWNER (WHATSAPP)</a>
-            <a href="https://t.me/Arulzxd" target="_blank" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-2 text-xs opacity-80">OWNER (TELEGRAM)</a>
-        </nav>
     </div>
+    <div id="menuOverlay" class="fixed inset-0 bg-black/60 z-40 hidden backdrop-blur-sm transition-opacity duration-300 opacity-0"></div>
 
-    <div id="menuOverlay" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden z-30 transition-opacity duration-300"></div>
-
-    <div class="max-w-5xl mx-auto px-4 py-8 relative z-10">
-        <header id="api" class="mb-12 text-center">
-            <div class="flex items-center justify-center gap-3 mb-2">
-                <span class="bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest animate-pulse light-mode:bg-cyan-100 light-mode:text-cyan-700">● ONLINE</span>
+    <div class="max-w-6xl mx-auto px-4 pt-12 pb-24 relative z-10 flex flex-col min-h-screen">
+        <header class="text-center mb-12 flex flex-col items-center">
+            <div id="mainTitle" class="mb-4 max-w-full overflow-hidden px-2">
+                ${headertitle}
             </div>
-            <div id="mainTitle" class="flex justify-center mb-4 min-h-[50px] items-center">${headertitle}</div>
-            <p id="mainDescription" class="text-md md:text-lg font-medium tracking-wide text-slate-300 max-w-xl mx-auto">${headerdescription}</p>
-            
-            <div class="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl mx-auto">
-                <div class="glass-panel flex flex-col items-center justify-center p-4 rounded-xl shadow-lg">
-                    <div class="text-center mb-3 font-['Space_Grotesk']">
-                        <div id="liveClock" class="text-2xl font-black tracking-wider text-cyan-400 light-mode:text-cyan-600 font-mono">
-                            00:00:00
-                        </div>
-                        <div id="liveDate" class="text-[10px] font-bold opacity-70 tracking-wide mt-0.5 uppercase">
-                            Memuat tanggal...
-                        </div>
-                    </div>
-                    <hr class="w-full border-white/5 light-mode:border-slate-200 mb-3">
-                    
-                    <span id="stat-battery-title" class="text-xs font-bold uppercase tracking-wider text-slate-400">Baterai Anda</span>
-                    <div class="flex items-center gap-3 mt-2">
-                        <div id="batteryContainer" class="battery-container border border-white/20 light-mode:border-slate-400">
-                            <div id="batteryLevel" class="battery-level bg-green-400" style="width: 0%"></div>
-                            <div class="battery-tip"></div>
-                        </div>
-                        <div class="text-left">
-                            <span id="batteryPercentage" class="text-lg font-bold block leading-none light-mode:text-slate-900">0%</span>
-                            <span id="batteryStatus" class="text-[10px] uppercase text-slate-400 light-mode:text-slate-500 font-medium">Mendeteksi...</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="glass-panel flex flex-col items-center justify-center p-4 rounded-xl shadow-lg">
-                    <span id="stat-endpoints-title" class="text-xs font-bold uppercase tracking-wider text-slate-400">Total Endpoint</span>
-                    <span id="totalEndpoints" class="text-3xl font-black text-cyan-400 mt-1 light-mode:text-cyan-600">0</span>
-                </div>
-                
-                <div class="glass-panel flex flex-col items-center justify-center p-4 rounded-xl shadow-lg">
-                    <span id="stat-categories-title" class="text-xs font-bold uppercase tracking-wider text-slate-400">Total Kategori</span>
-                    <span id="totalCategories" class="text-3xl font-black text-cyan-400 mt-1 light-mode:text-cyan-600">0</span>
-                </div>
-            </div>
-
-            <div class="glass-panel max-w-3xl mx-auto mt-4 p-3 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-3 border border-white/20">
-                <div class="flex items-center gap-2 text-sm text-cyan-400 light-mode:text-cyan-700 code-font">
-                    <span>🌐</span> <span class="underline break-all font-semibold">https://api-arulzxd-vvipclouds.vercel.app/</span>
-                </div>
-                <a href="https://wa.me/6285122629940?text=Halo%20Arulz,%20saya%20ingin%20request%20fitur%20baru%20di%20REST%20API%20:" 
-                   target="_blank" 
-                   class="w-full sm:w-auto px-6 py-2 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs uppercase rounded-lg shadow transition-all active:scale-95 light-mode:bg-cyan-600 light-mode:hover:bg-cyan-500 light-mode:text-white text-center flex items-center justify-center">
-                    + Request New Feature
-                </a>
-            </div>
-
-            <div class="flex justify-center gap-4 mt-4 max-w-3xl mx-auto">
-                <a href="https://whatsapp.com/channel/0029VbAwdIyJJhzRMpjUcS3P" 
-                   target="_blank" 
-                   class="flex-1 glass-panel py-2 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-white/10 light-mode:hover:bg-slate-100 transition-colors light-mode:text-slate-700 text-center block">
-                   💬 Channel
-                </a>
-                <a href="https://chat.whatsapp.com/LBeGqVsmDBb6j29ysuusd9" 
-                   target="_blank" 
-                   class="flex-1 glass-panel py-2 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-white/10 light-mode:hover:bg-slate-100 transition-colors light-mode:text-slate-700 text-center block">
-                   👥 Group
-                </a>
-            </div>
-
-            <div class="music-player-card glass-panel mt-8 max-w-2xl mx-auto rounded-2xl p-4 shadow-2xl relative overflow-hidden border border-white/10">
-                <audio id="audioElement"></audio>
-                <div class="flex items-center justify-between gap-4">
-                    <div class="flex items-center gap-4 flex-1 min-w-0">
-                        <div class="relative w-16 h-16 rounded-xl overflow-hidden bg-black flex-shrink-0 border border-white/10">
-                            <img id="musicCoverImg" src="" alt="Cover" class="w-full h-full object-cover transition-transform duration-500">
-                        </div>
-                        <div class="flex-1 min-w-0 text-left">
-                            <h3 id="musicTitle" class="music-text-title text-white font-bold text-sm tracking-wider uppercase truncate m-0">Loading...</h3>
-                            <p id="musicArtist" class="music-text-artist text-slate-400 text-xs font-semibold tracking-wide truncate mt-0.5">-</p>
-                            <div class="flex items-center gap-2 mt-2">
-                                <span id="currentTime" class="text-[10px] text-slate-400 light-mode:text-slate-500 code-font w-7 text-left">0:00</span>
-                                <div id="progressContainer" class="music-progress-bar-bg flex-1 h-1 bg-white/10 rounded-full relative cursor-pointer group">
-                                    <div id="progressBar" class="h-full bg-cyan-400 rounded-full w-0 transition-all duration-300"></div>
-                                </div>
-                                <span id="totalDuration" class="text-[10px] text-slate-400 light-mode:text-slate-500 code-font w-7 text-right">0:00</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-1.5 flex-shrink-0">
-                        <button id="prevBtn" class="music-btn-nav w-9 h-9 flex items-center justify-center glass-panel rounded-xl text-slate-300 hover:text-white transition-all active:scale-95">
-                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
-                        </button>
-                        <button id="playBtn" class="music-btn-nav w-10 h-10 flex items-center justify-center glass-panel rounded-xl text-slate-300 hover:text-white transition-all active:scale-95">
-                            <svg id="playIcon" class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-                        </button>
-                        <button id="nextBtn" class="music-btn-nav w-9 h-9 flex items-center justify-center glass-panel rounded-xl text-slate-300 hover:text-white transition-all active:scale-95">
-                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M16 6h2v12h-2zm-10.5 12l8.5-6-8.5-6z"/></svg>
-                        </button>
-                        <button id="playlistToggleBtn" class="music-btn-nav w-9 h-9 flex items-center justify-center glass-panel rounded-xl text-slate-300 hover:text-white transition-all active:scale-95">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
-                        </button>
-                    </div>
-                </div>
-                <div id="playlistPanel" class="music-playlist-border hidden mt-4 pt-4 border-t border-white/10 max-h-40 overflow-y-auto space-y-1 light-mode:border-slate-200"></div>
-            </div>
+            <p id="mainDescription" class="text-slate-400 font-mono text-sm tracking-wide max-w-xl mx-auto line-clamp-2 md:line-clamp-none">${headerdescription}</p>
         </header>
 
-        <div class="mb-8">
-            <div class="relative">
-                <input 
-                    type="text" 
-                    id="searchInput" 
-                    placeholder="Cari endpoint berdasarkan nama, path, atau kategori..."
-                    class="search-input w-full px-4 py-3 text-sm rounded-xl focus:outline-none focus:border-cyan-500 transition-all code-font glass-panel border border-white/10 text-white placeholder-slate-400 light-mode:text-slate-900 light-mode:placeholder-slate-500 light-mode:focus:border-cyan-600"
-                >
-                <svg class="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                </svg>
+        <section class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
+            <div id="batteryContainer" class="glass-panel p-5 rounded-2xl flex flex-col justify-between group transition-all duration-300 hover:border-cyan-500/30">
+                <div class="flex items-center justify-between mb-2">
+                    <span id="stat-battery-title" class="text-xs font-bold font-mono tracking-wider text-slate-400">YOUR BATTERY</span>
+                    <div class="battery-icon-container">
+                        <div class="battery-body">
+                            <div id="batteryLevel" class="battery-level bg-green-500" style="width: 0%"></div>
+                        </div>
+                        <div class="battery-cap"></div>
+                    </div>
+                </div>
+                <div class="flex items-baseline gap-2 mt-2">
+                    <span id="batteryPercentage" class="text-3xl font-extrabold font-mono tracking-tight text-cyan-400">...</span>
+                    <span id="batteryStatus" class="text-xs font-mono text-slate-400 truncate max-w-[150px]">Detecting...</span>
+                </div>
             </div>
-            <div id="categoryFilters" class="flex flex-wrap gap-2 mt-4 justify-start md:justify-center overflow-x-auto pb-2 scrollbar-hide"></div>
+
+            <div class="glass-panel p-5 rounded-2xl flex flex-col justify-between transition-all duration-300 hover:border-cyan-500/30">
+                <div class="flex items-center justify-between mb-2">
+                    <span id="stat-endpoints-title" class="text-xs font-bold font-mono tracking-wider text-slate-400">TOTAL ENDPOINTS</span>
+                    <div class="p-1.5 bg-cyan-500/10 text-cyan-400 rounded-lg">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+                    </div>
+                </div>
+                <div class="flex items-baseline gap-2 mt-2">
+                    <span id="totalEndpoints" class="text-3xl font-extrabold font-mono tracking-tight text-cyan-400">0</span>
+                    <span class="text-xs font-mono text-slate-400">endpoints ready</span>
+                </div>
+            </div>
+
+            <div class="glass-panel p-5 rounded-2xl flex flex-col justify-between transition-all duration-300 hover:border-cyan-500/30">
+                <div class="flex items-center justify-between mb-2">
+                    <span id="stat-categories-title" class="text-xs font-bold font-mono tracking-wider text-slate-400">TOTAL CATEGORIES</span>
+                    <div class="p-1.5 bg-cyan-500/10 text-cyan-400 rounded-lg">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                    </div>
+                </div>
+                <div class="flex items-baseline gap-2 mt-2">
+                    <span id="totalCategories" class="text-3xl font-extrabold font-mono tracking-tight text-cyan-400">0</span>
+                    <span class="text-xs font-mono text-slate-400">categories active</span>
+                </div>
+            </div>
+        </section>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10 items-start">
+            <div class="glass-panel p-4 rounded-2xl flex flex-col md:flex-row items-center gap-4 md:col-span-2 music-player-card">
+                <div class="relative w-20 h-20 flex-shrink-0 group rounded-xl overflow-hidden shadow-md">
+                    <img id="musicCover" src="${playlist[0].cover}" alt="Album Art" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                    <div id="musicLoadingDisc" class="absolute inset-0 bg-black/60 flex items-center justify-center hidden rounded-xl">
+                        <div class="w-6 h-6 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                </div>
+                <div class="flex-1 min-w-0 w-full flex flex-col justify-center">
+                    <div class="flex justify-between items-start gap-2 mb-1">
+                        <div class="min-w-0 flex-1">
+                            <h4 id="musicTitle" class="font-bold text-sm text-slate-100 truncate font-mono music-text-title">${playlist[0].title}</h4>
+                            <p id="musicArtist" class="text-xs text-slate-400 truncate font-mono mt-0.5 music-text-artist">${playlist[0].artist}</p>
+                        </div>
+                        <div id="musicWaveContainer" class="flex items-end gap-0.5 h-4 mt-1 px-1 flex-shrink-0">
+                            <div class="w-0.5 bg-cyan-400 h-2 animate-music-wave-1"></div>
+                            <div class="w-0.5 bg-cyan-400 h-3 animate-music-wave-2"></div>
+                            <div class="w-0.5 bg-cyan-400 h-1 animate-music-wave-3"></div>
+                            <div class="w-0.5 bg-cyan-400 h-4 animate-music-wave-4"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center gap-2 mb-3">
+                        <span id="musicCurrentTime" class="text-[10px] font-mono text-slate-500 w-8">00:00</span>
+                        <div id="musicProgressBarBg" class="flex-1 h-1 bg-white/10 rounded-full cursor-pointer relative music-progress-bar-bg group">
+                            <div id="musicProgressBar" class="h-full bg-cyan-400 rounded-full w-0 transition-all duration-100 relative">
+                                <div class="absolute right-0 top-1/2 -translate-y-1/2 w-2 h-2 bg-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow shadow-black"></div>
+                            </div>
+                        </div>
+                        <span id="musicTotalTime" class="text-[10px] font-mono text-slate-500 w-8 text-right">00:00</span>
+                    </div>
+                    
+                    <div class="flex items-center justify-center md:justify-start gap-4">
+                        <button id="musicPrevBtn" class="p-2 rounded-xl bg-white/5 border border-white/5 text-slate-400 hover:text-white transition-all hover:bg-white/10 active:scale-95 music-btn-nav">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+                        </button>
+                        <button id="musicPlayBtn" class="p-3 rounded-full bg-cyan-500 hover:bg-cyan-400 text-black shadow-lg shadow-cyan-500/20 transition-all active:scale-95">
+                            <svg id="musicPlayIcon" class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                            <svg id="musicPauseIcon" class="w-4 h-4 hidden" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                        </button>
+                        <button id="musicNextBtn" class="p-2 rounded-xl bg-white/5 border border-white/5 text-slate-400 hover:text-white transition-all hover:bg-white/10 active:scale-95 music-btn-nav">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6zm9-12v12h2V6z"/></svg>
+                        </button>
+                    </div>
+                </div>
+                <audio id="mainAudio" src="${playlist[0].url}" preload="metadata"></audio>
+            </div>
+
+            <div class="glass-panel p-4 rounded-2xl flex flex-col justify-center h-full min-h-[116px] md:min-h-0 font-mono text-center md:text-right">
+                <div id="liveClock" class="text-4xl font-extrabold tracking-wider text-cyan-400 leading-none mb-1.5 drop-shadow-[0_2px_8px_rgba(6,182,212,0.15)]">00:00:00</div>
+                <div id="liveDate" class="text-xs text-slate-400 font-bold tracking-wide">Loading date...</div>
+                <div class="text-[10px] text-slate-500 mt-1 font-semibold">Asia/Jakarta (WIB)</div>
+            </div>
         </div>
 
-        <div id="noResults" class="text-center py-12 hidden">
-            <div class="text-4xl mb-2">剥</div>
-            <h3 id="no-results-title" class="text-sm font-bold mb-1 text-white">Endpoint tidak ditemukan</h3>
-            <p id="no-results-desc" class="text-xs text-slate-400 light-mode:text-slate-500">Coba gunakan kata kunci lain</p>
-        </div>
+        <main class="flex-1 flex flex-col md:flex-row gap-6 items-start">
+            <aside class="w-full md:w-64 flex-shrink-0 md:sticky md:top-6 flex flex-col gap-3">
+                <div class="relative w-full">
+                    <input type="text" id="searchInput" class="w-full bg-[#0d1527]/60 border border-white/10 rounded-xl px-4 py-3 pl-11 text-sm font-mono focus:outline-none focus:border-cyan-500/50 text-slate-200 placeholder-slate-500 transition-all shadow-inner" placeholder="Cari endpoint..." />
+                    <svg class="w-4 h-4 text-slate-500 absolute left-4 top-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                </div>
+                
+                <div id="categoryContainer" class="flex flex-row md:flex-col gap-1.5 overflow-x-auto pb-2 md:pb-0 scrollbar-hide w-full max-w-full">
+                    </div>
+            </aside>
 
-        <div id="apiList" class="space-y-4"></div>
+            <div class="flex-1 w-full flex flex-col gap-4">
+                <div id="noResultsCard" class="glass-panel p-12 text-center rounded-2xl hidden transition-all">
+                    <div class="text-5xl mb-4 animate-bounce">🔍</div>
+                    <h3 id="no-results-title" class="font-bold text-lg text-slate-200 mb-1">Endpoint tidak ditemukan</h3>
+                    <p id="no-results-desc" class="text-sm text-slate-400 font-mono">Coba gunakan kata kunci lain</p>
+                </div>
 
-        <footer id="siteFooter" class="mt-12 pt-6 border-t border-white/10 text-center text-xs text-slate-500">
+                <div id="apiList" class="flex flex-col gap-4 w-full">
+                    </div>
+            </div>
+        </main>
+
+        <footer id="siteFooter" class="mt-24 pt-6 border-t border-white/10 text-center text-xs text-slate-500">
             ${footer}
         </footer>
     </div>
@@ -560,20 +570,15 @@ app.get('/', (req, res) => {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.30.1/locale/id.min.js"></script>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.45/moment-timezone-with-data.min.js"></script>
-
-<script class="notranslate" translate="no">
-    window.musicPlaylist = ${JSON.stringify(playlist)};
-</script>
 <script src="script.js"></script>
+
+<script>
+    const playlistData = ${JSON.stringify(playlist)};
+</script>
 </body>
-</html>
-    `);
+</html>`);
 });
 
-if (require.main === module) {
-  app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-  });
-}
-
-module.exports = app;
+app.listen(PORT, () => {
+  console.log(`Server is running smoothly on port ${PORT}`);
+});
