@@ -46,7 +46,6 @@ async function create_frame(text, color, pathna) {
     ctx.fillText(line, width / 2, startY);
     startY += fsize;
   });
-  // @napi-rs/canvas menggunakan toBuffer('image/png') secara sinkronus
   return canvas.toBuffer('image/png');
 }
 
@@ -300,7 +299,6 @@ async function generateTtp_v3(text) {
   gradient.addColorStop(0, '#FF00FF');
   gradient.addColorStop(1, '#000');
   ctx.fillStyle = gradient;
-  // Perbaikan: Di @napi-rs/canvas harus panggil beginPath sebelum arc untuk menggambar lingkaran dengan benar
   ctx.beginPath();
   ctx.arc(width / 2, height / 2, 200, 0, 2 * Math.PI);
   ctx.fill();
@@ -482,7 +480,6 @@ async function generateTtp_v5(text) {
 
     await dl_font();
     
-    // Penyesuaian Perubahan @napi-rs/canvas untuk registrasi font custom
     GlobalFonts.registerFromPath(font_path, 'Baloo');
 
     const width = 512, height = 512, maxWidth = 480;
@@ -529,12 +526,11 @@ async function generateTtp_v5(text) {
     });
 
     const buffer = canvas.toBuffer('image/png');
-    // Note: Disarankan file font jangan dihapus (di-unlink) jika API diakses terus menerus agar tidak mendownload ulang.
     return buffer;
 }
 
 // ==========================================
-// EXPRESS ROUTER ENDPOINT (SELECT OPTION)
+// EXPRESS ROUTER ENDPOINT (HTML REMOVED)
 // ==========================================
 
 router.get("/", async (req, res) => {
@@ -542,54 +538,12 @@ router.get("/", async (req, res) => {
     const text = req.query.text;
     const type = req.query.type || 'ttp';
 
+    // Jika parameter text kosong, berikan response bad request JSON
     if (!text) {
-      res.setHeader("Content-Type", "text/html");
-      return res.send(`
-        <!DOCTYPE html>
-        <html lang="id">
-        <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>TTP / ATTP Generator Napi-rs</title>
-          <style>
-            body { font-family: 'Arial', sans-serif; background: #121212; color: #fff; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-            .card { background: #1e1e1e; padding: 30px; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); width: 350px; text-align: center; }
-            h2 { margin-bottom: 20px; color: #00ff7f; }
-            .form-group { margin-bottom: 15px; text-align: left; }
-            label { display: block; margin-bottom: 5px; font-size: 14px; color: #bbb; }
-            input, select { width: 100%; padding: 10px; box-sizing: border-box; border-radius: 6px; border: 1px solid #333; background: #2a2a2a; color: #fff; font-size: 14px; }
-            button { width: 100%; padding: 12px; background: #00ff7f; border: none; border-radius: 6px; color: #000; font-weight: bold; font-size: 16px; cursor: pointer; margin-top: 10px; transition: 0.2s; }
-            button:hover { background: #00cd65; }
-          </style>
-        </head>
-        <body>
-          <div class="card">
-            <h2>Text Maker (Napi-Canvas)</h2>
-            <form action="" method="GET">
-              <div class="form-group">
-                <label for="text">Teks Gambar:</label>
-                <input type="text" id="text" name="text" placeholder="Masukkan teks..." required>
-              </div>
-              <div class="form-group">
-                <label for="type">Pilih Model / Tipe:</label>
-                <select id="type" name="type">
-                  <option value="ttp">TTP V1 (Static Canvas)</option>
-                  <option value="attp">ATTP V1 (Animated GIF)</option>
-                  <option value="ttp_v2">TTP V2 (Linear Background)</option>
-                  <option value="attp_v2">ATTP V2 (Linear Gradient GIF)</option>
-                  <option value="ttp_v3">TTP V3 (Radial Glow Style)</option>
-                  <option value="attp_v3">ATTP V3 (Checkerboard Frame GIF)</option>
-                  <option value="ttp_v4">TTP V4 (Abstract Line Effect)</option>
-                  <option value="attp_v4">ATTP V4 (Pulsing Circle Frame GIF)</option>
-                  <option value="ttp_v5">TTP V5 (Baloo Font Custom)</option>
-                </select>
-              </div>
-              <button type="submit">Generate Teks</button>
-            </form>
-          </div>
-        </body>
-        </html>
-      `);
+      return res.status(400).json({
+        status: false,
+        message: "Masukkan parameter 'text'. Contoh: ?text=Halo"
+      });
     }
 
     let buffer;
@@ -603,28 +557,28 @@ router.get("/", async (req, res) => {
         buffer = await generateAttp(text);
         contentType = "image/gif";
         break;
-      case 'ttp_v2':
+      case 'ttpv2':
         buffer = await generateTtp_v2(text);
         break;
-      case 'attp_v2':
+      case 'attpv2':
         buffer = await generateAttp_v2(text);
         contentType = "image/gif";
         break;
-      case 'ttp_v3':
+      case 'ttpv3':
         buffer = await generateTtp_v3(text);
         break;
-      case 'attp_v3':
+      case 'attpv3':
         buffer = await generateAttp_v3(text);
         contentType = "image/gif";
         break;
-      case 'ttp_v4':
+      case 'ttpv4':
         buffer = await generateTtp_v4(text);
         break;
-      case 'attp_v4':
+      case 'attpv4':
         buffer = await generateAttp_v4(text);
         contentType = "image/gif";
         break;
-      case 'ttp_v5':
+      case 'ttpv5':
         buffer = await generateTtp_v5(text);
         break;
       default:
@@ -638,6 +592,7 @@ router.get("/", async (req, res) => {
     return res.send(buffer);
 
   } catch (error) {
+    // Menangani error dan mengirimkan status 500 (Internal Server Error) secara konsisten
     return res.status(500).json({
       status: false,
       creator: "ArulzXD",
