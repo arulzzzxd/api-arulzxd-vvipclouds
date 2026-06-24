@@ -141,29 +141,28 @@ function getEndpointsFromRouter(category, file) {
   const route = require(path.join(apiPath, category, file));
   const subRouter = route.stack ? route : route.router || route;
   if (!subRouter || !subRouter.stack) return endpoints;
-
   subRouter.stack.forEach(layer => {
     if (layer.route) {
       const methods = Object.keys(layer.route.methods).map(m => m.toUpperCase());
 
-      // Tempat penampung parameter sementara dari scraping regex query & body
+      // Membuat penampung parameter sementara dari scraping regex query & body
       let tempParams = {}; 
-      let isFileUploadDetected = false;
 
       if (layer.route.stack && layer.route.stack.length) {
         layer.route.stack.forEach(mw => {
           const fnString = mw.handle.toString();
-          
           [...fnString.matchAll(/req\.query\.([a-zA-Z0-9_]+)/g)].forEach(match => {
-            if (match[1] !== 'apikey') tempParams[match[1]] = "";
+            if (match[1] !== 'apikey') params[match[1]] = "";
           });
           [...fnString.matchAll(/req\.body\.([a-zA-Z0-9_]+)/g)].forEach(match => {
-            if (match[1] !== 'apikey') tempParams[match[1]] = "";
+            params[match[1]] = "";
           });
-
-          // DETEKSI FILE UPLOAD di dalam loop middleware
+          
+          // DETEKSI FILE UPLOAD
           if (fnString.includes('req.file') || fnString.includes('req.files') || fnString.includes('file')) {
-             isFileUploadDetected = true;
+             if (methods.includes('POST') || methods.includes('PUT')) {
+                params['file'] = "file";
+             }
           }
         });
       }
@@ -173,21 +172,13 @@ function getEndpointsFromRouter(category, file) {
         apikey: "",
         ...tempParams 
       };
-      
-      if (isFileUploadDetected && (methods.includes('POST') || methods.includes('PUT'))) {
-         params['file'] = "file";
-      }
-      
-      if ((file.toLowerCase().includes('upload') || file.toLowerCase().includes('uploader')) && (methods.includes('POST') || methods.includes('PUT'))) {
-         if (!params['file']) params['file'] = "file";
-      }
 
       endpoints.push({
         name: `/${category}/${file.replace(/\.js$/,"")}`,
         path: `/api/${category}/${file.replace(/\.js$/,"")}`,
         desc: `/${category}/${file.replace(/\.js$/,"")}`,
         status: route.status || "ready",
-        type: route.type || "free", 
+        type: route.type || "free", // <-- Menyimpan properti tipe akses (free/premium)
         params,
         methods
       });
