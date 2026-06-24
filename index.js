@@ -165,6 +165,19 @@ function getEndpointsFromRouter(category, file) {
         apikey: "",
         ...tempParams 
       };
+      
+      // DETEKSI FILE UPLOAD
+          if (fnString.includes('req.file') || fnString.includes('req.files') || fnString.includes('file')) {
+             if (methods.includes('POST') || methods.includes('PUT')) {
+                params['file'] = "file";
+             }
+          }
+        });
+      }
+      
+      if ((file.toLowerCase().includes('upload') || file.toLowerCase().includes('uploader')) && (methods.includes('POST') || methods.includes('PUT'))) {
+         if (!params['file']) params['file'] = "file";
+      }
 
       endpoints.push({
         name: `/${category}/${file.replace(/\.js$/,"")}`,

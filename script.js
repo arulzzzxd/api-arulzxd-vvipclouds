@@ -419,7 +419,7 @@ function closeSidebarMenu() {
 function toggleEndpoint(catIdx, epIdx) {
     const content = document.getElementById(`ep-${catIdx}-${epIdx}`);
     const icon = document.getElementById(`ep-icon-${catIdx}-${epIdx}`);
-    
+
     content.classList.toggle('hidden');
     if (icon) {
         icon.textContent = content.classList.contains('hidden') ? '+' : '−';
@@ -464,6 +464,7 @@ function createMediaPreview(url, contentType, originalUrl = '') {
     return `<div class="w-full flex flex-col items-center gap-3">${previewHtml}<div class="flex gap-2"><button type="button" onclick="copyText('${originalUrl || url}', 'Media URL')" class="${btnClass}">📋 Copy URL</button><a href="${url}" download class="${btnClass}">📥 Download</a></div></div>`;
 }
 
+// LOGIKA EKSEKUSI API: SUPPORT FILE UPLOAD (FORMDATA) & JSON RAW TEXT/MEDIA
 async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
     e.preventDefault();
     if (isRequestInProgress) {
@@ -492,7 +493,14 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
 
     const formData = new FormData(form);
     const params = new URLSearchParams();
+    const apikeyValue = getApiKeyForEndpoint(endpointType);
+    
+    // Inject API KEY
+    if (apikeyValue !== '') {
+        params.append('apikey', apikeyValue);
+    }
 
+    // Cek apakah form memiliki file untuk dikirim menggunakan Multipart FormData
     let hasFileInput = false;
     const fileElements = form.querySelectorAll('input[type="file"]');
     fileElements.forEach(el => { if (el.files.length > 0) hasFileInput = true; });
@@ -503,24 +511,30 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
 
     try {
         if (hasFileInput && (method === 'POST' || method === 'PUT')) {
+            // KIRIM SEBAGAI MULTIPART FORM-DATA JIKA ADA FILE
+            if (apikeyValue !== '') formData.set('apikey', apikeyValue);
             fetchOptions.body = formData;
+            // Endpoint URL untuk POST form-data biasanya params tidak digabungkan kecuali disyaratkan router
             fullPath += '?' + params.toString(); 
         } else {
+            // JIKA BUKAN FILE (QUERY PARAMS atau JSON BODY)
             for (const [key, value] of formData.entries()) {
-                if (value && typeof value === 'string') {
+                if (value && key !== 'apikey' && typeof value === 'string') {
                     params.append(key, value);
                 }
             }
             if (method === 'GET' || method === 'DELETE') {
                 fullPath += '?' + params.toString();
             } else {
+                // Method POST / PUT tanpa file = kirim sebagai JSON
                 fetchOptions.headers = { 'Content-Type': 'application/json' };
                 const jsonBody = {};
+                if (apikeyValue !== '') jsonBody.apikey = apikeyValue;
                 for (const [key, value] of formData.entries()) {
-                    if (value) jsonBody[key] = value;
+                    if (value && key !== 'apikey') jsonBody[key] = value;
                 }
                 fetchOptions.body = JSON.stringify(jsonBody);
-                fullPath += '?' + params.toString(); 
+                fullPath += '?' + params.toString(); // Sertakan juga di url berjaga-jaga
             }
         }
 
@@ -541,11 +555,12 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
         if (contentType.includes("application/json")) {
             const data = await response.json();
             rawResponseText = JSON.stringify(data, null, 2);
-
+            
+            // Auto detect URL gambar dari JSON Response
             let detectedMediaUrl = null;
             if (data.url && typeof data.url === 'string' && data.url.startsWith('http')) detectedMediaUrl = data.url;
             else if (data.result && data.result.url && typeof data.result.url === 'string') detectedMediaUrl = data.result.url;
-
+            
             if (detectedMediaUrl && (detectedMediaUrl.match(/\.(jpeg|jpg|gif|png|webp|mp4|mp3)/i))) {
                  responseContent.innerHTML = createMediaPreview(detectedMediaUrl, null, detectedMediaUrl) + `<div class="mt-4 text-xs font-bold text-slate-500 uppercase">RAW JSON DATA</div><pre id="raw-text-${catIdx}-${epIdx}" class="code-font text-sm overflow-auto text-cyan-400 p-2 bg-black/50 rounded-lg mt-2">${rawResponseText}</pre>`;
                  isMedia = true;
@@ -562,6 +577,7 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
             responseContent.innerHTML = `<pre id="raw-text-${catIdx}-${epIdx}" class="code-font text-sm overflow-auto p-2">${rawResponseText}</pre>`;
         }
 
+        // Tampilkan Action Buttons (Copy)
         const isLightMode = body.classList.contains('light-mode');
         const btnStyle = isLightMode 
             ? 'px-2.5 py-1 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded text-[11px] font-semibold transition-colors code-font border border-black/5'
@@ -795,41 +811,29 @@ function loadApis() {
                         const isRequired = true; 
                         let paramDesc = pType || paramName;
 
-                        if (pType === 'file' || paramName.toLowerCase() === 'file') {
-                            html += `
-                            <div>
-                                <div class="flex items-center justify-between mb-1.5">
-                                    <label class="block text-xs font-semibold text-slate-300 light-mode:text-slate-700 code-font">
-                                        ${paramName} <span class="text-red-500">*</span> <span class="text-amber-400 text-[9px]">(File)</span>
-                                    </label>
-                                </div>
-                                <input type="file" name="${paramName}" onchange="updateLivePreview(${catIdx}, ${epIdx}, '${method}', '${path}', '${epType}')" class="w-full px-3 py-2 rounded-lg bg-black/40 light-mode:bg-white border border-white/10 light-mode:border-slate-300 text-white light-mode:text-slate-900 focus:outline-none focus:border-cyan-500 code-font text-sm file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:bg-cyan-500/10 file:text-cyan-400 file:cursor-pointer" required>
-                            </div>`;
-                        } else {
-                            let inputValue = '';
-                            let inputPlaceholder = `Masukkan ${paramName}`;
+                        let inputValue = '';
+                        let inputPlaceholder = `Masukkan ${paramName}`;
 
-                            if (paramName.toLowerCase() === 'apikey') {
-                                if (epType === 'premium') {
-                                    inputValue = '';
-                                    inputPlaceholder = 'Masukkan apikey premium';
-                                } else {
-                                    inputValue = 'arulzxd-keys';
-                                    inputPlaceholder = 'Masukkan apikey';
-                                }
+                        if (paramName.toLowerCase() === 'apikey') {
+                            if (epType === 'premium') {
+                                inputValue = '';
+                                inputPlaceholder = 'Masukkan apikey premium';
+                            } else {
+                                inputValue = 'arulzxd-keys';
+                                inputPlaceholder = 'Masukkan apikey';
                             }
-
-                            html += `
-                            <div>
-                                <div class="flex items-center justify-between mb-1.5">
-                                    <label class="block text-xs font-semibold text-slate-300 light-mode:text-slate-700 code-font">
-                                        ${paramName} ${isRequired ? '<span class="text-red-500">*</span>' : ''}
-                                    </label>
-                                    <span class="text-[10px] text-slate-500 light-mode:text-slate-400 italic font-normal">${paramDesc}</span>
-                                </div>
-                                <input type="text" name="${paramName}" value="${inputValue}" oninput="updateLivePreview(${catIdx}, ${epIdx}, '${method}', '${path}', '${epType}')" class="w-full px-3 py-2 rounded-lg bg-black/40 light-mode:bg-white border border-white/10 light-mode:border-slate-300 text-white light-mode:text-slate-900 focus:outline-none focus:border-cyan-500 code-font text-sm" placeholder="${inputPlaceholder}" ${isRequired ? 'required' : ''}>
-                            </div>`;
                         }
+
+                        html += `
+                        <div>
+                            <div class="flex items-center justify-between mb-1.5">
+                                <label class="block text-xs font-semibold text-slate-300 light-mode:text-slate-700 code-font">
+                                    ${paramName} ${isRequired ? '<span class="text-red-500">*</span>' : ''}
+                                </label>
+                                <span class="text-[10px] text-slate-500 light-mode:text-slate-400 italic font-normal">${paramDesc}</span>
+                            </div>
+                            <input type="text" name="${paramName}" value="${inputValue}" oninput="updateLivePreview(${catIdx}, ${epIdx}, '${method}', '${path}', '${epType}')" class="w-full px-3 py-2 rounded-lg bg-black/40 light-mode:bg-white border border-white/10 light-mode:border-slate-300 text-white light-mode:text-slate-900 focus:outline-none focus:border-cyan-500 code-font text-sm" placeholder="${inputPlaceholder}" ${isRequired ? 'required' : ''}>
+                        </div>`;
                     });
                 }
                 html += `
