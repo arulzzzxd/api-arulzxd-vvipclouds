@@ -324,11 +324,12 @@ function initDigitalClock() {
     if (!clockElement || !dateElement) return;
 
     function updateClock() {
-        if (typeof moment === 'undefined') return;
-        const now = moment().tz("Asia/Jakarta");
-        clockElement.textContent = now.format('HH:mm:ss');
-        if (currentLang === 'id') dateElement.textContent = now.locale('id').format('dddd, D MMMM YYYY');
-        else dateElement.textContent = now.locale('en').format('dddd, MMMM D, YYYY');
+        if (typeof moment !== 'undefined') {
+            const now = moment().tz("Asia/Jakarta");
+            clockElement.textContent = now.format('HH:mm:ss');
+            if (currentLang === 'id') dateElement.textContent = now.locale('id').format('dddd, D MMMM YYYY');
+            else dateElement.textContent = now.locale('en').format('dddd, MMMM D, YYYY');
+        }
     }
     updateClock();
     setInterval(updateClock, 1000);
@@ -390,7 +391,6 @@ function updateLivePreview(catIdx, epIdx, method, basePath, endpointType) {
             curlContainer.textContent = `curl -X GET "${finalUrl}"`;
         } else {
             const bodyParams = [];
-
             for (const [key, value] of formData.entries()) {
                 if (value && typeof value === 'string') {
                     bodyParams.push(`"${key}": "${value}"`);
@@ -421,7 +421,6 @@ function toggleEndpoint(catIdx, epIdx) {
     const icon = document.getElementById(`ep-icon-${catIdx}-${epIdx}`);
     
     content.classList.toggle('hidden');
-    
     if (icon) {
         icon.textContent = content.classList.contains('hidden') ? '+' : '−';
     }
@@ -946,7 +945,6 @@ function initImageLightbox() {
         if (e.target.tagName === 'IMG' && e.target.classList.contains('media-image')) {
             e.preventDefault();
             lightboxImg.src = e.target.src;
-
             lightbox.classList.remove('hidden');
             requestAnimationFrame(() => {
                 lightbox.classList.remove('opacity-0');
