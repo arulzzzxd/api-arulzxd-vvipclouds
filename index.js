@@ -138,52 +138,70 @@ for (const category of endpointDirs) {
 // PERBAIKAN: Menambahkan properti type agar tersinkronisasi ke dokumentasi frontend
 function getEndpointsFromRouter(category, file) {
   const endpoints = [];
-  const route = require(path.join(apiPath, category, file));
-  const subRouter = route.stack ? route : route.router || route;
-  if (!subRouter || !subRouter.stack) return endpoints;
-  subRouter.stack.forEach(layer => {
-    if (layer.route) {
-      const methods = Object.keys(layer.route.methods).map(m => m.toUpperCase());
+  try {
+    const routePath = path.join(apiPath, category, file);
+    if (!fs.existsSync(routePath)) return endpoints;
 
-      // Membuat penampung parameter sementara dari scraping regex query & body
-      let tempParams = {}; 
+    const route = require(routePath);
+    const subRouter = route.stack ? route : route.router || route;
+    if (!subRouter || !subRouter.stack) return endpoints;
 
-      if (layer.route.stack && layer.route.stack.length) {
-        layer.route.stack.forEach(mw => {
-          const fnString = mw.handle.toString();
-          [...fnString.matchAll(/req\.query\.([a-zA-Z0-9_]+)/g)].forEach(match => {
-            if (match[1] !== 'apikey') params[match[1]] = "";
+    subRouter.stack.forEach(layer => {
+      if (layer.route) {
+        const methods = Object.keys(layer.route.methods).map(m => m.toUpperCase());
+
+        // Tempat penampung parameter sementara dari scraping regex query & body
+        let tempParams = {}; 
+        let isFileUploadDetected = false;
+
+        if (layer.route.stack && layer.route.stack.length) {
+          layer.route.stack.forEach(mw => {
+            if (mw.handle) {
+              const fnString = mw.handle.toString();
+              
+              [...fnString.matchAll(/req\.query\.([a-zA-Z0-9_]+)/g)].forEach(match => {
+                if (match[1] !== 'apikey') tempParams[match[1]] = "";
+              });
+              [...fnString.matchAll(/req\.body\.([a-zA-Z0-9_]+)/g)].forEach(match => {
+                if (match[1] !== 'apikey') tempParams[match[1]] = "";
+              });
+
+              // DETEKSI FILE UPLOAD di dalam loop middleware tempat fnString didefinisikan
+              if (fnString.includes('req.file') || fnString.includes('req.files') || fnString.includes('file')) {
+                 isFileUploadDetected = true;
+              }
+            }
           });
-          [...fnString.matchAll(/req\.body\.([a-zA-Z0-9_]+)/g)].forEach(match => {
-            params[match[1]] = "";
-          });
-          
-          // DETEKSI FILE UPLOAD
-          if (fnString.includes('req.file') || fnString.includes('req.files') || fnString.includes('file')) {
-             if (methods.includes('POST') || methods.includes('PUT')) {
-                params['file'] = "file";
-             }
-          }
+        }
+
+        // Rekonstruksi Objek: Memastikan apikey berada secara konsisten di urutan pertama
+        let params = { 
+          apikey: "",
+          ...tempParams 
+        };
+        
+        if (isFileUploadDetected && (methods.includes('POST') || methods.includes('PUT'))) {
+           params['file'] = "file";
+        }
+        
+        if ((file.toLowerCase().includes('upload') || file.toLowerCase().includes('uploader')) && (methods.includes('POST') || methods.includes('PUT'))) {
+           if (!params['file']) params['file'] = "file";
+        }
+
+        endpoints.push({
+          name: `/${category}/${file.replace(/\.js$/,"")}`,
+          path: `/api/${category}/${file.replace(/\.js$/,"")}`,
+          desc: `/${category}/${file.replace(/\.js$/,"")}`,
+          status: route.status || "ready",
+          type: route.type || "free", 
+          params,
+          methods
         });
       }
-
-      // Rekonstruksi Objek: Memastikan apikey berada secara konsisten di urutan pertama
-      let params = { 
-        apikey: "",
-        ...tempParams 
-      };
-
-      endpoints.push({
-        name: `/${category}/${file.replace(/\.js$/,"")}`,
-        path: `/api/${category}/${file.replace(/\.js$/,"")}`,
-        desc: `/${category}/${file.replace(/\.js$/,"")}`,
-        status: route.status || "ready",
-        type: route.type || "free", // <-- Menyimpan properti tipe akses (free/premium)
-        params,
-        methods
-      });
-    }
-  });
+    });
+  } catch (error) {
+    console.error(`Error loading route ${category}/${file}:`, error);
+  }
   return endpoints;
 }
 
