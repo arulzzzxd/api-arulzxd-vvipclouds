@@ -4,7 +4,6 @@
  * [•] CONVERTED    :: Express Router API
  */
 
-
 const express = require("express");
 const multer = require("multer");
 const FormData = require("form-data");
@@ -50,8 +49,11 @@ router.post("/", (req, res) => {
     const started = Date.now();
     const form = new FormData();
     
+    // Perbaikan logika fallback filename agar ekstensi .jpg atau ekstensi asli tetap aman ter-render
+    const filename = file.originalname || `upload-${Date.now()}.jpg`;
+
     form.append("file", file.buffer, {
-      filename: file.originalname || `upload-${Date.now()}${path.extname(file.originalname || '.jpg')}`,
+      filename: filename,
       contentType: file.mimetype
     });
 
@@ -78,7 +80,11 @@ router.post("/", (req, res) => {
       }
 
     } catch (error) {
-      const errorMsg = error.response?.data ? JSON.stringify(error.response.data) : error.message;
+      // Mengamankan parsing error message jika response dari target uploader berupa objek/HTML
+      const errorMsg = error.response?.data 
+        ? (typeof error.response.data === "object" ? JSON.stringify(error.response.data) : error.response.data) 
+        : error.message;
+
       return res.status(error.response?.status || 500).json({
         status: false,
         code: error.response?.status || 500,
