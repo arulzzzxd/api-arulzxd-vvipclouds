@@ -464,7 +464,7 @@ function createMediaPreview(url, contentType, originalUrl = '') {
     return `<div class="w-full flex flex-col items-center gap-3">${previewHtml}<div class="flex gap-2"><button type="button" onclick="copyText('${originalUrl || url}', 'Media URL')" class="${btnClass}">📋 Copy URL</button><a href="${url}" download class="${btnClass}">📥 Download</a></div></div>`;
 }
 
-// LOGIKA EKSEKUSI API: SUPPORT FILE UPLOAD (FORMDATA) & JSON RAW TEXT/MEDIA
+// LOGIKA EKSEKUSI API TERBARU (FIXED APIKEY & MULTIPART/JSON ROUTING)
 async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
     e.preventDefault();
     if (isRequestInProgress) {
@@ -492,9 +492,8 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
     responseContent.innerHTML = '<div class="spinner mx-auto"></div>';
 
     const formData = new FormData(form);
-    const params = new URLSearchParams();
+    const queryParams = new URLSearchParams();
     
-    // Cek apakah form memiliki file untuk dikirim menggunakan Multipart FormData
     let hasFileInput = false;
     const fileElements = form.querySelectorAll('input[type="file"]');
     fileElements.forEach(el => { if (el.files.length > 0) hasFileInput = true; });
@@ -505,26 +504,26 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
 
     try {
         if (hasFileInput && (method === 'POST' || method === 'PUT')) {
-            // KIRIM SEBAGAI MULTIPART FORM-DATA JIKA ADA FILE
+            // JIKA SUBMIT FILE UPLOAD: Menggunakan FormData murni (Multipart Form-Data)
             fetchOptions.body = formData;
         } else {
-            // JIKA BUKAN FILE (QUERY PARAMS atau JSON BODY)
+            // JIKA TEXT BIASA / BUKAN MULTIPART FILE
             for (const [key, value] of formData.entries()) {
                 if (value && typeof value === 'string') {
-                    params.append(key, value);
+                    queryParams.append(key, value);
                 }
             }
+
             if (method === 'GET' || method === 'DELETE') {
-                fullPath += '?' + params.toString();
+                fullPath += '?' + queryParams.toString();
             } else {
-                // Method POST / PUT tanpa file = kirim sebagai JSON
+                // Method POST / PUT tanpa file: Dikirim via JSON Body
                 fetchOptions.headers = { 'Content-Type': 'application/json' };
                 const jsonBody = {};
                 for (const [key, value] of formData.entries()) {
                     if (value) jsonBody[key] = value;
                 }
                 fetchOptions.body = JSON.stringify(jsonBody);
-                fullPath += '?' + params.toString(); 
             }
         }
 
@@ -546,7 +545,6 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
             const data = await response.json();
             rawResponseText = JSON.stringify(data, null, 2);
             
-            // Auto detect URL gambar dari JSON Response
             let detectedMediaUrl = null;
             if (data.url && typeof data.url === 'string' && data.url.startsWith('http')) detectedMediaUrl = data.url;
             else if (data.result && data.result.url && typeof data.result.url === 'string') detectedMediaUrl = data.result.url;
@@ -567,7 +565,6 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
             responseContent.innerHTML = `<pre id="raw-text-${catIdx}-${epIdx}" class="code-font text-sm overflow-auto p-2">${rawResponseText}</pre>`;
         }
 
-        // Tampilkan Action Buttons (Copy)
         const isLightMode = body.classList.contains('light-mode');
         const btnStyle = isLightMode 
             ? 'px-2.5 py-1 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded text-[11px] font-semibold transition-colors code-font border border-black/5'
@@ -580,7 +577,10 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
         copyUrlBtn.type = "button";
         copyUrlBtn.className = btnStyle;
         copyUrlBtn.innerHTML = "🔗 Copy URL Request";
-        copyUrlBtn.onclick = () => copyText(fullPath, "URL Request");
+        copyUrlBtn.onclick = () => {
+            const finalFullUrl = method === 'GET' ? fullPath : (queryParams.toString() ? `${fullPath}?${queryParams.toString()}` : fullPath);
+            copyText(finalFullUrl, "URL Request");
+        };
         actionContainer.appendChild(copyUrlBtn);
 
         if (!isMedia) {
@@ -823,7 +823,6 @@ function loadApis() {
                                 <span class="text-[10px] text-slate-500 light-mode:text-slate-400 italic font-normal">${paramDesc}</span>
                             </div>`;
 
-                        // INTEGRASI FITUR POST FILE UPLOAD (Mendeteksi Tipe Parameter File)
                         if (pType === 'file' || paramName === 'file') {
                             html += `<input type="file" name="${paramName}" onchange="updateLivePreview(${catIdx}, ${epIdx}, '${method}', '${path}', '${epType}')" class="w-full px-3 py-2 rounded-lg bg-black/40 light-mode:bg-white border border-white/10 light-mode:border-slate-300 text-white light-mode:text-slate-900 focus:outline-none focus:border-cyan-500 text-xs file:mr-3 file:py-1 file:px-2.5 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-cyan-500/10 file:text-cyan-400 hover:file:bg-cyan-500/20" ${isRequired ? 'required' : ''}>`;
                         } else {
