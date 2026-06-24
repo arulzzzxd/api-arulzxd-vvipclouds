@@ -374,7 +374,7 @@ function updateLivePreview(catIdx, epIdx, method, basePath, endpointType) {
     const params = new URLSearchParams();
 
     for (const [key, value] of formData.entries()) {
-        if (value && typeof value === 'string') {
+        if (value && key !== 'apikey' && typeof value === 'string') {
              params.append(key, value);
         }
     }
@@ -393,7 +393,7 @@ function updateLivePreview(catIdx, epIdx, method, basePath, endpointType) {
             const bodyParams = [];
 
             for (const [key, value] of formData.entries()) {
-                if (value && typeof value === 'string') {
+                if (value && key !== 'apikey' && typeof value === 'string') {
                     bodyParams.push(`"${key}": "${value}"`);
                 }
             }
@@ -511,7 +511,7 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
             fullPath += '?' + params.toString(); 
         } else {
             for (const [key, value] of formData.entries()) {
-                if (value && typeof value === 'string') {
+                if (value && key !== 'apikey' && typeof value === 'string') {
                     params.append(key, value);
                 }
             }
@@ -521,7 +521,7 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
                 fetchOptions.headers = { 'Content-Type': 'application/json' };
                 const jsonBody = {};
                 for (const [key, value] of formData.entries()) {
-                    if (value) jsonBody[key] = value;
+                    if (value && key !== 'apikey') jsonBody[key] = value;
                 }
                 fetchOptions.body = JSON.stringify(jsonBody);
                 fullPath += '?' + params.toString(); 
@@ -794,22 +794,7 @@ function loadApis() {
                             <div class="space-y-4 mb-4">`;
 
                 if (item.params) {
-                    // 1. BUAT INPUT APIKEY DI PALING AWAL SECARA OTOMATIS
-                    html += `
-                    <div>
-                        <div class="flex items-center justify-between mb-1.5">
-                            <label class="block text-xs font-semibold text-slate-300 light-mode:text-slate-700 code-font">
-                                apikey <span class="text-red-500">*</span>
-                            </label>
-                            <span class="text-[10px] text-slate-500 light-mode:text-slate-400 italic font-normal">string (API Key)</span>
-                        </div>
-                        <input type="text" name="apikey" oninput="updateLivePreview(${catIdx}, ${epIdx}, '${method}', '${path}', '${epType}')" class="w-full px-3 py-2 rounded-lg bg-black/40 light-mode:bg-white border border-white/10 light-mode:border-slate-300 text-white light-mode:text-slate-900 focus:outline-none focus:border-cyan-500 code-font text-sm" placeholder="Masukkan apikey" required value="arulzxd-keys">
-                    </div>`;
-
-                    // 2. LOOP PARAMETER LAINNYA, LEWATI APIKEY AGAR TIDAK DOUBLE
                     Object.keys(item.params).forEach(paramName => {
-                        if (paramName.toLowerCase() === 'apikey') return;
-
                         const pType = item.params[paramName];
                         const isRequired = true; 
                         let paramDesc = pType || paramName;
@@ -825,6 +810,20 @@ function loadApis() {
                                 <input type="file" name="${paramName}" onchange="updateLivePreview(${catIdx}, ${epIdx}, '${method}', '${path}', '${epType}')" class="w-full px-3 py-2 rounded-lg bg-black/40 light-mode:bg-white border border-white/10 light-mode:border-slate-300 text-white light-mode:text-slate-900 focus:outline-none focus:border-cyan-500 code-font text-sm file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:bg-cyan-500/10 file:text-cyan-400 file:cursor-pointer" required>
                             </div>`;
                         } else {
+                            // LOGIKA UTK APIKEY PREMIUM / FREE
+                            let inputValue = '';
+                            let inputPlaceholder = `Masukkan ${paramName}`;
+
+                            if (paramName.toLowerCase() === 'apikey') {
+                                if (epType === 'premium') {
+                                    inputValue = '';
+                                    inputPlaceholder = 'Masukkan apikey premium';
+                                } else {
+                                    inputValue = 'arulzxd-keys';
+                                    inputPlaceholder = 'Masukkan apikey';
+                                }
+                            }
+
                             html += `
                             <div>
                                 <div class="flex items-center justify-between mb-1.5">
@@ -833,7 +832,7 @@ function loadApis() {
                                     </label>
                                     <span class="text-[10px] text-slate-500 light-mode:text-slate-400 italic font-normal">${paramDesc}</span>
                                 </div>
-                                <input type="text" name="${paramName}" oninput="updateLivePreview(${catIdx}, ${epIdx}, '${method}', '${path}', '${epType}')" class="w-full px-3 py-2 rounded-lg bg-black/40 light-mode:bg-white border border-white/10 light-mode:border-slate-300 text-white light-mode:text-slate-900 focus:outline-none focus:border-cyan-500 code-font text-sm" placeholder="Masukkan ${paramName}" ${isRequired ? 'required' : ''}>
+                                <input type="text" name="${paramName}" value="${inputValue}" oninput="updateLivePreview(${catIdx}, ${epIdx}, '${method}', '${path}', '${epType}')" class="w-full px-3 py-2 rounded-lg bg-black/40 light-mode:bg-white border border-white/10 light-mode:border-slate-300 text-white light-mode:text-slate-900 focus:outline-none focus:border-cyan-500 code-font text-sm" placeholder="${inputPlaceholder}" ${isRequired ? 'required' : ''}>
                             </div>`;
                         }
                     });
