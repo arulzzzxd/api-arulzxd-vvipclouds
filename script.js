@@ -493,13 +493,7 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
 
     const formData = new FormData(form);
     const params = new URLSearchParams();
-    const apikeyValue = getApiKeyForEndpoint(endpointType);
     
-    // Inject API KEY
-    if (apikeyValue !== '') {
-        params.append('apikey', apikeyValue);
-    }
-
     // Cek apakah form memiliki file untuk dikirim menggunakan Multipart FormData
     let hasFileInput = false;
     const fileElements = form.querySelectorAll('input[type="file"]');
@@ -512,14 +506,11 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
     try {
         if (hasFileInput && (method === 'POST' || method === 'PUT')) {
             // KIRIM SEBAGAI MULTIPART FORM-DATA JIKA ADA FILE
-            if (apikeyValue !== '') formData.set('apikey', apikeyValue);
             fetchOptions.body = formData;
-            // Endpoint URL untuk POST form-data biasanya params tidak digabungkan kecuali disyaratkan router
-            fullPath += '?' + params.toString(); 
         } else {
             // JIKA BUKAN FILE (QUERY PARAMS atau JSON BODY)
             for (const [key, value] of formData.entries()) {
-                if (value && key !== 'apikey' && typeof value === 'string') {
+                if (value && typeof value === 'string') {
                     params.append(key, value);
                 }
             }
@@ -529,12 +520,11 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
                 // Method POST / PUT tanpa file = kirim sebagai JSON
                 fetchOptions.headers = { 'Content-Type': 'application/json' };
                 const jsonBody = {};
-                if (apikeyValue !== '') jsonBody.apikey = apikeyValue;
                 for (const [key, value] of formData.entries()) {
-                    if (value && key !== 'apikey') jsonBody[key] = value;
+                    if (value) jsonBody[key] = value;
                 }
                 fetchOptions.body = JSON.stringify(jsonBody);
-                fullPath += '?' + params.toString(); // Sertakan juga di url berjaga-jaga
+                fullPath += '?' + params.toString(); 
             }
         }
 
@@ -831,9 +821,16 @@ function loadApis() {
                                     ${paramName} ${isRequired ? '<span class="text-red-500">*</span>' : ''}
                                 </label>
                                 <span class="text-[10px] text-slate-500 light-mode:text-slate-400 italic font-normal">${paramDesc}</span>
-                            </div>
-                            <input type="text" name="${paramName}" value="${inputValue}" oninput="updateLivePreview(${catIdx}, ${epIdx}, '${method}', '${path}', '${epType}')" class="w-full px-3 py-2 rounded-lg bg-black/40 light-mode:bg-white border border-white/10 light-mode:border-slate-300 text-white light-mode:text-slate-900 focus:outline-none focus:border-cyan-500 code-font text-sm" placeholder="${inputPlaceholder}" ${isRequired ? 'required' : ''}>
-                        </div>`;
+                            </div>`;
+
+                        // INTEGRASI FITUR POST FILE UPLOAD (Mendeteksi Tipe Parameter File)
+                        if (pType === 'file' || paramName === 'file') {
+                            html += `<input type="file" name="${paramName}" onchange="updateLivePreview(${catIdx}, ${epIdx}, '${method}', '${path}', '${epType}')" class="w-full px-3 py-2 rounded-lg bg-black/40 light-mode:bg-white border border-white/10 light-mode:border-slate-300 text-white light-mode:text-slate-900 focus:outline-none focus:border-cyan-500 text-xs file:mr-3 file:py-1 file:px-2.5 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-cyan-500/10 file:text-cyan-400 hover:file:bg-cyan-500/20" ${isRequired ? 'required' : ''}>`;
+                        } else {
+                            html += `<input type="text" name="${paramName}" value="${inputValue}" oninput="updateLivePreview(${catIdx}, ${epIdx}, '${method}', '${path}', '${epType}')" class="w-full px-3 py-2 rounded-lg bg-black/40 light-mode:bg-white border border-white/10 light-mode:border-slate-300 text-white light-mode:text-slate-900 focus:outline-none focus:border-cyan-500 code-font text-sm" placeholder="${inputPlaceholder}" ${isRequired ? 'required' : ''}>`;
+                        }
+
+                        html += `</div>`;
                     });
                 }
                 html += `
