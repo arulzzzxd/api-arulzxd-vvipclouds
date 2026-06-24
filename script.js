@@ -279,7 +279,7 @@ function initBatteryDetection() {
                     isSimulatedCharging = true;
                     localStorage.setItem('simulatedCharging', 'true');
                     batteryContainer.classList.add('charging');
-                    batteryLevelElement.classList.add('battery-charging');
+                    batteryLevelElement.classList.remove('battery-charging');
                     batteryStatusElement.textContent = i18n[currentLang].batteryCharging;
                 } else {
                     batteryStatusElement.textContent = `2h 30m ${i18n[currentLang].batteryLeft}`;
@@ -365,7 +365,7 @@ function copyFromElement(elementId, type) {
     if (el) copyText(el.innerText || el.textContent, type);
 }
 
-// INJEKSI APIKEY OTOMATIS KE URL PREVIEW
+// PERBAIKAN: Apikey diikutkan ke dalam live URL preview & cURL dashboard
 function updateLivePreview(catIdx, epIdx, method, basePath, endpointType) {
     const form = document.getElementById(`form-${catIdx}-${epIdx}`);
     if (!form) return;
@@ -374,7 +374,7 @@ function updateLivePreview(catIdx, epIdx, method, basePath, endpointType) {
     const params = new URLSearchParams();
 
     for (const [key, value] of formData.entries()) {
-        if (value && key !== 'apikey' && typeof value === 'string') {
+        if (value && typeof value === 'string') {
              params.append(key, value);
         }
     }
@@ -393,7 +393,7 @@ function updateLivePreview(catIdx, epIdx, method, basePath, endpointType) {
             const bodyParams = [];
 
             for (const [key, value] of formData.entries()) {
-                if (value && key !== 'apikey' && typeof value === 'string') {
+                if (value && typeof value === 'string') {
                     bodyParams.push(`"${key}": "${value}"`);
                 }
             }
@@ -466,7 +466,7 @@ function createMediaPreview(url, contentType, originalUrl = '') {
     return `<div class="w-full flex flex-col items-center gap-3">${previewHtml}<div class="flex gap-2"><button type="button" onclick="copyText('${originalUrl || url}', 'Media URL')" class="${btnClass}">📋 Copy URL</button><a href="${url}" download class="${btnClass}">📥 Download</a></div></div>`;
 }
 
-// LOGIKA EKSEKUSI API: SUPPORT FILE UPLOAD (FORMDATA) & JSON RAW TEXT/MEDIA
+// PERBAIKAN UTAMA: Filter key !== 'apikey' dihapus agar nilai apikey dikirimkan ke backend server
 async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
     e.preventDefault();
     if (isRequestInProgress) {
@@ -496,7 +496,6 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
     const formData = new FormData(form);
     const params = new URLSearchParams();
 
-    // Cek apakah form memiliki file untuk dikirim menggunakan Multipart FormData
     let hasFileInput = false;
     const fileElements = form.querySelectorAll('input[type="file"]');
     fileElements.forEach(el => { if (el.files.length > 0) hasFileInput = true; });
@@ -510,8 +509,9 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
             fetchOptions.body = formData;
             fullPath += '?' + params.toString(); 
         } else {
+            // Berhasil diperbaiki: apikey masuk ke query parameter URL
             for (const [key, value] of formData.entries()) {
-                if (value && key !== 'apikey' && typeof value === 'string') {
+                if (value && typeof value === 'string') {
                     params.append(key, value);
                 }
             }
@@ -521,7 +521,7 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
                 fetchOptions.headers = { 'Content-Type': 'application/json' };
                 const jsonBody = {};
                 for (const [key, value] of formData.entries()) {
-                    if (value && key !== 'apikey') jsonBody[key] = value;
+                    if (value) jsonBody[key] = value;
                 }
                 fetchOptions.body = JSON.stringify(jsonBody);
                 fullPath += '?' + params.toString(); 
@@ -810,7 +810,6 @@ function loadApis() {
                                 <input type="file" name="${paramName}" onchange="updateLivePreview(${catIdx}, ${epIdx}, '${method}', '${path}', '${epType}')" class="w-full px-3 py-2 rounded-lg bg-black/40 light-mode:bg-white border border-white/10 light-mode:border-slate-300 text-white light-mode:text-slate-900 focus:outline-none focus:border-cyan-500 code-font text-sm file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:bg-cyan-500/10 file:text-cyan-400 file:cursor-pointer" required>
                             </div>`;
                         } else {
-                            // LOGIKA UTK APIKEY PREMIUM / FREE
                             let inputValue = '';
                             let inputPlaceholder = `Masukkan ${paramName}`;
 
