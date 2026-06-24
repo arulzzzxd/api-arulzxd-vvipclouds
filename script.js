@@ -365,7 +365,6 @@ function copyFromElement(elementId, type) {
     if (el) copyText(el.innerText || el.textContent, type);
 }
 
-// PERBAIKAN: Apikey diikutkan ke dalam live URL preview & cURL dashboard
 function updateLivePreview(catIdx, epIdx, method, basePath, endpointType) {
     const form = document.getElementById(`form-${catIdx}-${epIdx}`);
     if (!form) return;
@@ -441,6 +440,7 @@ function getContentType(url, contentType) {
     return 'unknown';
 }
 
+// PERBAIKAN: Menghapus pembatas max-h-60 & max-w-md agar gambar/video muncul full size
 function createMediaPreview(url, contentType, originalUrl = '') {
     const type = getContentType(url, contentType);
     let previewHtml = '';
@@ -451,22 +451,21 @@ function createMediaPreview(url, contentType, originalUrl = '') {
 
     switch(type) {
         case 'image':
-            previewHtml = `<div class="media-preview cursor-zoom-in flex justify-center"><img src="${url}" class="media-image max-h-60 rounded-lg shadow-lg border border-white/10 transition-transform duration-200 hover:brightness-90" alt="Response Image"></div>`;
+            previewHtml = `<div class="media-preview cursor-zoom-in flex justify-center w-full"><img src="${url}" class="media-image w-full h-auto max-w-full rounded-lg shadow-lg border border-white/10 transition-transform duration-200 hover:brightness-90" alt="Response Image"></div>`;
             break;
         case 'video':
-            previewHtml = `<div class="media-preview flex justify-center"><video controls class="max-h-60 rounded-lg w-full max-w-md bg-black border border-white/10"><source src="${url}">Your browser does not support video.</video></div>`;
+            previewHtml = `<div class="media-preview flex justify-center w-full"><video controls class="rounded-lg w-full h-auto max-w-full bg-black border border-white/10"><source src="${url}">Your browser does not support video.</video></div>`;
             break;
         case 'audio':
-            previewHtml = `<div class="media-preview flex justify-center"><audio controls class="w-full max-w-md"><source src="${url}">Your browser does not support audio.</audio></div>`;
+            previewHtml = `<div class="media-preview flex justify-center w-full"><audio controls class="w-full"><source src="${url}">Your browser does not support audio.</audio></div>`;
             break;
         default:
-            previewHtml = `<div class="media-preview flex justify-center"><iframe src="${url}" class="media-iframe max-h-60 rounded-lg border border-white/10" frameborder="0"></iframe></div>`;
+            previewHtml = `<div class="media-preview flex justify-center w-full"><iframe src="${url}" class="media-iframe w-full min-h-[400px] rounded-lg border border-white/10" frameborder="0"></iframe></div>`;
     }
 
     return `<div class="w-full flex flex-col items-center gap-3">${previewHtml}<div class="flex gap-2"><button type="button" onclick="copyText('${originalUrl || url}', 'Media URL')" class="${btnClass}">📋 Copy URL</button><a href="${url}" download class="${btnClass}">📥 Download</a></div></div>`;
 }
 
-// PERBAIKAN UTAMA: Filter key !== 'apikey' dihapus agar nilai apikey dikirimkan ke backend server
 async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
     e.preventDefault();
     if (isRequestInProgress) {
@@ -509,7 +508,6 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
             fetchOptions.body = formData;
             fullPath += '?' + params.toString(); 
         } else {
-            // Berhasil diperbaiki: apikey masuk ke query parameter URL
             for (const [key, value] of formData.entries()) {
                 if (value && typeof value === 'string') {
                     params.append(key, value);
