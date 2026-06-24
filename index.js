@@ -141,31 +141,36 @@ function getEndpointsFromRouter(category, file) {
   const route = require(path.join(apiPath, category, file));
   const subRouter = route.stack ? route : route.router || route;
   if (!subRouter || !subRouter.stack) return endpoints;
+  
   subRouter.stack.forEach(layer => {
     if (layer.route) {
       const methods = Object.keys(layer.route.methods).map(m => m.toUpperCase());
 
-      // Otomatis daftarkan parameter apikey di paling awal agar muncul di UI dokumentasi
-      let params = { apikey: "" }; 
+      // 1. Buat objek parameter kosong terlebih dahulu
+      let detectedParams = {};
 
       if (layer.route.stack && layer.route.stack.length) {
         layer.route.stack.forEach(mw => {
           const fnString = mw.handle.toString();
           [...fnString.matchAll(/req\.query\.([a-zA-Z0-9_]+)/g)].forEach(match => {
-            if (match[1] !== 'apikey') params[match[1]] = "";
+            if (match[1] !== 'apikey') detectedParams[match[1]] = "";
           });
           [...fnString.matchAll(/req\.body\.([a-zA-Z0-9_]+)/g)].forEach(match => {
-            params[match[1]] = "";
+            if (match[1] !== 'apikey') detectedParams[match[1]] = "";
           });
         });
       }
+
+      // 2. Gabungkan 'apikey' di posisi paling awal agar selalu muncul pertama di UI
+      let params = { apikey: "", ...detectedParams };
+
       endpoints.push({
         name: `/${category}/${file.replace(/\.js$/,"")}`,
         path: `/api/${category}/${file.replace(/\.js$/,"")}`,
         desc: `/${category}/${file.replace(/\.js$/,"")}`,
         status: route.status || "ready",
-        type: route.type || "free", // <-- Menyimpan properti tipe akses (free/premium)
-        params,
+        type: route.type || "free", 
+        params, // <-- Menggunakan objek params yang sudah dipastikan berisi apikey di awal
         methods
       });
     }
