@@ -440,7 +440,6 @@ function getContentType(url, contentType) {
     return 'unknown';
 }
 
-// PERBAIKAN: Menghapus pembatas max-h-60 & max-w-md agar gambar/video muncul full size
 function createMediaPreview(url, contentType, originalUrl = '') {
     const type = getContentType(url, contentType);
     let previewHtml = '';
@@ -451,10 +450,10 @@ function createMediaPreview(url, contentType, originalUrl = '') {
 
     switch(type) {
         case 'image':
-            previewHtml = `<div class="media-preview cursor-zoom-in flex justify-center w-full"><img src="${url}" class="media-image w-full h-auto max-w-full rounded-lg shadow-lg border border-white/10 transition-transform duration-200 hover:brightness-90" alt="Response Image"></div>`;
+            previewHtml = `<div class="media-preview cursor-zoom-in flex justify-center w-full bg-black/5 rounded-lg overflow-hidden"><img src="${url}" class="media-image w-full h-auto max-w-full rounded-lg shadow-lg border border-white/10 transition-transform duration-200 hover:brightness-90 object-contain" alt="Response Image"></div>`;
             break;
         case 'video':
-            previewHtml = `<div class="media-preview flex justify-center w-full"><video controls class="rounded-lg w-full h-auto max-w-full bg-black border border-white/10"><source src="${url}">Your browser does not support video.</video></div>`;
+            previewHtml = `<div class="media-preview flex justify-center w-full bg-black rounded-lg overflow-hidden"><video controls class="rounded-lg w-full h-auto max-w-full bg-black border border-white/10 object-contain"><source src="${url}">Your browser does not support video.</video></div>`;
             break;
         case 'audio':
             previewHtml = `<div class="media-preview flex justify-center w-full"><audio controls class="w-full"><source src="${url}">Your browser does not support audio.</audio></div>`;
