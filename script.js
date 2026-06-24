@@ -11,17 +11,6 @@ let batteryInterval = null;
 let boundUpdateBatteryInfo = null; 
 let activeCategory = 'all';
 
-// ==================== CACHE APIKEY SYSTEM ====================
-// Cache apikey utama otomatis ke 'free'
-if (!localStorage.getItem('cached_apikey')) {
-    localStorage.setItem('cached_apikey', 'free');
-}
-
-function getApiKeyForEndpoint(endpointType) {
-    if (endpointType === 'premium') return ''; // Kosongkan jika premium
-    return localStorage.getItem('cached_apikey') || 'free';
-}
-
 const themeToggleBtn = document.getElementById('themeToggle');
 const body = document.body;
 const themeBg = document.getElementById('themeBg');
@@ -207,7 +196,7 @@ function initBatteryDetection() {
     const batteryPercentageElement = document.getElementById('batteryPercentage');
     const batteryStatusElement = document.getElementById('batteryStatus');
     const batteryContainer = document.getElementById('batteryContainer');
-    
+
     if ('getBattery' in navigator) {
         navigator.getBattery().then(function(battery) {
             boundUpdateBatteryInfo = function updateBatteryInfo() {
@@ -215,10 +204,10 @@ function initBatteryDetection() {
                 const isCharging = battery.charging;
                 const roundedLevel = Math.round(level);
                 const isLightMode = body.classList.contains('light-mode');
-                
+
                 batteryPercentageElement.textContent = `${roundedLevel}%`;
                 batteryLevelElement.style.width = `${level}%`;
-                
+
                 if (level > 60) {
                     batteryLevelElement.className = 'battery-level ' + (isLightMode ? 'bg-green-600' : 'bg-green-500');
                 } else if (level > 20) {
@@ -226,7 +215,7 @@ function initBatteryDetection() {
                 } else {
                     batteryLevelElement.className = 'battery-level ' + (isLightMode ? 'bg-red-600' : 'bg-red-500');
                 }
-                
+
                 if (isCharging) {
                     batteryContainer.classList.add('charging');
                     batteryStatusElement.textContent = i18n[currentLang].batteryCharging;
@@ -234,7 +223,7 @@ function initBatteryDetection() {
                 } else {
                     batteryContainer.classList.remove('charging');
                     batteryLevelElement.classList.remove('battery-charging');
-                    
+
                     if (battery.dischargingTime === Infinity) {
                         batteryStatusElement.textContent = i18n[currentLang].batteryFull;
                     } else {
@@ -242,7 +231,7 @@ function initBatteryDetection() {
                     }
                 }
             };
-            
+
             boundUpdateBatteryInfo();
             battery.addEventListener('levelchange', boundUpdateBatteryInfo);
             battery.addEventListener('chargingchange', boundUpdateBatteryInfo);
@@ -250,14 +239,14 @@ function initBatteryDetection() {
             battery.addEventListener('dischargingtimechange', boundUpdateBatteryInfo);
             window.addEventListener('batteryupdate-hook', boundUpdateBatteryInfo);
             batteryMonitor = battery;
-            
+
         }).catch(function(error) {
             fallbackBattery();
         });
     } else {
         fallbackBattery();
     }
-    
+
     function fallbackBattery() {
         let simulatedLevel = localStorage.getItem('simulatedBattery');
         if (!simulatedLevel) {
@@ -266,13 +255,13 @@ function initBatteryDetection() {
         } else {
             simulatedLevel = parseInt(simulatedLevel);
         }
-        
+
         let isSimulatedCharging = localStorage.getItem('simulatedCharging') === 'true';
-        
+
         function simulateBattery() {
             const isLightMode = body.classList.contains('light-mode');
             let newLevel = simulatedLevel;
-            
+
             if (isSimulatedCharging) {
                 newLevel = Math.min(100, newLevel + 0.5);
                 if (newLevel >= 100) {
@@ -298,11 +287,11 @@ function initBatteryDetection() {
             }
             simulatedLevel = newLevel;
             localStorage.setItem('simulatedBattery', newLevel.toString());
-            
+
             const roundedLevel = Math.round(newLevel);
             batteryPercentageElement.textContent = `${roundedLevel}%`;
             batteryLevelElement.style.width = `${newLevel}%`;
-            
+
             if (newLevel > 60) {
                 batteryLevelElement.className = 'battery-level ' + (isLightMode ? 'bg-green-600' : 'bg-green-500');
             } else if (newLevel > 20) {
@@ -311,7 +300,7 @@ function initBatteryDetection() {
                 batteryLevelElement.className = 'battery-level ' + (isLightMode ? 'bg-red-600' : 'bg-red-500');
             }
         }
-        
+
         simulateBattery();
         window.addEventListener('batteryupdate-hook', simulateBattery);
         if (!batteryInterval) batteryInterval = setInterval(simulateBattery, 10000);
@@ -383,13 +372,8 @@ function updateLivePreview(catIdx, epIdx, method, basePath, endpointType) {
 
     const formData = new FormData(form);
     const params = new URLSearchParams();
-    
-    // Inject cache apikey otomatis berdasarkan tipe
-    const apikeyValue = getApiKeyForEndpoint(endpointType);
-    if (apikeyValue !== '') params.append('apikey', apikeyValue);
 
     for (const [key, value] of formData.entries()) {
-        // Abaikan apikey manual jika terdeteksi (sebagai jaga-jaga)
         if (value && key !== 'apikey' && typeof value === 'string') {
              params.append(key, value);
         }
@@ -407,15 +391,13 @@ function updateLivePreview(catIdx, epIdx, method, basePath, endpointType) {
             curlContainer.textContent = `curl -X GET "${finalUrl}"`;
         } else {
             const bodyParams = [];
-            if (apikeyValue !== '') bodyParams.push(`"apikey": "${apikeyValue}"`);
-            
+
             for (const [key, value] of formData.entries()) {
                 if (value && key !== 'apikey' && typeof value === 'string') {
                     bodyParams.push(`"${key}": "${value}"`);
                 }
             }
             const dataString = bodyParams.length ? ` -H "Content-Type: application/json" -d '{${bodyParams.join(', ')}}'` : '';
-            // curl untuk POST biasanya path aslinya tanpa parameter url jika dikirim lewat body (tapi kita biarkan apikey di body)
             curlContainer.textContent = `curl -X ${method} "${BASE_URL}${basePath}"${dataString}`;
         }
     }
@@ -438,8 +420,12 @@ function closeSidebarMenu() {
 function toggleEndpoint(catIdx, epIdx) {
     const content = document.getElementById(`ep-${catIdx}-${epIdx}`);
     const icon = document.getElementById(`ep-icon-${catIdx}-${epIdx}`);
+    
     content.classList.toggle('hidden');
-    icon.style.transform = content.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(180deg)';
+    
+    if (icon) {
+        icon.textContent = content.classList.contains('hidden') ? '+' : '−';
+    }
 }
 
 function getContentType(url, contentType) {
@@ -509,12 +495,6 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
 
     const formData = new FormData(form);
     const params = new URLSearchParams();
-    const apikeyValue = getApiKeyForEndpoint(endpointType);
-    
-    // Inject API KEY
-    if (apikeyValue !== '') {
-        params.append('apikey', apikeyValue);
-    }
 
     // Cek apakah form memiliki file untuk dikirim menggunakan Multipart FormData
     let hasFileInput = false;
@@ -527,13 +507,9 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
 
     try {
         if (hasFileInput && (method === 'POST' || method === 'PUT')) {
-            // KIRIM SEBAGAI MULTIPART FORM-DATA JIKA ADA FILE
-            if (apikeyValue !== '') formData.set('apikey', apikeyValue);
             fetchOptions.body = formData;
-            // Endpoint URL untuk POST form-data biasanya params tidak digabungkan kecuali disyaratkan router
             fullPath += '?' + params.toString(); 
         } else {
-            // JIKA BUKAN FILE (QUERY PARAMS atau JSON BODY)
             for (const [key, value] of formData.entries()) {
                 if (value && key !== 'apikey' && typeof value === 'string') {
                     params.append(key, value);
@@ -542,15 +518,13 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
             if (method === 'GET' || method === 'DELETE') {
                 fullPath += '?' + params.toString();
             } else {
-                // Method POST / PUT tanpa file = kirim sebagai JSON
                 fetchOptions.headers = { 'Content-Type': 'application/json' };
                 const jsonBody = {};
-                if (apikeyValue !== '') jsonBody.apikey = apikeyValue;
                 for (const [key, value] of formData.entries()) {
                     if (value && key !== 'apikey') jsonBody[key] = value;
                 }
                 fetchOptions.body = JSON.stringify(jsonBody);
-                fullPath += '?' + params.toString(); // Sertakan juga di url berjaga-jaga
+                fullPath += '?' + params.toString(); 
             }
         }
 
@@ -571,12 +545,11 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
         if (contentType.includes("application/json")) {
             const data = await response.json();
             rawResponseText = JSON.stringify(data, null, 2);
-            
-            // Auto detect URL gambar dari JSON Response
+
             let detectedMediaUrl = null;
             if (data.url && typeof data.url === 'string' && data.url.startsWith('http')) detectedMediaUrl = data.url;
             else if (data.result && data.result.url && typeof data.result.url === 'string') detectedMediaUrl = data.result.url;
-            
+
             if (detectedMediaUrl && (detectedMediaUrl.match(/\.(jpeg|jpg|gif|png|webp|mp4|mp3)/i))) {
                  responseContent.innerHTML = createMediaPreview(detectedMediaUrl, null, detectedMediaUrl) + `<div class="mt-4 text-xs font-bold text-slate-500 uppercase">RAW JSON DATA</div><pre id="raw-text-${catIdx}-${epIdx}" class="code-font text-sm overflow-auto text-cyan-400 p-2 bg-black/50 rounded-lg mt-2">${rawResponseText}</pre>`;
                  isMedia = true;
@@ -593,7 +566,6 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
             responseContent.innerHTML = `<pre id="raw-text-${catIdx}-${epIdx}" class="code-font text-sm overflow-auto p-2">${rawResponseText}</pre>`;
         }
 
-        // Tampilkan Action Buttons (Copy)
         const isLightMode = body.classList.contains('light-mode');
         const btnStyle = isLightMode 
             ? 'px-2.5 py-1 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded text-[11px] font-semibold transition-colors code-font border border-black/5'
@@ -635,23 +607,23 @@ function clearResponse(catIdx, epIdx, endpointType) {
     const responseDiv = document.getElementById(`response-${catIdx}-${epIdx}`);
     if (responseDiv) responseDiv.classList.add('hidden');
 
+    const icon = document.getElementById(`ep-icon-${catIdx}-${epIdx}`);
+    if (icon) icon.textContent = '+';
+
     const form = document.getElementById(`form-${catIdx}-${epIdx}`);
     if (form) {
         form.reset(); 
         const urlContainer = document.getElementById(`live-url-${catIdx}-${epIdx}`);
         if (urlContainer) {
             const basePath = urlContainer.textContent.split('?')[0];
-            const apikey = getApiKeyForEndpoint(endpointType);
-            urlContainer.textContent = apikey !== '' ? `${basePath}?apikey=${apikey}` : basePath;
+            urlContainer.textContent = basePath;
         }
 
         const curlContainer = document.getElementById(`live-curl-${catIdx}-${epIdx}`);
         if (curlContainer) {
             const method = curlContainer.textContent.split(' ')[1] || 'GET';
             const baseUrl = curlContainer.textContent.split('"')[1] || '';
-            const apikey = getApiKeyForEndpoint(endpointType);
-            const queryStr = apikey !== '' ? `?apikey=${apikey}` : '';
-            curlContainer.textContent = `curl -X ${method} "${baseUrl.split('?')[0]}${queryStr}"`;
+            curlContainer.textContent = `curl -X ${method} "${baseUrl.split('?')[0]}"`;
         }
     }
 }
@@ -719,15 +691,15 @@ function loadApis() {
         apiList.innerHTML = '<p class="text-center">No API data loaded.</p>';
         return;
     }
-    
+
     totalEndpoints = 0;
     totalCategories = apiData.categories.length;
     apiData.categories.forEach(category => { totalEndpoints += category.items.length; });
-    
+
     updateTotalEndpoints();
     updateTotalCategories();
     renderCategoryFilters();
-    
+
     const isLightMode = body.classList.contains('light-mode');
     const pathColorClass = isLightMode ? 'text-cyan-700' : 'text-cyan-200';
     const subTextColorClass = isLightMode ? 'text-slate-600' : 'opacity-70';
@@ -758,13 +730,13 @@ function loadApis() {
                     </svg>
                 </button>
                 <div id="cat-${catIdx}" class="hidden">`;
-        
+
         category.items.forEach((item, epIdx) => {
             const method = item.methods && item.methods.length ? item.methods[0] : 'GET';
             const pathParts = item.path.split('?');
             const path = pathParts[0];
             const epType = item.type || 'free';
-            
+
             let statusClass = "status-ready";
             let statusText = "READY"; 
             if (item.status === 'update') { statusClass = 'status-update'; statusText = "UPDATE"; }
@@ -773,9 +745,6 @@ function loadApis() {
             let badgeTypeHtml = epType === 'premium' 
                 ? `<span class="px-1.5 py-0.5 text-[9px] rounded-sm bg-amber-500/20 text-amber-400 border border-amber-500/30 font-bold uppercase tracking-wider animate-pulse">👑 PREMIUM</span>`
                 : `<span class="px-1.5 py-0.5 text-[9px] rounded-sm bg-blue-500/20 text-blue-400 border border-blue-500/30 font-bold uppercase tracking-wider">FREE</span>`;
-
-            const currentApikey = getApiKeyForEndpoint(epType);
-            const queryParamsString = currentApikey !== '' ? `?apikey=${currentApikey}` : '';
 
             html += `
             <div class="api-item border-t border-white/10 light-mode:border-slate-200" 
@@ -792,6 +761,7 @@ function loadApis() {
                             </div>
                         </div>
                     </div>
+                    <span id="ep-icon-${catIdx}-${epIdx}" class="text-base font-bold text-cyan-400 light-mode:text-cyan-600 px-2 code-font">+</span>
                 </button>
                 <div id="ep-${catIdx}-${epIdx}" class="hidden bg-slate-950/40 light-mode:bg-slate-50/50 px-4 py-4 border-t border-white/10 light-mode:border-slate-200 backdrop-blur-sm">
                     <p class="text-xs mb-4 ${isLightMode ? 'text-slate-700' : 'opacity-80'}">${item.desc}</p>
@@ -802,7 +772,7 @@ function loadApis() {
                             <button type="button" onclick="copyFromElement('live-url-${catIdx}-${epIdx}', 'URL')" class="px-3 py-1 bg-white/5 hover:bg-white/10 light-mode:bg-slate-200 light-mode:hover:bg-slate-300 border border-white/10 light-mode:border-slate-300 rounded-lg text-[10px] transition-all active:scale-95 code-font text-slate-300 light-mode:text-slate-800">Copy URL</button>
                         </div>
                         <div class="bg-slate-900/40 light-mode:bg-slate-200/60 border border-white/10 light-mode:border-slate-300 px-4 py-3 rounded-xl backdrop-blur-md shadow-inner">
-                            <code id="live-url-${catIdx}-${epIdx}" class="code-font text-xs text-cyan-400 light-mode:text-cyan-700 font-medium break-all">${BASE_URL}${path}${queryParamsString}</code>
+                            <code id="live-url-${catIdx}-${epIdx}" class="code-font text-xs text-cyan-400 light-mode:text-cyan-700 font-medium break-all">${BASE_URL}${path}</code>
                         </div>
                     </div>
 
@@ -812,7 +782,7 @@ function loadApis() {
                             <button type="button" onclick="copyFromElement('live-curl-${catIdx}-${epIdx}', 'cURL')" class="px-3 py-1 bg-white/5 hover:bg-white/10 light-mode:bg-slate-200 light-mode:hover:bg-slate-300 border border-white/10 light-mode:border-slate-300 rounded-lg text-[10px] transition-all active:scale-95 code-font text-slate-300 light-mode:text-slate-800">Copy cURL</button>
                         </div>
                         <div class="bg-slate-900/40 light-mode:bg-slate-200/60 border border-white/10 light-mode:border-slate-300 px-4 py-3 rounded-xl backdrop-blur-md shadow-inner">
-                            <code id="live-curl-${catIdx}-${epIdx}" class="code-font text-xs text-slate-300 light-mode:text-slate-700 block overflow-x-auto whitespace-pre">curl -X ${method} "${BASE_URL}${path}${queryParamsString}"</code>
+                            <code id="live-curl-${catIdx}-${epIdx}" class="code-font text-xs text-slate-300 light-mode:text-slate-700 block overflow-x-auto whitespace-pre">curl -X ${method} "${BASE_URL}${path}"</code>
                         </div>
                     </div>`;
 
@@ -822,10 +792,9 @@ function loadApis() {
                         <h4 class="font-bold text-[11px] uppercase tracking-wider text-slate-400 light-mode:text-slate-600 mb-3">Parameter</h4>
                         <form id="form-${catIdx}-${epIdx}" onsubmit="executeRequest(event, ${catIdx}, ${epIdx}, '${method}', '${path}', '${epType}')">
                             <div class="space-y-4 mb-4">`;
-                
+
                 if (item.params) {
                     Object.keys(item.params).forEach(paramName => {
-                        // Sembunyikan parameter apikey agar UI bersih seperti screenshot
                         if (paramName.toLowerCase() === 'apikey') return;
 
                         const pType = item.params[paramName];
