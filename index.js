@@ -63,7 +63,9 @@ const validateApiKey = (req, res, next) => {
     return next();
   }
 
-  const userKey = req.query.apikey;
+  // PERBAIKAN: Cek apikey di query URL dulu, jika tidak ada cek di body request
+  const userKey = req.query.apikey || req.body.apikey;
+  
   if (!userKey) {
     return res.status(403).json({
       status: false,
@@ -83,7 +85,7 @@ const validateApiKey = (req, res, next) => {
     });
   }
 
-  // DINAMIS: Cek Status Fitur & Hak Akses Fitur Premium
+  // Dinamis: Cek Status Fitur & Hak Akses Fitur Premium
   const pathParts = req.path.split('/');
   const currentCategory = pathParts[1]; 
   const currentRouteName = pathParts[2];   
@@ -94,7 +96,7 @@ const validateApiKey = (req, res, next) => {
       if (fs.existsSync(routeFilePath)) {
         const routeModule = require(routeFilePath);
 
-        // Cek Status Fitur (Maintenance/Perbaikan)
+        // Cek Status Fitur
         if (routeModule.status === "error" || routeModule.status === "perbaikan") {
           return res.status(503).json({
             status: false,
