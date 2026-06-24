@@ -141,36 +141,38 @@ function getEndpointsFromRouter(category, file) {
   const route = require(path.join(apiPath, category, file));
   const subRouter = route.stack ? route : route.router || route;
   if (!subRouter || !subRouter.stack) return endpoints;
-  
   subRouter.stack.forEach(layer => {
     if (layer.route) {
       const methods = Object.keys(layer.route.methods).map(m => m.toUpperCase());
 
-      // 1. Buat objek parameter kosong terlebih dahulu
-      let detectedParams = {};
+      // Membuat penampung parameter sementara dari scraping regex query & body
+      let tempParams = {}; 
 
       if (layer.route.stack && layer.route.stack.length) {
         layer.route.stack.forEach(mw => {
           const fnString = mw.handle.toString();
           [...fnString.matchAll(/req\.query\.([a-zA-Z0-9_]+)/g)].forEach(match => {
-            if (match[1] !== 'apikey') detectedParams[match[1]] = "";
+            if (match[1] !== 'apikey') tempParams[match[1]] = "";
           });
           [...fnString.matchAll(/req\.body\.([a-zA-Z0-9_]+)/g)].forEach(match => {
-            if (match[1] !== 'apikey') detectedParams[match[1]] = "";
+            if (match[1] !== 'apikey') tempParams[match[1]] = "";
           });
         });
       }
 
-      // 2. Gabungkan 'apikey' di posisi paling awal agar selalu muncul pertama di UI
-      let params = { apikey: "", ...detectedParams };
+      // Rekonstruksi Objek: Memastikan apikey berada secara konsisten di urutan pertama
+      let params = { 
+        apikey: "",
+        ...tempParams 
+      };
 
       endpoints.push({
         name: `/${category}/${file.replace(/\.js$/,"")}`,
         path: `/api/${category}/${file.replace(/\.js$/,"")}`,
         desc: `/${category}/${file.replace(/\.js$/,"")}`,
         status: route.status || "ready",
-        type: route.type || "free", 
-        params, // <-- Menggunakan objek params yang sudah dipastikan berisi apikey di awal
+        type: route.type || "free", // <-- Menyimpan properti tipe akses (free/premium)
+        params,
         methods
       });
     }
@@ -204,7 +206,7 @@ router.get('/apilist', (req, res) => {
         desc: "/apilist",
         status: "ready",
         type: "free",
-        params: {},
+        params: { apikey: "" },
         methods: ["GET"]
       }
     ]
