@@ -12,7 +12,6 @@ const path = require("path");
 
 const router = express.Router();
 
-// Set batasan strict maksimal 4.5 MB (4.5 * 1024 * 1024 bytes)
 const MAX_FILE_SIZE = 4.5 * 1024 * 1024;
 
 const upload = multer({
@@ -24,8 +23,21 @@ const UA = "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like G
 
 // Endpoint UTAMA
 router.post("/", (req, res) => {
-  // Menggunakan callback multer manual untuk menangani error limit ukuran file dengan rapi
   upload(req, res, async (err) => {
+    // 1. Cek validasi API Key terlebih dahulu (bisa dari query atau dari body setelah multer berjalan)
+    const apikey = req.query.apikey || req.body.apikey;
+    
+    if (!apikey) {
+      return res.status(400).json({
+        status: false,
+        creator: "Arulz-XD",
+        message: "API Key mana? masukkan parameter ?apikey"
+      });
+    }
+
+    // Jalankan validasi value apikey kamu di sini jika diperlukan
+    // contoh: if (apikey !== "arulzxd-keys") { ... }
+
     if (err instanceof multer.MulterError) {
       if (err.code === "LIMIT_FILE_SIZE") {
         return res.status(400).json({
@@ -48,8 +60,6 @@ router.post("/", (req, res) => {
 
     const started = Date.now();
     const form = new FormData();
-    
-    // Perbaikan logika fallback filename agar ekstensi .jpg atau ekstensi asli tetap aman ter-render
     const filename = file.originalname || `upload-${Date.now()}.jpg`;
 
     form.append("file", file.buffer, {
@@ -80,7 +90,6 @@ router.post("/", (req, res) => {
       }
 
     } catch (error) {
-      // Mengamankan parsing error message jika response dari target uploader berupa objek/HTML
       const errorMsg = error.response?.data 
         ? (typeof error.response.data === "object" ? JSON.stringify(error.response.data) : error.response.data) 
         : error.message;
