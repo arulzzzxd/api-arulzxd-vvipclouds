@@ -1,70 +1,69 @@
-/**
- * NAMA SCRAPE  :: ARULZ UPLOADER API
- * [•] PEMBUAT      :: DEFAN (dipastebin.web.id)
- * [•] BASIS        :: api-arulzxd-vvipclouds.vercel.app
- */
+const express = require("express");
+const axios = require("axios");
+const FormData = require("form-data");
 
-const axios = require('axios');
-const express = require('express');
-const multer = require('multer');
-const FormData = require('form-data');
 const router = express.Router();
 
-// Konfigurasi penyimpanan sementara di memori (RAM)
-const upload = multer({ storage: multer.memoryStorage() });
+async function arulzUploader(fileUrl) {
+    const file = await axios.get(fileUrl, {
+        responseType: "arraybuffer"
+    });
 
-// Fungsi Scraper Arulz Uploader dengan API Key di URL
-async function scrapeUploader(fileBuffer, fileName, mimeType, apiKey) {
-  try {
+    const ext = fileUrl.split(".").pop().split("?")[0] || "bin";
+
     const form = new FormData();
-    // Berdasarkan gambar, nama field input filenya adalah 'file'
-    form.append('file', fileBuffer, {
-      filename: fileName,
-      contentType: mimeType,
-    });
+    form.append(
+        "file",
+        Buffer.from(file.data),
+        `upload.${ext}`
+    );
 
-    // API Key disisipkan langsung ke dalam URL (?apikey=...) sesuai kebutuhan sistemnya
-    const response = await axios.post(`https://api-arulzxd-vvipclouds.vercel.app/api/tools/arulz-tourl?apikey=${apiKey}`, form, {
-      headers: {
-        ...form.getHeaders(),
-        "User-Agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Mobile Safari/537.36",
-        "Referer": "https://api-arulzxd-vvipclouds.vercel.app/",
-      }
-    });
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
+    const { data } = await axios.post(
+        "https://arulz-uploader.vercel.app/api/upload",
+        form,
+        {
+            headers: {
+                ...form.getHeaders(),
+                "User-Agent": "Mozilla/5.0"
+            }
+        }
+    );
+
+    return data;
 }
 
-// Endpoint POST Utama
-router.post('/', upload.single('file'), async (req, res) => {
-  const file = req.file;
-  // Mengambil apikey dari body request (bisa diganti default jika ingin hardcode)
-  const apiKey = req.body.apikey || "arulzxd-keys"; 
+router.post("/", async (req, res) => {
+    const { url } = req.body;
 
-  if (!file) return res.status(400).json({ error: "Missing 'file' parameter di body request" });
+    if (!url) {
+        return res.status(400).json({
+            status: false,
+            error: "Missing 'url' parameter"
+        });
+    }
 
-  try {
-    // Eksekusi fungsi scraper
-    const result = await scrapeUploader(file.buffer, file.originalname, file.mimetype, apiKey);
+    try {
+        const result = await arulzUploader(url);
 
-    // Mengembalikan response hasil upload
-    return res.json({
-      status: true,
-      data: {
-        nama_file: file.originalname,
-        ukuran: file.size,
-        tipe: file.mimetype,
-        result: result 
-      }
-    });
+        return res.status(200).json({
+            status: true,
+            creator: "ArulzXD",
+            result
+        });
 
-  } catch (e) {
-    return res.status(500).json({ error: e.message });
-  }
+    } catch (error) {
+        const detail = error.response?.data || error.message;
+
+        return res.status(500).json({
+            status: false,
+            error: typeof detail === "object"
+                ? JSON.stringify(detail)
+                : detail
+        });
+    }
 });
 
-router.status = "ready"; 
+router.status = "ready";
 router.type = "free";
+
 module.exports = router;
