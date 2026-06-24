@@ -1,22 +1,21 @@
 const express = require("express");
 const axios = require("axios");
 const FormData = require("form-data");
+const multer = require("multer");
 
 const router = express.Router();
+const upload = multer({ storage: multer.memoryStorage() });
 
-async function arulzUploader(fileUrl) {
-    const file = await axios.get(fileUrl, {
-        responseType: "arraybuffer"
-    });
-
-    const ext = fileUrl.split(".").pop().split("?")[0] || "bin";
-
+// ======================================================
+// CORE UPLOADER
+// ======================================================
+async function arulzUploader(file) {
     const form = new FormData();
-    form.append(
-        "file",
-        Buffer.from(file.data),
-        `upload.${ext}`
-    );
+
+    form.append("file", file.buffer, {
+        filename: file.originalname,
+        contentType: file.mimetype
+    });
 
     const { data } = await axios.post(
         "https://arulz-uploader.vercel.app/api/upload",
@@ -25,36 +24,40 @@ async function arulzUploader(fileUrl) {
             headers: {
                 ...form.getHeaders(),
                 "User-Agent": "Mozilla/5.0"
-            }
+            },
+            maxBodyLength: Infinity,
+            maxContentLength: Infinity
         }
     );
 
     return data;
 }
 
-router.post("/", async (req, res) => {
-    const { url } = req.body;
-
-    if (!url) {
+// ======================================================
+// ENDPOINT POST
+// ======================================================
+router.post("/", upload.single("file"), async (req, res) => {
+    if (!req.file) {
         return res.status(400).json({
             status: false,
-            error: "Missing 'url' parameter"
+            error: "Missing file"
         });
     }
 
     try {
-        const result = await arulzUploader(url);
+        const result = await arulzUploader(req.file);
 
-        return res.status(200).json({
+        res.status(200).json({
             status: true,
             creator: "ArulzXD",
+            filename: req.file.originalname,
             result
         });
 
     } catch (error) {
         const detail = error.response?.data || error.message;
 
-        return res.status(500).json({
+        res.status(500).json({
             status: false,
             error: typeof detail === "object"
                 ? JSON.stringify(detail)
