@@ -1,72 +1,73 @@
-const express = require("express");
-const axios = require("axios");
-const FormData = require("form-data");
-const multer = require("multer");
-
+const axios = require('axios');
+const express = require('express');
 const router = express.Router();
+const multer = require('multer');
+const FormData = require('form-data');
+
+// Menggunakan memoryStorage agar file tidak disimpan di penyimpanan lokal, melainkan di memori RAM sementara
 const upload = multer({ storage: multer.memoryStorage() });
 
-// ======================================================
-// CORE UPLOADER
-// ======================================================
-async function arulzUploader(file) {
-    const form = new FormData();
+/**
+ * Fungsi untuk mengunggah file hasil scrape langsung ke backend arulz-uploader
+ * @param {Buffer} fileBuffer - Buffer dari file asli
+ * @param {string} filename - Nama asli file
+ * @param {string} mimetype - Tipe file (contoh: image/png)
+ */
+async function scrapeUploader(fileBuffer, filename, mimetype) {
+    try {
+        const form = new FormData();
+        // Masukkan buffer file dan meta datanya ke dalam form data
+        form.append('file', fileBuffer, {
+            filename: filename,
+            contentType: mimetype,
+        });
 
-    form.append("file", file.buffer, {
-        filename: file.originalname,
-        contentType: file.mimetype
-    });
-
-    const { data } = await axios.post(
-        "https://arulz-uploader.vercel.app/api/upload",
-        form,
-        {
+        // Tembak langsung ke API upload milik arulz-uploader
+        const targetUrl = 'https://arulz-uploader.vercel.app/api/upload';
+        const response = await axios.post(targetUrl, form, {
             headers: {
                 ...form.getHeaders(),
-                "User-Agent": "Mozilla/5.0"
-            },
-            maxBodyLength: Infinity,
-            maxContentLength: Infinity
-        }
-    );
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                'Origin': 'https://arulz-uploader.vercel.app',
+                'Referer': 'https://arulz-uploader.vercel.app/'
+            }
+        });
 
-    return data;
+        return response.data; // Mengembalikan response data bawaan dari web arulz-uploader
+    } catch (error) {
+        throw error;
+    }
 }
 
-// ======================================================
-// ENDPOINT POST
-// ======================================================
-router.post("/", upload.single("file"), async (req, res) => {
-    if (!req.file) {
-        return res.status(400).json({
-            status: false,
-            error: "Missing file"
-        });
-    }
-
+// Endpoint utama Router menggunakan POST karena menerima upload file
+// Menggunakan middleware upload.single('file') dengan form-key bernama 'file'
+router.post('/', upload.single('file'), async (req, res) => {
     try {
-        const result = await arulzUploader(req.file);
+        if (!req.file) {
+            return res.status(400).json({ 
+                status: false, 
+                message: "Tidak ada file yang diunggah. Gunakan form-key 'file'" 
+            });
+        }
 
+        // Jalankan fungsi scrape dengan mengirimkan buffer data file
+        const result = await scrapeUploader(req.file.buffer, req.file.originalname, req.file.mimetype);
+        
+        // Kembalikan hasilnya ke client dalam format JSON sesuai hasil dari target
         res.status(200).json({
             status: true,
             creator: "ArulzXD",
-            filename: req.file.originalname,
-            result
+            result: result
         });
-
     } catch (error) {
-        const detail = error.response?.data || error.message;
-
-        res.status(500).json({
-            status: false,
-            error: typeof detail === "object"
-                ? JSON.stringify(detail)
-                : detail
+        const errorMsg = error.response ? error.response.data : error.message;
+        return res.status(500).json({ 
+            status: false, 
+            error: errorMsg 
         });
     }
 });
 
-router.status = "ready";
+router.status = "ready"; 
 router.type = "free";
-
 module.exports = router;
