@@ -1,50 +1,56 @@
-const express = require('express');
+const express = require("express");
+const Busboy = require("busboy");
+const axios = require("axios");
+const FormData = require("form-data");
+
 const router = express.Router();
-const multer = require('multer');
 
-// Konfigurasi Multer penyimpanan sementara (memory/disk)
-const upload = multer({ storage: multer.memoryStorage() });
+router.post("/", (req, res) => {
+    const busboy = Busboy({ headers: req.headers });
 
-// Properti status dan type untuk sinkronisasi dokumentasi di index.js
-router.status = "ready";
-router.type = "free"; // atau "premium"
+    let chunks = [];
+    let filename = "file";
+    let mimetype = "application/octet-stream";
 
-// Menggunakan upload.single('file') untuk memproses form-data berkey 'file'
-router.post('/', upload.single('file'), (req, res) => {
-    try {
-        // PERINGATAN: Harus eksplisit menulis 'req.file' atau 'req.body' di dalam fungsi 
-        // agar regex / string matching di index.js dapat mendeteksinya!
-        if (!req.file) {
-            return res.status(400).json({
+    busboy.on("file", (name, file, info) => {
+        filename = info.filename;
+        mimetype = info.mimeType;
+
+        file.on("data", data => chunks.push(data));
+    });
+
+    busboy.on("finish", async () => {
+        try {
+            const buffer = Buffer.concat(chunks);
+
+            const form = new FormData();
+            form.append("file", buffer, {
+                filename,
+                contentType: mimetype
+            });
+
+            const { data } = await axios.post(
+                "https://arulz-uploader.vercel.app/api/upload",
+                form,
+                {
+                    headers: form.getHeaders()
+                }
+            );
+
+            res.json({
+                status: true,
+                creator: "ArulzXD",
+                result: data
+            });
+        } catch (e) {
+            res.status(500).json({
                 status: false,
-                message: "Tidak ada file yang diunggah!"
+                message: e.message
             });
         }
+    });
 
-        // Contoh membaca data file buffer
-        const fileBuffer = req.file.buffer;
-        const fileName = req.file.originalname;
-        const fileSize = req.file.size;
-
-        // Logika uploader Anda di sini (misal upload ke Imgur, Catbox, dll)
-        // ...
-
-        res.json({
-            status: true,
-            creator: "Arulz-XD",
-            result: {
-                name: fileName,
-                size: fileSize,
-                url: `https://arulz-uploader.vercel.app/files/contoh_output.jpg`
-            }
-        });
-
-    } catch (error) {
-        res.status(500).json({
-            status: false,
-            message: error.message
-        });
-    }
+    req.pipe(busboy);
 });
 
 module.exports = router;
