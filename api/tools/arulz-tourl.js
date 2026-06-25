@@ -4,25 +4,24 @@ const router = express.Router();
 const multer = require('multer');
 const FormData = require('form-data');
 
-// Menggunakan memoryStorage agar file tidak disimpan di penyimpanan lokal, melainkan di memori RAM sementara
+// Menggunakan memoryStorage agar tidak memenuhi disk server
 const upload = multer({ storage: multer.memoryStorage() });
 
+// Konfigurasi API KEY (Disamakan dengan index.js Anda)
+const VALID_API_KEY = "arulzxd-keys"; 
+const PREMIUM_API_KEYS = ["arulz-premium", "key-vip-arulz", "owner-key-999"]; 
+
 /**
- * Fungsi untuk mengunggah file hasil scrape langsung ke backend arulz-uploader
- * @param {Buffer} fileBuffer - Buffer dari file asli
- * @param {string} filename - Nama asli file
- * @param {string} mimetype - Tipe file (contoh: image/png)
+ * Fungsi Scraper / Forwarder ke arulz-uploader
  */
 async function scrapeUploader(fileBuffer, filename, mimetype) {
     try {
         const form = new FormData();
-        // Masukkan buffer file dan meta datanya ke dalam form data
         form.append('file', fileBuffer, {
             filename: filename,
             contentType: mimetype,
         });
 
-        // Tembak langsung ke API upload milik arulz-uploader
         const targetUrl = 'https://arulz-uploader.vercel.app/api/upload';
         const response = await axios.post(targetUrl, form, {
             headers: {
@@ -33,36 +32,64 @@ async function scrapeUploader(fileBuffer, filename, mimetype) {
             }
         });
 
-        return response.data; // Mengembalikan response data bawaan dari web arulz-uploader
+        return response.data;
     } catch (error) {
         throw error;
     }
 }
 
-// Endpoint utama Router menggunakan POST karena menerima upload file
-// Menggunakan middleware upload.single('file') dengan form-key bernama 'file'
+// ENDPOINT UTAMA - POST
+// Kita pasang `upload.single('file')` di paling awal supaya Express bisa membaca req.body dan req.query dari tipe form-data
 router.post('/', upload.single('file'), async (req, res) => {
     try {
-        if (!req.file) {
-            return res.status(400).json({ 
-                status: false, 
-                message: "Tidak ada file yang diunggah. Gunakan form-key 'file'" 
+        // Ambil apikey dari mana saja: Query URL (?apikey=), Body form-data, atau Header HTTP
+        const apikey = req.query.apikey || req.body.apikey || req.headers['x-api-key'];
+
+        // 1. Validasi Keberadaan API Key
+        if (!apikey) {
+            return res.status(400).json({
+                status: false,
+                creator: "Arulz-XD",
+                message: "API Key mana? masukkan parameter ?apikey atau masukkan ke form-body"
             });
         }
 
-        // Jalankan fungsi scrape dengan mengirimkan buffer data file
+        // 2. Validasi Kecocokan API Key
+        const isValidFree = apikey === VALID_API_KEY;
+        const isValidPremium = PREMIUM_API_KEYS.includes(apikey);
+
+        if (!isValidFree && !isValidPremium) {
+            return res.status(403).json({
+                status: false,
+                creator: "Arulz-XD",
+                message: "API Key salah atau tidak terdaftar!"
+            });
+        }
+
+        // 3. Validasi File
+        if (!req.file) {
+            return res.status(400).json({ 
+                status: false, 
+                creator: "Arulz-XD",
+                message: "Tidak ada file yang diunggah. Gunakan form-key bernama 'file'" 
+            });
+        }
+
+        // 4. Proses Eksekusi Scrape Upload
         const result = await scrapeUploader(req.file.buffer, req.file.originalname, req.file.mimetype);
         
-        // Kembalikan hasilnya ke client dalam format JSON sesuai hasil dari target
-        res.status(200).json({
+        // 5. Berikan Response Sukses
+        return res.status(200).json({
             status: true,
-            creator: "ArulzXD",
+            creator: "Arulz-XD",
             result: result
         });
+
     } catch (error) {
         const errorMsg = error.response ? error.response.data : error.message;
         return res.status(500).json({ 
             status: false, 
+            creator: "Arulz-XD",
             error: errorMsg 
         });
     }
