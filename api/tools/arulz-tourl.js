@@ -53,4 +53,6 @@ router.post("/", (req, res) => {
     req.pipe(busboy);
 });
 
+router.status = "ready"; 
+router.type = "free";
 module.exports = router;
