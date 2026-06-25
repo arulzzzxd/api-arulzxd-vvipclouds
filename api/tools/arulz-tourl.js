@@ -7,6 +7,21 @@ const router = express.Router();
 
 router.post("/", (req, res) => {
     const busboy = Busboy({ headers: req.headers });
+    const apikey = req.query.apikey;
+    
+    if (!apikey) {
+            return res.status(403).json({
+                status: false,
+                message: "Parameter 'apikey' diperlukan."
+            });
+        }
+
+        if (apikey !== "arulzxd-keys") {
+            return res.status(403).json({
+                status: false,
+                message: "Apikey tidak valid."
+            });
+        }
 
     let chunks = [];
     let filename = "file";
@@ -53,6 +68,6 @@ router.post("/", (req, res) => {
     req.pipe(busboy);
 });
 
-router.status = "error"; 
+router.status = "ready"; 
 router.type = "free";
 module.exports = router;
