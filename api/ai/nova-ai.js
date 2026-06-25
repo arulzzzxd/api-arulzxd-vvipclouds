@@ -65,5 +65,4 @@ const text = req.query.text?.trim();
 
 router.status = "ready";
 router.type = "free";
-
 module.exports = router;
