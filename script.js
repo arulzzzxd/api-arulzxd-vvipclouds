@@ -464,7 +464,7 @@ function createMediaPreview(url, contentType, originalUrl = '') {
     return `<div class="w-full flex flex-col items-center gap-3">${previewHtml}<div class="flex gap-2"><button type="button" onclick="copyText('${originalUrl || url}', 'Media URL')" class="${btnClass}">📋 Copy URL</button><a href="${url}" download class="${btnClass}">📥 Download</a></div></div>`;
 }
 
-// LOGIKA EKSEKUSI API TERBARU (FIXED APIKEY & MULTIPART/JSON ROUTING)
+// LOGIKA EKSEKUSI API TERBARU DENGAN COKOTAN METADATA DINAMIS (RESPON TIME, SIZE, CONTENT-TYPE)
 async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
     e.preventDefault();
     if (isRequestInProgress) {
@@ -523,11 +523,11 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
             }
         }
 
-        // 1. HITUNG WAKTU PROSES (SPEED)
+        // 1. HITUNG HIT KECEPATAN RESPON (ms)
         const startTime = performance.now();
         const response = await fetch(fullPath, fetchOptions);
         const endTime = performance.now();
-        const duration = Math.round(endTime - startTime); // Hasil dalam ms
+        const duration = Math.round(endTime - startTime);
 
         if (response.status === 403 || response.status === 503) {
             const data = await response.json();
@@ -538,47 +538,24 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
 
         if (!response.ok) throw new Error(`HTTP Error ${response.status}`);
 
-        // 2. AMBIL METADATA DARI HEADER RESPONS
-        const contentType = response.headers.get("content-type") || "unknown";
-        const contentEncoding = response.headers.get("content-encoding");
-        
-        // Deteksi size (Ukuran File)
+        // 2. AMBIL METADATA TERBARU DARI RESPONS HEADERS
+        const contentType = response.headers.get("content-type") || "application/octet-stream";
+        const cleanContentType = contentType.split(';')[0].trim();
+        const contentLength = response.headers.get("content-length");
+
         let sizeText = "0 B";
-        let contentLength = response.headers.get("content-length");
-
-        if (contentLength) {
-            const bytes = parseInt(contentLength, 10);
-            if (bytes >= 1048576) sizeText = `${(bytes / 1048576).toFixed(1)} MB`;
-            else if (bytes >= 1024) sizeText = `${(bytes / 1024).toFixed(1)} KB`;
-            else sizeText = `${bytes} B`;
-        }
-
-        // 3. BUAT TEMPLATE BADGE METADATA (Sama seperti di gambar)
-        const metadataBadgeHtml = `
-            <div class="flex flex-wrap items-center gap-2 px-4 py-2 mb-4 text-xs font-mono font-bold rounded-lg bg-emerald-400 text-slate-900 border border-emerald-500/30 shadow-sm w-fit">
-                <span>HTTP ${response.status}</span>
-                <span class="opacity-40">•</span>
-                <span>${duration}ms</span>
-                <span class="opacity-40">•</span>
-                <span>${contentType.split(';')[0]}</span>
-                ${contentLength ? `
-                <span class="opacity-40">•</span>
-                <span>${sizeText}</span>` : ''}
-            </div>
-        `;
+        let bytes = contentLength ? parseInt(contentLength, 10) : 0;
 
         let rawResponseText = "";
         let finalInnerContent = "";
 
-        if (contentType.includes("application/json")) {
+        // 3. SELEKSI PROSES CONTENT-TYPE
+        if (cleanContentType.includes("application/json")) {
             const data = await response.json();
             rawResponseText = JSON.stringify(data, null, 2);
 
-            // Jika respons berupa json namun ukuran content-length kosong, kalkulasi manual dari string karakter
-            if (!contentLength) {
-                const bytes = new Bureau(rawResponseText).length || rawResponseText.length;
-                if (bytes >= 1024) sizeText = `${(bytes / 1024).toFixed(1)} KB`;
-                else sizeText = `${bytes} B`;
+            if (!bytes) {
+                bytes = new Blob([rawResponseText]).size;
             }
 
             let detectedMediaUrl = null;
@@ -591,26 +568,42 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
             } else {
                  finalInnerContent = `<pre id="raw-text-${catIdx}-${epIdx}" class="code-font text-sm overflow-auto text-cyan-400 p-2">${rawResponseText}</pre>`;
             }
-        } else if (contentType.startsWith("image/") || contentType.startsWith("video/") || contentType.startsWith("audio/") || contentType.includes("application/pdf")) {
+        } else if (cleanContentType.startsWith("image/") || cleanContentType.startsWith("video/") || cleanContentType.startsWith("audio/") || cleanContentType.includes("application/pdf")) {
             isMedia = true;
             const blob = await response.blob();
             
-            // Jika size masih kosong dari header, hitung dari Blob size data murni
-            if (!contentLength) {
-                const bytes = blob.size;
-                if (bytes >= 1048576) sizeText = `${(bytes / 1048576).toFixed(1)} MB`;
-                else if (bytes >= 1024) sizeText = `${(bytes / 1024).toFixed(1)} KB`;
-                else sizeText = `${bytes} B`;
+            if (!bytes) {
+                bytes = blob.size;
             }
 
             const blobUrl = URL.createObjectURL(blob);
-            finalInnerContent = createMediaPreview(blobUrl, contentType, fullPath);
+            finalInnerContent = createMediaPreview(blobUrl, cleanContentType, fullPath);
         } else {
             rawResponseText = await response.text();
+            if (!bytes) {
+                bytes = new Blob([rawResponseText]).size;
+            }
             finalInnerContent = `<pre id="raw-text-${catIdx}-${epIdx}" class="code-font text-sm overflow-auto p-2">${rawResponseText}</pre>`;
         }
 
-        // Gabungkan Badge + Media Preview / Text Data ke Container Utama
+        // Ubah format satuan bytes menjadi teks terbaca manusia (KB / MB)
+        if (bytes >= 1048576) sizeText = `${(bytes / 1048576).toFixed(1)} MB`;
+        else if (bytes >= 1024) sizeText = `${(bytes / 1024).toFixed(1)} KB`;
+        else sizeText = `${bytes} B`;
+
+        // 4. BUAT BADGE METADATA (VISUAL BAR HIJAU SESUAI GAMBAR)
+        const metadataBadgeHtml = `
+            <div class="flex flex-wrap items-center gap-2 px-4 py-2 mb-4 text-xs font-mono font-bold rounded-lg bg-emerald-400 text-slate-900 border border-emerald-500/30 shadow-sm w-fit">
+                <span>HTTP ${response.status}</span>
+                <span class="opacity-40">•</span>
+                <span>${duration}ms</span>
+                <span class="opacity-40">•</span>
+                <span>${cleanContentType}</span>
+                <span class="opacity-40">•</span>
+                <span>${sizeText}</span>
+            </div>
+        `;
+
         responseContent.innerHTML = metadataBadgeHtml + finalInnerContent;
 
         // Pembuatan Action Button Copy URL / JSON
@@ -641,7 +634,6 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
             actionContainer.appendChild(copyResponseBtn);
         }
 
-        // Masukkan action button setelah komponen badge metadata
         const badgeElement = responseContent.querySelector('.bg-emerald-400');
         if (badgeElement) {
             badgeElement.insertAdjacentElement('afterend', actionContainer);
@@ -653,7 +645,7 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
     } catch (error) {
         responseContent.innerHTML = `<pre class="text-red-400 code-font text-sm p-2 bg-red-500/10 rounded-lg">Error: ${error.message}</pre>`;
         showToast(i18n[currentLang].toastRequestFailed, true);
-    } final {
+    } finally {
         isRequestInProgress = false;
         executeBtn.disabled = false;
         executeBtn.classList.remove('btn-loading');
