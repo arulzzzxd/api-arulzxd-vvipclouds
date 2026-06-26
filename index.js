@@ -153,14 +153,13 @@ app.post('/uploadfile', async (req, res) => {
             return res.status(400).json({ error: 'Tidak ada file yang dipilih.' });
         }
 
-        // Ambil data file dari input name="file[]"
+        // Ambil data dari input name="file[]"
         let fileInput = req.files['file[]'];
         if (!fileInput) {
             return res.status(400).json({ error: 'Format input file tidak valid.' });
         }
 
-        // Jika hanya 1 file yang diunggah, express-fileupload menjadikannya Object.
-        // Kita ubah menjadi Array agar logic loopnya seragam.
+        // Jika hanya 1 file, ubah Object menjadi Array agar logic loop seragam
         if (!Array.isArray(fileInput)) {
             fileInput = [fileInput];
         }
@@ -171,26 +170,32 @@ app.post('/uploadfile', async (req, res) => {
         }
 
         const uploadedFilesLog = [];
+        const uploadDir = path.join(__dirname, 'files');
 
-        // Loop untuk memproses setiap file yang diunggah
+        // Pastikan folder 'files' sudah ada agar tidak error saat pemindahan (.mv)
+        if (!fs.existsSync(uploadDir)){
+            fs.mkdirSync(uploadDir, { recursive: true });
+        }
+
+        // Loop untuk memproses setiap file secara terpisah
         for (const file of fileInput) {
-            // Validasi ukuran file per berkas (Maks 100MB)
+            // Validasi ukuran berkas (Maks 100MB)
             const maxSize = 100 * 1024 * 1024;
             if (file.size > maxSize) {
                 return res.status(400).json({ error: `File ${file.name} melebihi batas ukuran maksimal 100MB!` });
             }
 
-            // Generate nama file unik agar tidak saling menimpa
-            const fileExtension = path.extname(file.name);
-            const uniqueFileName = `${Date.now()}-${crypto.randomBytes(4).toString('hex')}${fileExtension}`;
+            // PERBAIKAN UTAMA: Membuat nama file unik agar tidak saling menimpa
+            const fileExtension = path.extname(file.name) || '.png'; // Fallback jika ekstensi kosong
+            const uniqueString = crypto.randomBytes(4).toString('hex');
+            const uniqueFileName = `${Date.now()}-${uniqueString}${fileExtension}`;
             
-            // Tentukan lokasi folder penyimpanan (sesuaikan dengan folder tujuan Anda, misal 'files')
-            const uploadPath = path.join(__dirname, 'files', uniqueFileName);
+            const uploadPath = path.join(uploadDir, uniqueFileName);
 
-            // Pindahkan file dari temporary cache ke folder tujuan
+            // Pindahkan file ke folder tujuan secara asinkron (await)
             await file.mv(uploadPath);
 
-            // Simpan data URL respon
+            // Simpan data log untuk response JSON
             uploadedFilesLog.push({
                 originalname: file.name,
                 filename: uniqueFileName,
@@ -199,7 +204,7 @@ app.post('/uploadfile', async (req, res) => {
             });
         }
 
-        // Kirim response sukses berupa array objek file
+        // Kirim response data berupa array objek semua file yang berhasil
         return res.json({
             success: true,
             message: `${uploadedFilesLog.length} file berhasil diunggah!`,
@@ -207,10 +212,11 @@ app.post('/uploadfile', async (req, res) => {
         });
 
     } catch (error) {
-        console.error(error);
+        console.error("Upload Error:", error);
         return res.status(500).json({ error: 'Terjadi kesalahan pada server saat mengunggah file.' });
     }
 });
+
 
 
 const router = express.Router();
