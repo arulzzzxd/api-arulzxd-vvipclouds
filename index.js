@@ -500,6 +500,9 @@ app.get('/', (req, res) => {
     <link id="faviconLink" rel="icon" type="image/x-icon" href="${favicon}">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <link rel="stylesheet" href="styles.css" />
     
     <style>
@@ -856,6 +859,7 @@ app.get('/', (req, res) => {
 </html>
     `);
 });
+
 
 if (require.main === module) {
   app.listen(PORT, () => {
