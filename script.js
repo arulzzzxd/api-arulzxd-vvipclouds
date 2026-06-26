@@ -493,7 +493,7 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
 
     const formData = new FormData(form);
     const queryParams = new URLSearchParams();
-    
+
     let hasFileInput = false;
     const fileElements = form.querySelectorAll('input[type="file"]');
     fileElements.forEach(el => { if (el.files.length > 0) hasFileInput = true; });
@@ -504,20 +504,16 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
 
     try {
         if (hasFileInput && (method === 'POST' || method === 'PUT')) {
-            // JIKA SUBMIT FILE UPLOAD: Menggunakan FormData murni (Multipart Form-Data)
             fetchOptions.body = formData;
         } else {
-            // JIKA TEXT BIASA / BUKAN MULTIPART FILE
             for (const [key, value] of formData.entries()) {
                 if (value && typeof value === 'string') {
                     queryParams.append(key, value);
                 }
             }
-
             if (method === 'GET' || method === 'DELETE') {
                 fullPath += '?' + queryParams.toString();
             } else {
-                // Method POST / PUT tanpa file: Dikirim via JSON Body
                 fetchOptions.headers = { 'Content-Type': 'application/json' };
                 const jsonBody = {};
                 for (const [key, value] of formData.entries()) {
@@ -527,7 +523,11 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
             }
         }
 
+        // 1. HITUNG WAKTU PROSES (SPEED)
+        const startTime = performance.now();
         const response = await fetch(fullPath, fetchOptions);
+        const endTime = performance.now();
+        const duration = Math.round(endTime - startTime); // Hasil dalam ms
 
         if (response.status === 403 || response.status === 503) {
             const data = await response.json();
@@ -538,40 +538,89 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
 
         if (!response.ok) throw new Error(`HTTP Error ${response.status}`);
 
-        const contentType = response.headers.get("content-type") || "";
+        // 2. AMBIL METADATA DARI HEADER RESPONS
+        const contentType = response.headers.get("content-type") || "unknown";
+        const contentEncoding = response.headers.get("content-encoding");
+        
+        // Deteksi size (Ukuran File)
+        let sizeText = "0 B";
+        let contentLength = response.headers.get("content-length");
+
+        if (contentLength) {
+            const bytes = parseInt(contentLength, 10);
+            if (bytes >= 1048576) sizeText = `${(bytes / 1048576).toFixed(1)} MB`;
+            else if (bytes >= 1024) sizeText = `${(bytes / 1024).toFixed(1)} KB`;
+            else sizeText = `${bytes} B`;
+        }
+
+        // 3. BUAT TEMPLATE BADGE METADATA (Sama seperti di gambar)
+        const metadataBadgeHtml = `
+            <div class="flex flex-wrap items-center gap-2 px-4 py-2 mb-4 text-xs font-mono font-bold rounded-lg bg-emerald-400 text-slate-900 border border-emerald-500/30 shadow-sm w-fit">
+                <span>HTTP ${response.status}</span>
+                <span class="opacity-40">•</span>
+                <span>${duration}ms</span>
+                <span class="opacity-40">•</span>
+                <span>${contentType.split(';')[0]}</span>
+                ${contentLength ? `
+                <span class="opacity-40">•</span>
+                <span>${sizeText}</span>` : ''}
+            </div>
+        `;
+
         let rawResponseText = "";
+        let finalInnerContent = "";
 
         if (contentType.includes("application/json")) {
             const data = await response.json();
             rawResponseText = JSON.stringify(data, null, 2);
-            
+
+            // Jika respons berupa json namun ukuran content-length kosong, kalkulasi manual dari string karakter
+            if (!contentLength) {
+                const bytes = new Bureau(rawResponseText).length || rawResponseText.length;
+                if (bytes >= 1024) sizeText = `${(bytes / 1024).toFixed(1)} KB`;
+                else sizeText = `${bytes} B`;
+            }
+
             let detectedMediaUrl = null;
             if (data.url && typeof data.url === 'string' && data.url.startsWith('http')) detectedMediaUrl = data.url;
             else if (data.result && data.result.url && typeof data.result.url === 'string') detectedMediaUrl = data.result.url;
-            
+
             if (detectedMediaUrl && (detectedMediaUrl.match(/\.(jpeg|jpg|gif|png|webp|mp4|mp3)/i))) {
-                 responseContent.innerHTML = createMediaPreview(detectedMediaUrl, null, detectedMediaUrl) + `<div class="mt-4 text-xs font-bold text-slate-500 uppercase">RAW JSON DATA</div><pre id="raw-text-${catIdx}-${epIdx}" class="code-font text-sm overflow-auto text-cyan-400 p-2 bg-black/50 rounded-lg mt-2">${rawResponseText}</pre>`;
+                 finalInnerContent = createMediaPreview(detectedMediaUrl, null, detectedMediaUrl) + `<div class="mt-4 text-xs font-bold text-slate-500 uppercase">RAW JSON DATA</div><pre id="raw-text-${catIdx}-${epIdx}" class="code-font text-sm overflow-auto text-cyan-400 p-2 bg-black/50 rounded-lg mt-2">${rawResponseText}</pre>`;
                  isMedia = true;
             } else {
-                 responseContent.innerHTML = `<pre id="raw-text-${catIdx}-${epIdx}" class="code-font text-sm overflow-auto text-cyan-400 p-2">${rawResponseText}</pre>`;
+                 finalInnerContent = `<pre id="raw-text-${catIdx}-${epIdx}" class="code-font text-sm overflow-auto text-cyan-400 p-2">${rawResponseText}</pre>`;
             }
-        } else if (contentType.startsWith("image/") || contentType.startsWith("video/") || contentType.startsWith("audio/")) {
+        } else if (contentType.startsWith("image/") || contentType.startsWith("video/") || contentType.startsWith("audio/") || contentType.includes("application/pdf")) {
             isMedia = true;
             const blob = await response.blob();
+            
+            // Jika size masih kosong dari header, hitung dari Blob size data murni
+            if (!contentLength) {
+                const bytes = blob.size;
+                if (bytes >= 1048576) sizeText = `${(bytes / 1048576).toFixed(1)} MB`;
+                else if (bytes >= 1024) sizeText = `${(bytes / 1024).toFixed(1)} KB`;
+                else sizeText = `${bytes} B`;
+            }
+
             const blobUrl = URL.createObjectURL(blob);
-            responseContent.innerHTML = createMediaPreview(blobUrl, contentType, fullPath);
+            finalInnerContent = createMediaPreview(blobUrl, contentType, fullPath);
         } else {
             rawResponseText = await response.text();
-            responseContent.innerHTML = `<pre id="raw-text-${catIdx}-${epIdx}" class="code-font text-sm overflow-auto p-2">${rawResponseText}</pre>`;
+            finalInnerContent = `<pre id="raw-text-${catIdx}-${epIdx}" class="code-font text-sm overflow-auto p-2">${rawResponseText}</pre>`;
         }
 
+        // Gabungkan Badge + Media Preview / Text Data ke Container Utama
+        responseContent.innerHTML = metadataBadgeHtml + finalInnerContent;
+
+        // Pembuatan Action Button Copy URL / JSON
         const isLightMode = body.classList.contains('light-mode');
         const btnStyle = isLightMode 
             ? 'px-2.5 py-1 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded text-[11px] font-semibold transition-colors code-font border border-black/5'
             : 'px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-white rounded text-[11px] font-semibold transition-colors code-font border border-white/5';
 
         const actionContainer = document.createElement('div');
-        actionContainer.className = "flex flex-wrap gap-2 mb-3 border-b border-white/10 light-mode:border-slate-200 pb-3";
+        actionContainer.className = "flex flex-wrap gap-2 mb-3 border-b border-white/10 light-mode:border-slate-200 pb-3 mt-3";
 
         const copyUrlBtn = document.createElement('button');
         copyUrlBtn.type = "button";
@@ -592,12 +641,19 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
             actionContainer.appendChild(copyResponseBtn);
         }
 
-        responseContent.insertBefore(actionContainer, responseContent.firstChild);
+        // Masukkan action button setelah komponen badge metadata
+        const badgeElement = responseContent.querySelector('.bg-emerald-400');
+        if (badgeElement) {
+            badgeElement.insertAdjacentElement('afterend', actionContainer);
+        } else {
+            responseContent.insertBefore(actionContainer, responseContent.firstChild);
+        }
+
         showToast(i18n[currentLang].toastRequestSuccess);
     } catch (error) {
         responseContent.innerHTML = `<pre class="text-red-400 code-font text-sm p-2 bg-red-500/10 rounded-lg">Error: ${error.message}</pre>`;
         showToast(i18n[currentLang].toastRequestFailed, true);
-    } finally {
+    } final {
         isRequestInProgress = false;
         executeBtn.disabled = false;
         executeBtn.classList.remove('btn-loading');
