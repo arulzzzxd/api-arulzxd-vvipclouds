@@ -48,8 +48,8 @@ const i18n = {
         batteryDischarging: "Menguras Daya",
         batteryLeft: "tersisa",
         endpointsCount: "endpoints",
-        btnExecute: "Eksekusi",
-        btnClear: "Bersihkan",
+        btnExecute: "EKSEKUSI",
+        btnClear: "BERSIHKAN",
         toastMediaCopy: "Media URL disalin ke papan klip!",
         toastMediaFail: "Gagal menyalin URL",
         endpointNotAvailable: "⚠️ Endpoint ini tidak tersedia untuk pengujian",
@@ -71,8 +71,8 @@ const i18n = {
         batteryDischarging: "Discharging",
         batteryLeft: "left",
         endpointsCount: "endpoints",
-        btnExecute: "Execute",
-        btnClear: "Clear",
+        btnExecute: "EXECUTE",
+        btnClear: "CLEAR",
         toastMediaCopy: "Media URL copied to clipboard!",
         toastMediaFail: "Failed to copy URL",
         endpointNotAvailable: "⚠️ This endpoint is not available for testing",
@@ -571,7 +571,7 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
         } else if (cleanContentType.startsWith("image/") || cleanContentType.startsWith("video/") || cleanContentType.startsWith("audio/") || cleanContentType.includes("application/pdf")) {
             isMedia = true;
             const blob = await response.blob();
-            
+
             if (!bytes) {
                 bytes = blob.size;
             }
@@ -883,8 +883,8 @@ function loadApis() {
                 html += `
                             </div>
                             <div class="flex gap-3">
-                                <button type="submit" class="px-5 py-2 bg-cyan-500 light-mode:bg-cyan-600 hover:bg-cyan-400 light-mode:hover:bg-cyan-500 text-slate-950 light-mode:text-white rounded-md font-bold text-xs tracking-wider transition-all flex items-center justify-center">EKSEKUSI</button>
-                                <button type="button" onclick="clearResponse(${catIdx}, ${epIdx}, '${epType}')" class="px-5 py-2 bg-transparent border border-white/20 light-mode:border-slate-300 hover:border-white/40 light-mode:hover:bg-slate-100 text-slate-300 light-mode:text-slate-700 rounded-md font-bold text-xs transition-colors">BERSIHKAN</button>
+                                <button type="submit" class="px-5 py-2 bg-cyan-500 light-mode:bg-cyan-600 hover:bg-cyan-400 light-mode:hover:bg-cyan-500 text-slate-950 light-mode:text-white rounded-md font-bold text-xs tracking-wider transition-all flex items-center justify-center">${i18n[currentLang].btnExecute}</button>
+                                <button type="button" onclick="clearResponse(${catIdx}, ${epIdx}, '${epType}')" class="px-5 py-2 bg-transparent border border-white/20 light-mode:border-slate-300 hover:border-white/40 light-mode:hover:bg-slate-100 text-slate-300 light-mode:text-slate-700 rounded-md font-bold text-xs transition-colors">${i18n[currentLang].btnClear}</button>
                             </div>
                         </form>
 
