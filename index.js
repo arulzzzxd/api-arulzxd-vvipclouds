@@ -181,30 +181,94 @@ app.post('/uploadfile', async (req, res) => {
     const baseWebUrl = process.env.BASE_URL || `${protocol}://${req.get('host')}`;
     const rawUrl = `${baseWebUrl}/files/${fileName}`;
 
-    // Response halaman sukses upload (Tetap mempertahankan struktur HTML asli Anda)
+    // === GANTI DARI SINI UNTUK MEMPERBAIKI TAMPILAN SEPERTI GAMBAR 2 ===
     res.send(`
       <!DOCTYPE html>
       <html lang="id" class="dark">
       <head>
           <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
           <title>Unggahan Berhasil</title>
           <script src="https://cdn.tailwindcss.com"></script>
+          <link rel="icon" type="image/x-icon" href="https://files.catbox.moe/4j9u3m.png">
+          <script>
+              tailwind.config = {
+                  darkMode: 'class',
+                  theme: { extend: {} }
+              }
+          </script>
           <style>
-              body { background-color: #000000; color: #ffffff; }
-              .dark-card { background-color: #111111; border: 1px solid #333333; }
+              body { 
+                  background-color: #0b0f19; 
+                  color: #f3f4f6;
+                  font-family: 'Inter', sans-serif;
+              }
+              .glass-card {
+                  background: rgba(17, 24, 39, 0.7);
+                  backdrop-filter: blur(12px);
+                  border: 1px solid rgba(255, 255, 255, 0.08);
+              }
+              .url-box {
+                  background: rgba(0, 0, 0, 0.4);
+                  border: 1px solid rgba(255, 255, 255, 0.05);
+              }
+              .checkmark-circle {
+                  background: rgba(16, 185, 129, 0.1);
+                  border: 2px solid rgba(16, 185, 129, 0.4);
+              }
           </style>
       </head>
       <body class="flex flex-col items-center justify-center min-h-screen p-4">
-          <div class="dark-card p-8 rounded-xl shadow-2xl w-full max-w-md text-center">
-              <h1 class="text-3xl font-extrabold mb-4 text-green-400">Unggahan Berhasil!</h1>
-              <div class="p-4 bg-zinc-900 border border-zinc-800 rounded-lg break-all mb-6">
-                  <a href="${rawUrl}" target="_blank" class="text-cyan-400 underline font-mono text-lg">${rawUrl}</a>
+          <div class="glass-card p-8 rounded-2xl shadow-2xl w-full max-w-md text-center transition-all duration-300">
+              
+              <div class="mb-5 flex justify-center">
+                  <div class="checkmark-circle w-16 h-16 rounded-full flex items-center justify-center text-emerald-400">
+                      <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path>
+                      </svg>
+                  </div>
               </div>
-              <a href="/uploader" class="inline-block bg-gradient-to-r from-gray-800 to-gray-900 text-white font-bold py-3 px-6 rounded-full transition">Unggah File Lain</a>
+              
+              <h1 class="text-2xl font-black mb-2 tracking-wide text-white">Unggahan Berhasil!</h1>
+              <p class="mb-5 text-sm text-gray-400">Berkas Anda telah aktif di cloud server:</p>
+              
+              <div class="url-box p-3.5 rounded-xl break-all mb-6 transition-all duration-200">
+                  <a id="rawUrl" href="${rawUrl}" target="_blank" class="text-cyan-400 hover:text-cyan-300 font-mono text-sm font-medium transition-colors">${rawUrl}</a>
+              </div>
+              
+              <div class="flex space-x-3">
+                  <button onclick="copyToClipboard()" class="flex-1 bg-zinc-800 hover:bg-zinc-700 text-white text-sm font-semibold py-2.5 px-4 rounded-xl transition duration-200">
+                      Salin URL
+                  </button>
+                  <a href="/" class="flex-1 bg-cyan-600 hover:bg-cyan-500 text-white text-sm font-semibold py-2.5 px-4 rounded-xl transition duration-200 block text-center">
+                      Kembali
+                  </a>
+              </div>
           </div>
+
+          <div id="toast" class="fixed bottom-5 bg-emerald-600 text-white text-xs font-semibold px-4 py-2.5 rounded-lg shadow-lg opacity-0 invisible transition-all duration-300">
+              URL Berhasil disalin ke papan klip!
+          </div>
+
+          <script>
+              function copyToClipboard() {
+                  const urlText = document.getElementById('rawUrl').href;
+                  navigator.clipboard.writeText(urlText).then(() => {
+                      const toast = document.getElementById('toast');
+                      toast.classList.remove('opacity-0', 'invisible');
+                      toast.classList.add('opacity-100', 'visible');
+                      setTimeout(() => {
+                          toast.classList.remove('opacity-100', 'visible');
+                          toast.classList.add('opacity-0', 'invisible');
+                      }, 2500);
+                  });
+              }
+          </script>
       </body>
       </html>
     `);
+    // === SELESAI ===
+
   } catch (error) {
     console.error(error);
     res.status(500).send('Error uploading file.');
