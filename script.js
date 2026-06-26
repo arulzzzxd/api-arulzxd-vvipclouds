@@ -1074,7 +1074,7 @@ document.addEventListener('DOMContentLoaded', () => {
         .then(res => res.json())
         .then(data => {
             apiData = data;
-            // loadApis(); // Jalankan fungsi render bawaan Anda
+            loadApis(); // Jalankan fungsi render bawaan Anda
         })
         .catch(err => {
             const apiListEl = document.getElementById('apiList');
