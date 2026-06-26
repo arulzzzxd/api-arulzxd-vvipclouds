@@ -8,7 +8,6 @@ const fs = require('fs');
 const fileUpload = require('express-fileupload');
 const axios = require('axios');
 const mime = require('mime-types');
-const multer = require('multer');
 const https = require('https');
 const http = require('http');
 const crypto = require('crypto');
@@ -148,133 +147,71 @@ app.get('/files/*', async (req, res) => {
   }
 });
 
-/**
- * Proses Handler Upload File ke GitHub
- */
-app.post('/uploadfile', multer().array('file[]', 5), (req, res) => {
-if (!req.files || Object.keys(req.files).length === 0) {
-    return res.status(400).send('Tidak ada file yang diunggah.');
-  }
+app.post('/uploadfile', async (req, res) => {
+    try {
+        if (!req.files || Object.keys(req.files).length === 0) {
+            return res.status(400).json({ error: 'Tidak ada file yang dipilih.' });
+        }
 
-  let uploadedFile = req.files.file;
-  const originalName = uploadedFile.name || 'file';
-  const origExt = path.extname(originalName);
+        // Ambil data file dari input name="file[]"
+        let fileInput = req.files['file[]'];
+        if (!fileInput) {
+            return res.status(400).json({ error: 'Format input file tidak valid.' });
+        }
 
-  let extension = origExt ? origExt.replace(/^\./, '') : (mime.extension(uploadedFile.mimetype) || 'bin');
-  let id = generateId(6);
-  let fileName = origExt ? `${id}${origExt}` : `${id}.${extension}`;
-  let gitPath = `uploads/${fileName}`;
-  let base64Content = Buffer.from(uploadedFile.data).toString('base64');
+        // Jika hanya 1 file yang diunggah, express-fileupload menjadikannya Object.
+        // Kita ubah menjadi Array agar logic loopnya seragam.
+        if (!Array.isArray(fileInput)) {
+            fileInput = [fileInput];
+        }
 
-  try {
-    await axios.put(`https://api.github.com/repos/${owner}/${repo}/contents/${gitPath}`, {
-      message: `Upload file ${fileName}`,
-      content: base64Content,
-      branch: branch,
-    }, {
-      headers: {
-        Authorization: `Bearer ${githubToken}`,
-        'Content-Type': 'application/json',
-      },
-    });
+        // Validasi batas maksimal 5 file
+        if (fileInput.length > 5) {
+            return res.status(400).json({ error: 'Maksimal file yang boleh diupload sekaligus adalah 5 file!' });
+        }
 
-    const protocol = getRequestProtocol(req);
-    const baseWebUrl = process.env.BASE_URL || `${protocol}://${req.get('host')}`;
-    const rawUrl = `${baseWebUrl}/files/${fileName}`;
+        const uploadedFilesLog = [];
 
-    // === GANTI DARI SINI UNTUK MEMPERBAIKI TAMPILAN SEPERTI GAMBAR 2 ===
-    res.send(`
-      <!DOCTYPE html>
-      <html lang="id" class="dark">
-      <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>Unggahan Berhasil</title>
-          <script src="https://cdn.tailwindcss.com"></script>
-          <link rel="icon" type="image/x-icon" href="https://files.catbox.moe/4j9u3m.png">
-          <script>
-              tailwind.config = {
-                  darkMode: 'class',
-                  theme: { extend: {} }
-              }
-          </script>
-          <style>
-              body { 
-                  background-color: #0b0f19; 
-                  color: #f3f4f6;
-                  font-family: 'Inter', sans-serif;
-              }
-              .glass-card {
-                  background: rgba(17, 24, 39, 0.7);
-                  backdrop-filter: blur(12px);
-                  border: 1px solid rgba(255, 255, 255, 0.08);
-              }
-              .url-box {
-                  background: rgba(0, 0, 0, 0.4);
-                  border: 1px solid rgba(255, 255, 255, 0.05);
-              }
-              .checkmark-circle {
-                  background: rgba(16, 185, 129, 0.1);
-                  border: 2px solid rgba(16, 185, 129, 0.4);
-              }
-          </style>
-      </head>
-      <body class="flex flex-col items-center justify-center min-h-screen p-4">
-          <div class="glass-card p-8 rounded-2xl shadow-2xl w-full max-w-md text-center transition-all duration-300">
-              
-              <div class="mb-5 flex justify-center">
-                  <div class="checkmark-circle w-16 h-16 rounded-full flex items-center justify-center text-emerald-400">
-                      <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path>
-                      </svg>
-                  </div>
-              </div>
-              
-              <h1 class="text-2xl font-black mb-2 tracking-wide text-white">Unggahan Berhasil!</h1>
-              <p class="mb-5 text-sm text-gray-400">Berkas Anda telah aktif di cloud server:</p>
-              
-              <div class="url-box p-3.5 rounded-xl break-all mb-6 transition-all duration-200">
-                  <a id="rawUrl" href="${rawUrl}" target="_blank" class="text-cyan-400 hover:text-cyan-300 font-mono text-sm font-medium transition-colors">${rawUrl}</a>
-              </div>
-              
-              <div class="flex space-x-3">
-                  <button onclick="copyToClipboard()" class="flex-1 bg-zinc-800 hover:bg-zinc-700 text-white text-sm font-semibold py-2.5 px-4 rounded-xl transition duration-200">
-                      Salin URL
-                  </button>
-                  <a href="/" class="flex-1 bg-cyan-600 hover:bg-cyan-500 text-white text-sm font-semibold py-2.5 px-4 rounded-xl transition duration-200 block text-center">
-                      Kembali
-                  </a>
-              </div>
-          </div>
+        // Loop untuk memproses setiap file yang diunggah
+        for (const file of fileInput) {
+            // Validasi ukuran file per berkas (Maks 100MB)
+            const maxSize = 100 * 1024 * 1024;
+            if (file.size > maxSize) {
+                return res.status(400).json({ error: `File ${file.name} melebihi batas ukuran maksimal 100MB!` });
+            }
 
-          <div id="toast" class="fixed bottom-5 bg-emerald-600 text-white text-xs font-semibold px-4 py-2.5 rounded-lg shadow-lg opacity-0 invisible transition-all duration-300">
-              URL Berhasil disalin ke papan klip!
-          </div>
+            // Generate nama file unik agar tidak saling menimpa
+            const fileExtension = path.extname(file.name);
+            const uniqueFileName = `${Date.now()}-${crypto.randomBytes(4).toString('hex')}${fileExtension}`;
+            
+            // Tentukan lokasi folder penyimpanan (sesuaikan dengan folder tujuan Anda, misal 'files')
+            const uploadPath = path.join(__dirname, 'files', uniqueFileName);
 
-          <script>
-              function copyToClipboard() {
-                  const urlText = document.getElementById('rawUrl').href;
-                  navigator.clipboard.writeText(urlText).then(() => {
-                      const toast = document.getElementById('toast');
-                      toast.classList.remove('opacity-0', 'invisible');
-                      toast.classList.add('opacity-100', 'visible');
-                      setTimeout(() => {
-                          toast.classList.remove('opacity-100', 'visible');
-                          toast.classList.add('opacity-0', 'invisible');
-                      }, 2500);
-                  });
-              }
-          </script>
-      </body>
-      </html>
-    `);
-    // === SELESAI ===
+            // Pindahkan file dari temporary cache ke folder tujuan
+            await file.mv(uploadPath);
 
-  } catch (error) {
-    console.error(error);
-    res.status(500).send('Error uploading file.');
-  }
+            // Simpan data URL respon
+            uploadedFilesLog.push({
+                originalname: file.name,
+                filename: uniqueFileName,
+                url: `https://api-arulzxd-vvipclouds.vercel.app/files/${uniqueFileName}`,
+                size: (file.size / (1024 * 1024)).toFixed(2) + ' MB'
+            });
+        }
+
+        // Kirim response sukses berupa array objek file
+        return res.json({
+            success: true,
+            message: `${uploadedFilesLog.length} file berhasil diunggah!`,
+            results: uploadedFilesLog
+        });
+
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ error: 'Terjadi kesalahan pada server saat mengunggah file.' });
+    }
 });
+
 
 const router = express.Router();
 const apiPath = path.join(__dirname, 'api');
