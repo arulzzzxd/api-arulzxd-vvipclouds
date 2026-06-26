@@ -26,7 +26,6 @@
     "jsdom": "^20.0.0",
     "jimp": "^1.6.1",
     "mime-types": "^2.1.35",
-    "multer": "^2.2.0",
     "moment-timezone": "^0.5.46",
     "music-metadata": "^11.12.3",
     "node-fetch": "^2.6.9",
