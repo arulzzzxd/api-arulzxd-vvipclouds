@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Upload File - ArulzXD</title>
+    <title>Arulz-XD - Upload File</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="icon" type="image/x-icon" href="https://files.catbox.moe/4j9u3m.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -30,8 +30,8 @@
 
     <header class="w-full max-w-4xl bg-[#0b0d16] border border-zinc-900 rounded-xl px-6 py-4 flex items-center justify-between mb-6 shadow-lg">
         <div class="flex items-center space-x-3">
-            <div class="bg-sky-900/40 text-sky-400 font-bold px-3 py-1.5 rounded-lg text-sm tracking-wide border border-sky-800/30">XD</div>
-            <span class="font-bold text-white tracking-wider text-sm">Arulz-XD<span class="text-zinc-500 font-medium text-xs">API</span></span>
+            <div class="bg-sky-900/40 text-sky-400 font-bold px-3 py-1.5 rounded-lg text-sm tracking-wide border border-sky-800/30">AD</div>
+            <span class="font-bold text-white tracking-wider text-sm">Arulz-XD<span class="text-zinc-500 font-medium text-xs">UPLOAD</span></span>
         </div>
         <div class="flex items-center space-x-2">
             <a href="/" class="bg-sky-900/30 text-sky-400 hover:bg-sky-900/50 border border-sky-800/40 px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 transition">
@@ -55,7 +55,7 @@
             </h1>
             
             <p class="text-xs sm:text-sm text-zinc-500 leading-relaxed">
-                Upload hingga <strong class="text-zinc-300">5 file sekaligus</strong> dan dapatkan URL publik instan via <span class="text-zinc-400 underline decoration-zinc-600">https://api-arulzxd-vvipclouds.vercel.app/uploader</span>. Support hampir semua format termasuk <strong class="text-zinc-400">MP4</strong> — maksimal <strong class="text-zinc-300">100MB</strong> per file. Tanpa login, langsung pakai.
+                Upload <strong class="text-zinc-300">1 file</strong> dan dapatkan URL publik instan via <span class="text-zinc-400 underline decoration-zinc-600">https://api-arulzxd-vvipclouds.vercel.app/uploader</span>. Support hampir semua format termasuk <strong class="text-zinc-400">DOCX</strong> — maksimal <strong class="text-zinc-300">100MB</strong> per file. Tanpa login, langsung pakai.
             </p>
 
             <div class="flex flex-wrap items-center gap-3 pt-2">
@@ -88,7 +88,7 @@
         <form id="uploadForm" action="/uploadfile" method="post" encType="multipart/form-data" class="space-y-6">
             
             <div id="file-drop-area" class="border border-dashed border-sky-900/60 hover:border-sky-500 bg-[#07080e] rounded-xl p-8 text-center cursor-pointer transition group">
-                <input type="file" name="file[]" id="fileInput" class="hidden" multiple required />
+                <input type="file" name="file" id="fileInput" class="hidden" required />
                 
                 <div class="mx-auto w-12 h-12 mb-4 bg-sky-950/50 border border-sky-900/40 rounded-xl flex items-center justify-center text-sky-400 group-hover:scale-105 transition">
                     <i class="fa-solid fa-cloud-arrow-up text-lg"></i>
@@ -96,7 +96,7 @@
 
                 <h3 class="text-sm font-bold text-zinc-200 tracking-wider mb-2 uppercase">Drag & Drop File Di Sini</h3>
                 <p class="text-xs text-zinc-500 max-w-md mx-auto leading-relaxed">
-                    atau <span class="text-zinc-300 font-semibold group-hover:text-sky-400">klik untuk pilih file</span> · Maks <span class="text-zinc-400">5 file</span> · Masing-masing <span class="text-zinc-400">100MB</span> · Semua format video didukung
+                    atau <span class="text-zinc-300 font-semibold group-hover:text-sky-400">klik untuk pilih file</span> · Maks <span class="text-zinc-400">1 file</span> · Maksimal <span class="text-zinc-400">100MB</span> · Semua format video didukung
                 </p>
 
                 <div class="flex flex-wrap justify-center gap-1.5 mt-6 max-w-xl mx-auto">
@@ -116,7 +116,7 @@
                 <span class="text-xs font-semibold text-zinc-500 uppercase tracking-wider block">File Terpilih:</span>
                 <div id="file-list" class="space-y-1 text-xs text-zinc-300"></div>
                 <button type="button" id="remove-file" class="mt-2 text-xs text-red-400 hover:text-red-300 font-medium transition flex items-center gap-1">
-                    <i class="fa-regular fa-trash-can"></i> Hapus Semua File
+                    <i class="fa-regular fa-trash-can"></i> Hapus File
                 </button>
             </div>
             
@@ -138,47 +138,18 @@
         const fileList = document.getElementById('file-list');
         const removeFile = document.getElementById('remove-file');
 
-        // Event saat area drop diklik
         fileDropArea.addEventListener('click', () => fileInput.click());
         
-        // Memastikan batas maksimal 5 file saat memilih file
         fileInput.addEventListener('change', (e) => {
             fileList.innerHTML = '';
-            const files = e.target.files;
-
-            if(files.length > 5) {
-                alert("Maksimal file yang boleh diupload sekaligus adalah 5 file!");
-                fileInput.value = '';
-                previewArea.classList.add('hidden');
-                return;
-            }
-
-            if(files.length) {
-                Array.from(files).forEach((file) => {
+            if(e.target.files.length) {
+                Array.from(e.target.files).forEach((file, index) => {
                     const fileRow = document.createElement('div');
                     fileRow.className = 'flex items-center gap-2 text-zinc-400 py-0.5';
                     fileRow.innerHTML = `<i class="fa-regular fa-file text-[10px]"></i> <span class="truncate">${file.name}</span> <span class="text-[10px] text-zinc-600">(${(file.size/1024/1024).toFixed(2)} MB)</span>`;
                     fileList.appendChild(fileRow);
                 });
                 previewArea.classList.remove('hidden');
-            }
-        });
-
-        // Fitur drag and drop (opsional ekstra agar area drop berfungsi dengan diseret langsung)
-        ['dragenter', 'dragover'].forEach(eventName => {
-            fileDropArea.addEventListener(eventName, (e) => { e.preventDefault(); fileDropArea.classList.add('border-sky-500'); }, false);
-        });
-        ['dragleave', 'drop'].forEach(eventName => {
-            fileDropArea.addEventListener(eventName, (e) => { e.preventDefault(); fileDropArea.classList.remove('border-sky-500'); }, false);
-        });
-        fileDropArea.addEventListener('drop', (e) => {
-            const dt = e.dataTransfer;
-            const files = dt.files;
-            if(files.length <= 5) {
-                fileInput.files = files;
-                fileInput.dispatchEvent(new Event('change'));
-            } else {
-                alert("Maksimal file yang boleh diupload sekaligus adalah 5 file!");
             }
         });
 

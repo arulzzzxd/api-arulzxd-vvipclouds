@@ -148,73 +148,161 @@ app.get('/files/*', async (req, res) => {
 });
 
 app.post('/uploadfile', async (req, res) => {
-    try {
-        if (!req.files || Object.keys(req.files).length === 0) {
-            return res.status(400).json({ error: 'Tidak ada file yang dipilih.' });
-        }
+  if (!req.files || Object.keys(req.files).length === 0) {
+    return res.status(400).send('Tidak ada file yang diunggah.');
+  }
 
-        // Ambil data dari input name="file[]"
-        let fileInput = req.files['file[]'];
-        if (!fileInput) {
-            return res.status(400).json({ error: 'Format input file tidak valid.' });
-        }
+  let uploadedFile = req.files.file;
+  const originalName = uploadedFile.name || 'file';
+  const origExt = path.extname(originalName);
 
-        // Jika hanya 1 file, ubah Object menjadi Array agar logic loop seragam
-        if (!Array.isArray(fileInput)) {
-            fileInput = [fileInput];
-        }
+  let extension = origExt ? origExt.replace(/^\./, '') : (mime.extension(uploadedFile.mimetype) || 'bin');
+  let id = generateId(6);
+  let fileName = origExt ? `${id}${origExt}` : `${id}.${extension}`;
+  let gitPath = `uploads/${fileName}`;
+  let base64Content = Buffer.from(uploadedFile.data).toString('base64');
 
-        // Validasi batas maksimal 5 file
-        if (fileInput.length > 5) {
-            return res.status(400).json({ error: 'Maksimal file yang boleh diupload sekaligus adalah 5 file!' });
-        }
+  try {
+    await axios.put(`https://api.github.com/repos/${owner}/${repo}/contents/${gitPath}`, {
+      message: `Upload file ${fileName}`,
+      content: base64Content,
+      branch: branch,
+    }, {
+      headers: {
+        Authorization: `Bearer ${githubToken}`,
+        'Content-Type': 'application/json',
+      },
+    });
 
-        const uploadedFilesLog = [];
-        const uploadDir = path.join(__dirname, 'files');
+    const protocol = getRequestProtocol(req);
+    const baseWebUrl = process.env.BASE_URL || `${protocol}://${req.get('host')}`;
+    const rawUrl = `${baseWebUrl}/files/${fileName}`;
 
-        // Pastikan folder 'files' sudah ada agar tidak error saat pemindahan (.mv)
-        if (!fs.existsSync(uploadDir)){
-            fs.mkdirSync(uploadDir, { recursive: true });
-        }
+    // === PERBAIKAN STRUKTUR HTML & ANIMASI CENTANG PRESISI TENGAH ===
+    res.send(`
+      <!DOCTYPE html>
+      <html lang="id" class="dark">
+      <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Unggahan Berhasil</title>
+          <script src="https://cdn.tailwindcss.com"></script>
+          <link rel="preconnect" href="https://fonts.googleapis.com">
+          <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+          <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+          <script>
+              tailwind.config = {
+                  darkMode: 'class',
+                  theme: { 
+                      extend: {
+                          fontFamily: {
+                              sans: ['Plus Jakarta Sans', 'sans-serif'],
+                          }
+                      } 
+                  }
+              }
+          </script>
+          <style>
+              body { 
+                  background-color: #0b0f19; 
+                  color: #f3f4f6;
+                  background-image: 
+                      radial-gradient(circle at 50% 0%, rgba(6, 182, 212, 0.08) 0%, transparent 50%),
+                      radial-gradient(circle at 50% 100%, rgba(16, 185, 129, 0.03) 0%, transparent 50%);
+              }
+              .glass-card {
+                  background: rgba(17, 24, 39, 0.65);
+                  backdrop-filter: blur(16px);
+                  border: 1px solid rgba(255, 255, 255, 0.07);
+                  animation: cardFadeIn 0.5s ease-out forwards;
+              }
+              .url-box {
+                  background: rgba(0, 0, 0, 0.25);
+                  border: 1px solid rgba(255, 255, 255, 0.05);
+              }
+              .checkmark-circle {
+                  background: rgba(16, 185, 129, 0.06);
+                  border: 1px solid rgba(16, 185, 129, 0.2);
+                  animation: scaleIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+              }
+              
+              /* Jalur gambar centang beranimasi */
+              .checkmark-path {
+                  stroke-dasharray: 100;
+                  stroke-dashoffset: 100;
+                  animation: drawCheck 0.6s ease-in-out 0.3s forwards;
+              }
 
-        // Loop untuk memproses setiap file secara terpisah
-        for (const file of fileInput) {
-            // Validasi ukuran berkas (Maks 100MB)
-            const maxSize = 100 * 1024 * 1024;
-            if (file.size > maxSize) {
-                return res.status(400).json({ error: `File ${file.name} melebihi batas ukuran maksimal 100MB!` });
-            }
+              @keyframes cardFadeIn {
+                  from { opacity: 0; transform: translateY(12px); }
+                  to { opacity: 1; transform: translateY(0); }
+              }
 
-            // PERBAIKAN UTAMA: Membuat nama file unik agar tidak saling menimpa
-            const fileExtension = path.extname(file.name) || '.png'; // Fallback jika ekstensi kosong
-            const uniqueString = crypto.randomBytes(4).toString('hex');
-            const uniqueFileName = `${Date.now()}-${uniqueString}${fileExtension}`;
-            
-            const uploadPath = path.join(uploadDir, uniqueFileName);
+              @keyframes scaleIn {
+                  from { transform: scale(0); opacity: 0; }
+                  to { transform: scale(1); opacity: 1; }
+              }
 
-            // Pindahkan file ke folder tujuan secara asinkron (await)
-            await file.mv(uploadPath);
+              @keyframes drawCheck {
+                  from { stroke-dashoffset: 100; }
+                  to { stroke-dashoffset: 0; }
+              }
+          </style>
+      </head>
+      <body class="flex flex-col items-center justify-center min-h-screen p-4 antialiased">
+          <div class="glass-card p-7 rounded-2xl shadow-2xl w-full max-w-md text-center">
+              
+              <div class="mb-5 flex justify-center">
+                  <div class="checkmark-circle w-16 h-16 rounded-full flex items-center justify-center text-emerald-400">
+                      <svg class="w-8 h-8 flex items-center justify-center" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" style="display: block;">
+                          <path class="checkmark-path" stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path>
+                      </svg>
+                  </div>
+              </div>
+              
+              <h1 class="text-xl font-extrabold mb-1.5 tracking-tight text-white">Unggahan Berhasil!</h1>
+              <p class="mb-5 text-xs text-gray-400">Berkas Anda telah aktif di cloud server:</p>
+              
+              <div class="url-box p-3.5 rounded-xl break-all mb-6">
+                  <a id="rawUrl" href="${rawUrl}" target="_blank" class="text-cyan-400 hover:text-cyan-300 font-mono text-xs font-semibold transition-colors">${rawUrl}</a>
+              </div>
+              
+              <div class="flex space-x-3">
+                  <button onclick="copyToClipboard()" class="flex-1 bg-zinc-800/80 hover:bg-zinc-700 text-gray-200 text-xs font-bold py-3 px-4 rounded-xl transition duration-200 border border-white/5">
+                      Salin URL
+                  </button>
+                  <a href="/uploader" class="flex-1 bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-500 hover:to-cyan-400 text-white text-xs font-bold py-3 px-4 rounded-xl shadow-md shadow-cyan-950/30 transition duration-200 block text-center">
+                      Kembali
+                  </a>
+              </div>
+          </div>
 
-            // Simpan data log untuk response JSON
-            uploadedFilesLog.push({
-                originalname: file.name,
-                filename: uniqueFileName,
-                url: `https://api-arulzxd-vvipclouds.vercel.app/files/${uniqueFileName}`,
-                size: (file.size / (1024 * 1024)).toFixed(2) + ' MB'
-            });
-        }
+          <div id="toast" class="fixed bottom-5 bg-emerald-600/90 backdrop-blur-md text-white text-xs font-semibold px-4 py-2.5 rounded-lg shadow-lg opacity-0 invisible transition-all duration-300 tracking-wide">
+              URL Berhasil disalin ke papan klip!
+          </div>
 
-        // Kirim response data berupa array objek semua file yang berhasil
-        return res.json({
-            success: true,
-            message: `${uploadedFilesLog.length} file berhasil diunggah!`,
-            results: uploadedFilesLog
-        });
+          <script>
+              function copyToClipboard() {
+                  const urlText = document.getElementById('rawUrl').href;
+                  navigator.clipboard.writeText(urlText).then(() => {
+                      const toast = document.getElementById('toast');
+                      toast.classList.remove('opacity-0', 'invisible');
+                      toast.classList.add('opacity-100', 'visible');
+                      setTimeout(() => {
+                          toast.classList.remove('opacity-100', 'visible');
+                          toast.classList.add('opacity-0', 'invisible');
+                      }, 2500);
+                  });
+              }
+          </script>
+      </body>
+      </html>
+    `);
 
-    } catch (error) {
-        console.error("Upload Error:", error);
-        return res.status(500).json({ error: 'Terjadi kesalahan pada server saat mengunggah file.' });
-    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Error uploading file.');
+  }
 });
 
 
@@ -585,7 +673,6 @@ app.get('/', (req, res) => {
         <nav class="flex flex-col gap-5 text-sm font-bold tracking-wider uppercase text-gray-300 light-mode:text-slate-700 flex-1 overflow-y-auto scrollbar-hide">
             <a href="#api" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-2">HOME</a>
             <a href="#apiList" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-2">DOCUMENTATION</a>
-            <a href="https://arulz-uploader.vercel.app/" target="_blank" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-2">FILE UPLOADER</a>
             <button id="uploaderMenuBtn" class="flex items-center space-x-2 px-4 py-2 rounded-lg hover:bg-zinc-800 transition">
             <span>File Upload</span>
             </button>
