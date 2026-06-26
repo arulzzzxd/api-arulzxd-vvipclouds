@@ -88,7 +88,7 @@
         <form id="uploadForm" action="/uploadfile" method="post" encType="multipart/form-data" class="space-y-6">
             
             <div id="file-drop-area" class="border border-dashed border-sky-900/60 hover:border-sky-500 bg-[#07080e] rounded-xl p-8 text-center cursor-pointer transition group">
-                <input type="file" name="file" id="fileInput" class="hidden" multiple required />
+                <input type="file" name="file[]" id="fileInput" class="hidden" multiple required />
                 
                 <div class="mx-auto w-12 h-12 mb-4 bg-sky-950/50 border border-sky-900/40 rounded-xl flex items-center justify-center text-sky-400 group-hover:scale-105 transition">
                     <i class="fa-solid fa-cloud-arrow-up text-lg"></i>
@@ -138,18 +138,47 @@
         const fileList = document.getElementById('file-list');
         const removeFile = document.getElementById('remove-file');
 
+        // Event saat area drop diklik
         fileDropArea.addEventListener('click', () => fileInput.click());
         
+        // Memastikan batas maksimal 5 file saat memilih file
         fileInput.addEventListener('change', (e) => {
             fileList.innerHTML = '';
-            if(e.target.files.length) {
-                Array.from(e.target.files).forEach((file, index) => {
+            const files = e.target.files;
+
+            if(files.length > 5) {
+                alert("Maksimal file yang boleh diupload sekaligus adalah 5 file!");
+                fileInput.value = '';
+                previewArea.classList.add('hidden');
+                return;
+            }
+
+            if(files.length) {
+                Array.from(files).forEach((file) => {
                     const fileRow = document.createElement('div');
                     fileRow.className = 'flex items-center gap-2 text-zinc-400 py-0.5';
                     fileRow.innerHTML = `<i class="fa-regular fa-file text-[10px]"></i> <span class="truncate">${file.name}</span> <span class="text-[10px] text-zinc-600">(${(file.size/1024/1024).toFixed(2)} MB)</span>`;
                     fileList.appendChild(fileRow);
                 });
                 previewArea.classList.remove('hidden');
+            }
+        });
+
+        // Fitur drag and drop (opsional ekstra agar area drop berfungsi dengan diseret langsung)
+        ['dragenter', 'dragover'].forEach(eventName => {
+            fileDropArea.addEventListener(eventName, (e) => { e.preventDefault(); fileDropArea.classList.add('border-sky-500'); }, false);
+        });
+        ['dragleave', 'drop'].forEach(eventName => {
+            fileDropArea.addEventListener(eventName, (e) => { e.preventDefault(); fileDropArea.classList.remove('border-sky-500'); }, false);
+        });
+        fileDropArea.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            if(files.length <= 5) {
+                fileInput.files = files;
+                fileInput.dispatchEvent(new Event('change'));
+            } else {
+                alert("Maksimal file yang boleh diupload sekaligus adalah 5 file!");
             }
         });
 

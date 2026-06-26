@@ -8,6 +8,7 @@ const fs = require('fs');
 const fileUpload = require('express-fileupload');
 const axios = require('axios');
 const mime = require('mime-types');
+const multer = require('multer');
 const https = require('https');
 const http = require('http');
 const crypto = require('crypto');
@@ -150,8 +151,8 @@ app.get('/files/*', async (req, res) => {
 /**
  * Proses Handler Upload File ke GitHub
  */
-app.post('/uploadfile', async (req, res) => {
-  if (!req.files || Object.keys(req.files).length === 0) {
+app.post('/uploadfile', multer().array('file[]', 5), (req, res) => {
+if (!req.files || Object.keys(req.files).length === 0) {
     return res.status(400).send('Tidak ada file yang diunggah.');
   }
 
