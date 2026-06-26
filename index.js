@@ -35,18 +35,18 @@ const footer = "© Arulz-XD";
 const VALID_API_KEY = "arulzxd-keys"; 
 const PREMIUM_API_KEYS = ["arulz-premium", "key-vip-arulz", "owner-key-999"]; 
 
-// GitHub Uploader Token Configuration
+const repoList = ['uploadergh', 'uploaderghv2', 'uploaderghv3'];
+const randomRepo = repoList[Math.floor(Math.random() * repoList.length)];
 const a = 'g';
 const b = 'h';
 const c = 'p';
 const to = '_WaSUBUjo7g3YcCcyo'; 
 const ken = 'OgBEWRKS16qYr1C8Gyg'; 
 const githubToken = `${a}${b}${c}${to}${ken}`;
-const owner = process.env.GITHUB_OWNER || 'arulzzzxd'; 
-const repo = process.env.GITHUB_REPO || 'uploadergh'; 
-const branch = process.env.GITHUB_BRANCH || 'main';
+const owner = 'arulzzzxd'; 
+const repo = randomRepo;
+const branch = 'main';
 
-// Dummy Playlist Array (Tetap dipertahankan sesuai file asli Anda)
 const playlist = [
   {
     title: "PAMIT KERJO",
