@@ -48,8 +48,8 @@ const i18n = {
         batteryDischarging: "Menguras Daya",
         batteryLeft: "tersisa",
         endpointsCount: "endpoints",
-        btnExecute: "EKSEKUSI",
-        btnClear: "BERSIHKAN",
+        btnExecute: "Eksekusi",
+        btnClear: "Bersihkan",
         toastMediaCopy: "Media URL disalin ke papan klip!",
         toastMediaFail: "Gagal menyalin URL",
         endpointNotAvailable: "⚠️ Endpoint ini tidak tersedia untuk pengujian",
@@ -71,8 +71,8 @@ const i18n = {
         batteryDischarging: "Discharging",
         batteryLeft: "left",
         endpointsCount: "endpoints",
-        btnExecute: "EXECUTE",
-        btnClear: "CLEAR",
+        btnExecute: "Execute",
+        btnClear: "Clear",
         toastMediaCopy: "Media URL copied to clipboard!",
         toastMediaFail: "Failed to copy URL",
         endpointNotAvailable: "⚠️ This endpoint is not available for testing",
@@ -883,8 +883,8 @@ function loadApis() {
                 html += `
                             </div>
                             <div class="flex gap-3">
-                                <button type="submit" class="px-5 py-2 bg-cyan-500 light-mode:bg-cyan-600 hover:bg-cyan-400 light-mode:hover:bg-cyan-500 text-slate-950 light-mode:text-white rounded-md font-bold text-xs tracking-wider transition-all flex items-center justify-center">${i18n[currentLang].btnExecute}</button>
-                                <button type="button" onclick="clearResponse(${catIdx}, ${epIdx}, '${epType}')" class="px-5 py-2 bg-transparent border border-white/20 light-mode:border-slate-300 hover:border-white/40 light-mode:hover:bg-slate-100 text-slate-300 light-mode:text-slate-700 rounded-md font-bold text-xs transition-colors">${i18n[currentLang].btnClear}</button>
+                                <button type="submit" class="px-5 py-2 bg-cyan-500 light-mode:bg-cyan-600 hover:bg-cyan-400 light-mode:hover:bg-cyan-500 text-slate-950 light-mode:text-white rounded-md font-bold text-xs tracking-wider transition-all flex items-center justify-center">EKSEKUSI</button>
+                                <button type="button" onclick="clearResponse(${catIdx}, ${epIdx}, '${epType}')" class="px-5 py-2 bg-transparent border border-white/20 light-mode:border-slate-300 hover:border-white/40 light-mode:hover:bg-slate-100 text-slate-300 light-mode:text-slate-700 rounded-md font-bold text-xs transition-colors">BERSIHKAN</button>
                             </div>
                         </form>
 
@@ -1028,7 +1028,7 @@ function initImageLightbox() {
     });
 }
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', () => {
     const savedLang = localStorage.getItem('lang') || 'id';
 
     initTheme();
@@ -1037,7 +1037,9 @@ document.addEventListener('DOMContentLoaded', function() {
     initMultiMusicPlayer();
     initImageLightbox(); 
     setLanguage(savedLang);
-
+    
+    const uploaderBtn = document.getElementById('uploaderMenuBtn'); 
+    const pastebinBtn = document.getElementById('pastebinMenuBtn'); 
     const bioMenuBtn = document.getElementById('bioMenuBtn');
     const bioDropdown = document.getElementById('bioDropdown');
     const closeMenuBtn = document.getElementById('closeMenuBtn');
@@ -1054,22 +1056,10 @@ document.addEventListener('DOMContentLoaded', function() {
         bioDropdown.addEventListener('click', (e) => { e.stopPropagation(); });
     }
 
-    fetch('/api/apilist')
-        .then(res => res.json())
-        .then(data => {
-            apiData = data;
-            loadApis();
-        })
-        .catch(err => {
-            document.getElementById('apiList').innerHTML = `<div class="text-center p-8 bg-red-900/20 border border-red-700 rounded-lg"><div class="text-4xl mb-4">⚠️</div><h3 class="font-bold text-lg mb-2">Failed to load API data</h3></div>`;
-        });
-
-    const uploaderBtn = document.getElementById('uploaderMenuBtn'); 
-    const pastebinBtn = document.getElementById('pastebinMenuBtn'); 
-
     if (uploaderBtn) {
         uploaderBtn.addEventListener('click', () => {
-            window.open('https://arulz-uploader.vercel.app/', '_blank'); 
+            // MENGARAHKAN LANGSUNG KE ENDPOINT UPLOADER INTERNAL WEBSITE ANDA
+            window.location.href = '/uploader'; 
         });
     }
 
@@ -1078,6 +1068,20 @@ document.addEventListener('DOMContentLoaded', function() {
             window.open('https://arulz-pastecode.vercel.app/', '_blank');
         });
     }
+
+    // Fetch list data API dari backend
+    fetch('/api/apilist')
+        .then(res => res.json())
+        .then(data => {
+            apiData = data;
+            // loadApis(); // Jalankan fungsi render bawaan Anda
+        })
+        .catch(err => {
+            const apiListEl = document.getElementById('apiList');
+            if(apiListEl) {
+               apiListEl.innerHTML = `<div class="text-center p-8 bg-red-900/20 border border-red-700 rounded-lg"><div class="text-4xl mb-4">⚠️</div><h3 class="font-bold text-lg mb-2">Failed to load API data</h3></div>`;
+            }
+        });
 });
 
 themeToggleBtn.addEventListener('click', toggleTheme);

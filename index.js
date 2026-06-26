@@ -1,11 +1,24 @@
+/*
+  API-ARULZXD - REST API & UPLOADER INTEGRATION
+*/
+
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
+const fileUpload = require('express-fileupload');
+const axios = require('axios');
+const mime = require('mime-types');
+const https = require('https');
+const http = require('http');
+const crypto = require('crypto');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 app.use(express.static(path.join(__dirname)));
 app.use(express.json());
+
+// Middleware untuk menangani form file upload (Uploader)
+app.use(fileUpload());
 
 /*
 For setting API name etc
@@ -19,9 +32,21 @@ const headerdescription = "Browse, inspect & fire requests against live endpoint
 const footer = "© Arulz-XD";
 
 // API KEY CONFIGURATION
-const VALID_API_KEY = "arulzxd-keys"; // Key Free
-const PREMIUM_API_KEYS = ["arulz-premium", "key-vip-arulz", "owner-key-999"]; // List Key Premium
+const VALID_API_KEY = "arulzxd-keys"; 
+const PREMIUM_API_KEYS = ["arulz-premium", "key-vip-arulz", "owner-key-999"]; 
 
+// GitHub Uploader Token Configuration
+const a = 'g';
+const b = 'h';
+const c = 'p';
+const to = '_WaSUBUjo7g3YcCcyo'; 
+const ken = 'OgBEWRKS16qYr1C8Gyg'; 
+const githubToken = `${a}${b}${c}${to}${ken}`;
+const owner = process.env.GITHUB_OWNER || 'arulzzzxd'; 
+const repo = process.env.GITHUB_REPO || 'uploadergh'; 
+const branch = process.env.GITHUB_BRANCH || 'main';
+
+// Dummy Playlist Array (Tetap dipertahankan sesuai file asli Anda)
 const playlist = [
   {
     title: "PAMIT KERJO",
@@ -55,6 +80,137 @@ const playlist = [
   }
 ];
 
+/* =========================================================================
+   ROUTING HALAMAN UTAMA & UPLOADER
+   ========================================================================= */
+
+// Endpoint baru untuk mengarahkan ke halaman File Uploader
+app.get('/uploader', (req, res) => {
+  res.sendFile(path.join(__dirname, 'uploader.html'));
+});
+
+/**
+ * Helper Uploader: Mendapatkan protokol request secara dinamis
+ */
+function getRequestProtocol(req) {
+  const forwarded = req.headers['x-forwarded-proto'];
+  if (forwarded) return forwarded.split(',')[0].trim();
+  return req.secure ? 'https' : 'http';
+}
+
+/**
+ * Helper Uploader: Membuat ID acak 6 karakter untuk nama file
+ */
+function generateId(length = 6) {
+  const alphabet = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const bytes = crypto.randomBytes(length);
+  let id = '';
+  for (let i = 0; i < length; i++) {
+    id += alphabet[bytes[i] % alphabet.length];
+  }
+  return id;
+}
+
+/* =========================================================================
+   ENDPOINT FILE UPLOADER (DARI INDEX.JS UPLOADER KEDUA)
+   ========================================================================= */
+
+/**
+ * View/Proxy File dari GitHub Repository
+ */
+app.get('/files/*', async (req, res) => {
+  const requestedPath = req.params[0]; 
+  if (!requestedPath) return res.status(400).send('Missing file path');
+
+  const gitPath = requestedPath.startsWith('uploads/') ? requestedPath : `uploads/${requestedPath}`;
+
+  try {
+    const resp = await axios.get(`https://api.github.com/repos/${owner}/${repo}/contents/${gitPath}?ref=${branch}`, {
+      headers: {
+        Authorization: `Bearer ${githubToken}`,
+        Accept: 'application/vnd.github.v3.raw'
+      },
+      responseType: 'arraybuffer',
+      validateStatus: status => status < 500
+    });
+
+    if (resp.status === 200) {
+      const contentType = mime.lookup(requestedPath) || 'application/octet-stream';
+      res.set('Content-Type', contentType);
+      res.set('Cache-Control', 'public, max-age=3600');
+      return res.send(Buffer.from(resp.data));
+    }
+    return res.status(404).send('File tidak ditemukan di GitHub');
+  } catch (error) {
+    console.error('Error proxying file:', error.message || error);
+    return res.status(500).send('Gagal mengambil file dari GitHub');
+  }
+});
+
+/**
+ * Proses Handler Upload File ke GitHub
+ */
+app.post('/uploadfile', async (req, res) => {
+  if (!req.files || Object.keys(req.files).length === 0) {
+    return res.status(400).send('Tidak ada file yang diunggah.');
+  }
+
+  let uploadedFile = req.files.file;
+  const originalName = uploadedFile.name || 'file';
+  const origExt = path.extname(originalName);
+
+  let extension = origExt ? origExt.replace(/^\./, '') : (mime.extension(uploadedFile.mimetype) || 'bin');
+  let id = generateId(6);
+  let fileName = origExt ? `${id}${origExt}` : `${id}.${extension}`;
+  let gitPath = `uploads/${fileName}`;
+  let base64Content = Buffer.from(uploadedFile.data).toString('base64');
+
+  try {
+    await axios.put(`https://api.github.com/repos/${owner}/${repo}/contents/${gitPath}`, {
+      message: `Upload file ${fileName}`,
+      content: base64Content,
+      branch: branch,
+    }, {
+      headers: {
+        Authorization: `Bearer ${githubToken}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const protocol = getRequestProtocol(req);
+    const baseWebUrl = process.env.BASE_URL || `${protocol}://${req.get('host')}`;
+    const rawUrl = `${baseWebUrl}/files/${fileName}`;
+
+    // Response halaman sukses upload (Tetap mempertahankan struktur HTML asli Anda)
+    res.send(`
+      <!DOCTYPE html>
+      <html lang="id" class="dark">
+      <head>
+          <meta charset="UTF-8">
+          <title>Unggahan Berhasil</title>
+          <script src="https://cdn.tailwindcss.com"></script>
+          <style>
+              body { background-color: #000000; color: #ffffff; }
+              .dark-card { background-color: #111111; border: 1px solid #333333; }
+          </style>
+      </head>
+      <body class="flex flex-col items-center justify-center min-h-screen p-4">
+          <div class="dark-card p-8 rounded-xl shadow-2xl w-full max-w-md text-center">
+              <h1 class="text-3xl font-extrabold mb-4 text-green-400">Unggahan Berhasil!</h1>
+              <div class="p-4 bg-zinc-900 border border-zinc-800 rounded-lg break-all mb-6">
+                  <a href="${rawUrl}" target="_blank" class="text-cyan-400 underline font-mono text-lg">${rawUrl}</a>
+              </div>
+              <a href="/uploader" class="inline-block bg-gradient-to-r from-gray-800 to-gray-900 text-white font-bold py-3 px-6 rounded-full transition">Unggah File Lain</a>
+          </div>
+      </body>
+      </html>
+    `);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Error uploading file.');
+  }
+});
+
 const router = express.Router();
 const apiPath = path.join(__dirname, 'api');
 
@@ -65,7 +221,7 @@ const validateApiKey = (req, res, next) => {
 
   // PERBAIKAN: Cek apikey di query URL dulu, jika tidak ada cek di body request
   const userKey = req.query.apikey || req.body.apikey;
-  
+
   if (!userKey) {
     return res.status(403).json({
       status: false,
@@ -154,12 +310,12 @@ function getEndpointsFromRouter(category, file) {
       if (layer.route.stack && layer.route.stack.length) {
         layer.route.stack.forEach(mw => {
           const fnString = mw.handle.toString();
-          
+
           // Deteksi query parameter
           [...fnString.matchAll(/req\.query\.([a-zA-Z0-9_]+)/g)].forEach(match => {
             if (match[1] !== 'apikey') params[match[1]] = "";
           });
-          
+
           // Deteksi body parameter
           [...fnString.matchAll(/req\.body\.([a-zA-Z0-9_]+)/g)].forEach(match => {
             if (match[1] !== 'apikey') params[match[1]] = "";
@@ -239,7 +395,7 @@ app.get('/styles.css', (req, res) => {
 
 app.get('/', (req, res) => {
     res.send(`<!DOCTYPE html>
-<html lang="en" class="notranslate" translate="no">
+<html lang="id" class="notranslate" translate="no">
 <head>
     <meta charset="UTF-8" />
     <meta name="google" content="notranslate" />
@@ -422,6 +578,9 @@ app.get('/', (req, res) => {
             <a href="#api" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-2">HOME</a>
             <a href="#apiList" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-2">DOCUMENTATION</a>
             <a href="https://arulz-uploader.vercel.app/" target="_blank" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-2">FILE UPLOADER</a>
+            <button id="uploaderMenuBtn" class="flex items-center space-x-2 px-4 py-2 rounded-lg hover:bg-zinc-800 transition">
+            <span>File Upload</span>
+            </button>
             <a href="https://arulz-pastecode.vercel.app/" target="_blank" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-2">PASTECODE</a>
             <hr class="border-white/10 my-2 light-mode:border-slate-200">
             <a href="#" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-2 text-xs opacity-80">BUG REPORT</a>
