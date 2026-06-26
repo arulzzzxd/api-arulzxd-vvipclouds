@@ -1,172 +1,187 @@
 <!DOCTYPE html>
-<html lang="id" class="dark">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>File Cloud Uploader</title>
+    <title>Upload File - ArulzXD</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="https://files.catbox.moe/4j9u3m.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
+        tailwind.config = { 
+            darkMode: 'class', 
+            theme: { 
                 extend: {
-                    fontFamily: {
-                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                    colors: {
+                        darkBg: '#090a0f',
+                        cardBg: '#0f111a',
+                        accentBlue: '#38bdf8'
                     }
-                }
-            }
+                } 
+            } 
         }
     </script>
     <style>
-        body {
-            background-color: #0b0f19;
-            background-image: 
-                radial-gradient(circle at 50% 0%, rgba(6, 182, 212, 0.08) 0%, transparent 50%),
-                radial-gradient(circle at 50% 100%, rgba(16, 185, 129, 0.03) 0%, transparent 50%);
-        }
-        .glass-card {
-            background: rgba(17, 24, 39, 0.65);
-            backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.07);
-        }
-        .drop-zone {
-            background: rgba(0, 0, 0, 0.25);
-            border: 2px dashed rgba(6, 182, 212, 0.25);
-            transition: all 0.2s ease-in-out;
-        }
-        .drop-zone:hover, .drop-zone.drag-over {
-            border-color: #06b6d4;
-            background: rgba(6, 182, 212, 0.04);
-        }
+        * { transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease; }
+        body { background-color: #050508; }
     </style>
 </head>
-<body class="flex flex-col items-center justify-center min-h-screen p-4 text-gray-200 antialiased">
+<body class="text-zinc-300 min-h-screen flex flex-col items-center p-4 sm:p-6 font-sans">
 
-    <!-- Kontainer Utama -->
-    <div class="w-full max-w-md flex flex-col">
+    <!-- Header / Navbar -->
+    <header class="w-full max-w-4xl bg-[#0b0d16] border border-zinc-900 rounded-xl px-6 py-4 flex items-center justify-between mb-6 shadow-lg">
+        <div class="flex items-center space-x-3">
+            <div class="bg-sky-900/40 text-sky-400 font-bold px-3 py-1.5 rounded-lg text-sm tracking-wide border border-sky-800/30">SX</div>
+            <span class="font-bold text-white tracking-wider text-sm">SOONEX <span class="text-zinc-500 font-medium text-xs">API</span></span>
+        </div>
+        <div class="flex items-center space-x-2">
+            <a href="/" class="bg-sky-900/30 text-sky-400 hover:bg-sky-900/50 border border-sky-800/40 px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 transition">
+                <i class="fa-solid fa-book text-[11px]"></i> Docs
+            </a>
+            <button class="bg-[#121522] border border-zinc-800 p-2.5 rounded-lg text-zinc-400 hover:text-white transition">
+                <i class="fa-solid fa-bars text-xs"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="w-full max-w-4xl bg-[#0b0d16] border border-zinc-900 rounded-2xl p-6 sm:p-8 shadow-2xl space-y-8">
         
-        <!-- Tombol Kembali yang Dibuat Lebih Manis -->
-        <a href="/" class="self-start inline-flex items-center text-xs font-semibold text-cyan-400 hover:text-cyan-300 transition-colors mb-5 group">
-            <svg class="w-4 h-4 mr-1.5 transform group-hover:-translate-x-0.5 transition-transform" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path>
-            </svg>
-            Kembali ke Dashboard REST API
-        </a>
-
-        <!-- Card Uploader Elegan -->
-        <div class="glass-card rounded-2xl shadow-2xl p-6 w-full text-center">
+        <!-- Header Info Hero -->
+        <div class="space-y-4 max-w-2xl">
+            <div class="inline-flex items-center gap-1.5 bg-sky-950/40 border border-sky-900/40 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider text-sky-400">
+                <span class="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse"></span> File Uploader
+            </div>
             
-            <!-- Judul & Subtitle -->
-            <div class="mb-6">
-                <h1 class="text-xl font-extrabold text-white tracking-tight">File Cloud Uploader</h1>
-                <p class="text-xs text-gray-400 mt-1">Unggah berkas Anda secara instan ke server cloud privat</p>
+            <h1 class="text-3xl font-extrabold text-white tracking-tight leading-tight">
+                <span class="text-sky-400">Upload</span> File <br class="sm:hidden"> Gratis & Instan
+            </h1>
+            
+            <p class="text-xs sm:text-sm text-zinc-500 leading-relaxed">
+                Upload hingga <strong class="text-zinc-300">5 file sekaligus</strong> dan dapatkan URL publik instan via <span class="text-zinc-400 underline decoration-zinc-600">files.soonex.biz.id</span>. Support hampir semua format termasuk <strong class="text-zinc-400">MP4</strong> — maksimal <strong class="text-zinc-300">75MB</strong> per file. Tanpa login, langsung pakai.
+            </p>
+
+            <!-- Actions & Badges -->
+            <div class="flex flex-wrap items-center gap-3 pt-2">
+                <a href="#" class="bg-transparent border border-zinc-800 text-zinc-300 hover:bg-zinc-900/50 px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 transition">
+                    <i class="fa-solid fa-book"></i> API Docs
+                </a>
+                <a href="#" class="bg-sky-500 hover:bg-sky-400 text-black px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-2 transition">
+                    <i class="fa-solid fa-layer-group text-[11px]"></i> Semua API
+                </a>
             </div>
 
-            <!-- Form Pengunggahan -->
-            <form action="/uploadfile" method="POST" enctype="multipart/form-data" id="uploadForm">
-                
-                <!-- Area Drop Zone Interaktif -->
-                <label for="fileInput" class="drop-zone rounded-xl p-6 mb-5 flex flex-col items-center justify-center cursor-pointer block group">
-                    <input type="file" name="file" id="fileInput" class="hidden" onchange="handleFileSelect(this)" required />
-                    
-                    <!-- Animasi Icon Awan Modern -->
-                    <div class="w-12 h-12 rounded-full bg-cyan-950/50 flex items-center justify-center text-cyan-400 group-hover:scale-105 transition-transform duration-200 mb-3 border border-cyan-900/40">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 16v-8m0 8l-3-3m3 3l3-3M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                    </div>
-
-                    <!-- Keterangan Teks -->
-                    <span id="dropZoneTitle" class="text-sm font-bold text-gray-200 group-hover:text-cyan-400 transition-colors">
-                        Klik atau seret file Anda ke sini
-                    </span>
-                    <span id="dropZoneSubtitle" class="text-xs text-gray-500 mt-1">
-                        Mendukung gambar, video, & dokumen dokumen
-                    </span>
-                </label>
-
-                <!-- Box Preview Nama File (Akan Muncul Jika File Dipilih) -->
-                <div id="filePreview" class="hidden bg-emerald-950/30 border border-emerald-900/50 rounded-xl p-3 mb-5 flex items-center justify-between text-left">
-                    <div class="flex items-center space-x-2.5 overflow-hidden">
-                        <div class="p-1.5 rounded-lg bg-emerald-900/40 text-emerald-400 shrink-0">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                            </svg>
-                        </div>
-                        <span id="fileName" class="text-xs font-semibold text-emerald-300 truncate tracking-wide">filename.jpg</span>
-                    </div>
-                    <button type="button" onclick="clearFileSelection(event)" class="text-gray-500 hover:text-rose-400 p-1 transition-colors">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
-                    </button>
-                </div>
-
-                <!-- Tombol Submit Bergradasi -->
-                <button type="submit" class="w-full bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-500 hover:to-cyan-400 text-white text-sm font-bold py-3 px-4 rounded-xl shadow-lg shadow-cyan-950/50 hover:shadow-cyan-900/40 transition-all duration-200 transform active:scale-[0.99]">
-                    Mulai Upload
-                </button>
-            </form>
+            <div class="flex flex-wrap items-center gap-2 pt-2">
+                <span class="bg-[#0f1220] border border-emerald-950 text-emerald-400 text-[10px] font-bold px-2.5 py-1 rounded-md flex items-center gap-1.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> ONLINE
+                </span>
+                <span class="bg-[#0f1220] border border-zinc-800 text-zinc-400 text-[10px] font-bold px-2.5 py-1 rounded-md flex items-center gap-1.5">
+                    <i class="fa-solid fa-hard-drive text-[9px]"></i> 75MB MAX
+                </span>
+                <span class="bg-[#0f1220] border border-zinc-800 text-zinc-400 text-[10px] font-bold px-2.5 py-1 rounded-md flex items-center gap-1.5">
+                    <i class="fa-solid fa-key text-[9px]"></i> NO KEY
+                </span>
+            </div>
         </div>
 
-        <!-- Footer Hak Cipta / Branding Tambahan -->
-        <p class="text-[11px] text-gray-600 text-center mt-4 tracking-wider">
-            &copy; 2026 ArulzXD Cloud Service. All rights reserved.
-        </p>
-    </div>
+        <!-- Section Divider -->
+        <div class="flex items-center gap-4 text-zinc-700 text-[10px] font-bold tracking-widest uppercase">
+            <span>//</span> <span>Upload File</span>
+            <div class="h-[1px] bg-zinc-900 flex-1"></div>
+        </div>
 
-    <!-- Script Kontrol UI Dinamis -->
-    <script>
-        function handleFileSelect(input) {
-            const previewBox = document.getElementById('filePreview');
-            const fileNameText = document.getElementById('fileName');
-            const dropZoneTitle = document.getElementById('dropZoneTitle');
-            const dropZoneSubtitle = document.getElementById('dropZoneSubtitle');
-
-            if (input.files && input.files[0]) {
-                fileNameText.textContent = input.files[0].name;
-                previewBox.classList.remove('hidden');
-                
-                // Ubah status dropzone menjadi aktif terpilih
-                dropZoneTitle.textContent = "File Berhasil Ditambahkan!";
-                dropZoneTitle.className = "text-sm font-bold text-cyan-400";
-                dropZoneSubtitle.textContent = "Ingin mengganti berkas? Klik lagi di sini";
-            }
-        }
-
-        function clearFileSelection(event) {
-            event.preventDefault();
-            const input = document.getElementById('fileInput');
-            const previewBox = document.getElementById('filePreview');
-            const dropZoneTitle = document.getElementById('dropZoneTitle');
-            const dropZoneSubtitle = document.getElementById('dropZoneSubtitle');
-
-            input.value = ''; // Reset nilai input file
-            previewBox.classList.add('hidden');
+        <!-- Form Section -->
+        <form id="uploadForm" action="/uploadfile" method="post" encType="multipart/form-data" class="space-y-6">
             
-            // Kembalikan teks semula
-            dropZoneTitle.textContent = "Klik atau seret file Anda ke sini";
-            dropZoneTitle.className = "text-sm font-bold text-gray-200 group-hover:text-cyan-400 transition-colors";
-            dropZoneSubtitle.textContent = "Mendukung gambar, video, & dokumen dokumen";
-        }
+            <!-- Drag and Drop Box -->
+            <div id="file-drop-area" class="border border-dashed border-sky-900/60 hover:border-sky-500 bg-[#07080e] rounded-xl p-8 text-center cursor-pointer transition group">
+                <input type="file" name="file" id="fileInput" class="hidden" multiple required />
+                
+                <div class="mx-auto w-12 h-12 mb-4 bg-sky-950/50 border border-sky-900/40 rounded-xl flex items-center justify-center text-sky-400 group-hover:scale-105 transition">
+                    <i class="fa-solid fa-cloud-arrow-up text-lg"></i>
+                </div>
 
-        // Efek Visual Drag Over
-        const dropZoneLabel = document.querySelector('.drop-zone');
-        ['dragenter', 'dragover'].forEach(eventName => {
-            dropZoneLabel.addEventListener(eventName, (e) => {
-                e.preventDefault();
-                dropZoneLabel.classList.add('drag-over');
-            }, false);
+                <h3 class="text-sm font-bold text-zinc-200 tracking-wider mb-2 uppercase">Drag & Drop File Di Sini</h3>
+                <p class="text-xs text-zinc-500 max-w-md mx-auto leading-relaxed">
+                    atau <span class="text-zinc-300 font-semibold group-hover:text-sky-400">klik untuk pilih file</span> · Maks <span class="text-zinc-400">5 file</span> · Masing-masing <span class="text-zinc-400">75MB</span> · Semua format video didukung
+                </p>
+
+                <!-- Format Tags -->
+                <div class="flex flex-wrap justify-center gap-1.5 mt-6 max-w-xl mx-auto">
+                    <span class="bg-[#0e1017] border border-zinc-800 text-[9px] font-bold text-zinc-500 px-2 py-1 rounded flex items-center gap-1"><i class="fa-regular fa-image"></i> GAMBAR</span>
+                    <span class="bg-[#0e1017] border border-zinc-800 text-[9px] font-bold text-zinc-500 px-2 py-1 rounded flex items-center gap-1"><i class="fa-regular fa-file-pdf"></i> PDF</span>
+                    <span class="bg-[#0e1017] border border-zinc-800 text-[9px] font-bold text-zinc-500 px-2 py-1 rounded flex items-center gap-1"><i class="fa-regular fa-file-word"></i> DOCX</span>
+                    <span class="bg-[#0e1017] border border-zinc-800 text-[9px] font-bold text-zinc-500 px-2 py-1 rounded flex items-center gap-1"><i class="fa-regular fa-file-excel"></i> XLSX</span>
+                    <span class="bg-[#0e1017] border border-zinc-800 text-[9px] font-bold text-zinc-500 px-2 py-1 rounded flex items-center gap-1"><i class="fa-regular fa-file-zipper"></i> ZIP</span>
+                    <span class="bg-[#0e1017] border border-zinc-800 text-[9px] font-bold text-zinc-500 px-2 py-1 rounded flex items-center gap-1"><i class="fa-regular fa-file-audio"></i> AUDIO</span>
+                    <span class="bg-[#0e1017] border border-zinc-800 text-[9px] font-bold text-zinc-500 px-2 py-1 rounded flex items-center gap-1"><i class="fa-regular fa-file-video"></i> WEBM / MOV</span>
+                    <span class="bg-sky-950/40 border border-sky-800/50 text-[9px] font-bold text-sky-400 px-2 py-1 rounded flex items-center gap-1"><i class="fa-regular fa-file-video"></i> MP4</span>
+                    <span class="bg-[#0e1017] border border-zinc-800 text-[9px] font-bold text-zinc-500 px-2 py-1 rounded flex items-center gap-1"><i class="fa-regular fa-file-lines"></i> TEXT</span>
+                </div>
+            </div>
+
+            <!-- Preview Area -->
+            <div id="preview-area" class="hidden text-left p-4 bg-[#07080e] border border-zinc-900 rounded-xl space-y-2">
+                <span class="text-xs font-semibold text-zinc-500 uppercase tracking-wider block">File Terpilih:</span>
+                <div id="file-list" class="space-y-1 text-xs text-zinc-300"></div>
+                <button type="button" id="remove-file" class="mt-2 text-xs text-red-400 hover:text-red-300 font-medium transition flex items-center gap-1">
+                    <i class="fa-regular fa-trash-can"></i> Hapus Semua File
+                </button>
+            </div>
+
+            <!-- Alternate Upload Section Divider -->
+            <div class="flex items-center justify-center gap-4 text-zinc-700 text-[9px] font-bold tracking-widest uppercase py-2">
+                <div class="h-[1px] bg-zinc-900 flex-1"></div>
+                <span>Atau Upload Via URL</span>
+                <div class="h-[1px] bg-zinc-900 flex-1"></div>
+            </div>
+
+            <!-- URL Input Form Group -->
+            <div class="flex flex-col sm:flex-row items-stretch gap-2">
+                <input type="url" placeholder="https://example.com/image.jpg" class="flex-1 bg-[#05060a] border border-zinc-900 rounded-lg px-4 py-3 text-xs focus:outline-none focus:border-zinc-700 text-zinc-300 placeholder-zinc-700" />
+                <button type="button" class="bg-sky-500 hover:bg-sky-400 text-black px-5 py-3 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition shrink-0 whitespace-nowrap">
+                    <i class="fa-solid fa-link"></i> Upload URL
+                </button>
+            </div>
+            
+            <button type="submit" id="uploadButton" class="w-full py-3.5 bg-gradient-to-r from-sky-600 to-sky-500 hover:from-sky-500 hover:to-sky-400 text-black font-bold rounded-xl transition shadow-lg shadow-sky-950/20 text-xs tracking-wider uppercase">Mulai Proses Upload</button>
+        </form>
+
+        <!-- Footer Notice Box -->
+        <footer class="bg-[#07080e] border border-zinc-900 rounded-xl p-4 flex items-start gap-3">
+            <i class="fa-solid fa-circle-info text-sky-500 text-xs mt-0.5"></i>
+            <p class="text-xs text-zinc-500 leading-normal">
+                File disimpan di <span class="text-zinc-400 bg-zinc-900/60 px-1.5 py-0.5 rounded border border-zinc-800/50 font-mono text-[11px]">files.soonex.biz.id</span>. Butuh integrasi via kode? <a href="#" class="text-sky-400 hover:underline font-medium">Lihat API Docs</a>.
+            </p>
+        </footer>
+    </main>
+
+    <script>
+        const fileDropArea = document.getElementById('file-drop-area');
+        const fileInput = document.getElementById('fileInput');
+        const previewArea = document.getElementById('preview-area');
+        const fileList = document.getElementById('file-list');
+        const removeFile = document.getElementById('remove-file');
+
+        fileDropArea.addEventListener('click', () => fileInput.click());
+        
+        fileInput.addEventListener('change', (e) => {
+            fileList.innerHTML = '';
+            if(e.target.files.length) {
+                Array.from(e.target.files).forEach((file, index) => {
+                    const fileRow = document.createElement('div');
+                    fileRow.className = 'flex items-center gap-2 text-zinc-400 py-0.5';
+                    fileRow.innerHTML = `<i class="fa-regular fa-file text-[10px]"></i> <span class="truncate">${file.name}</span> <span class="text-[10px] text-zinc-600">(${(file.size/1024/1024).toFixed(2)} MB)</span>`;
+                    fileList.appendChild(fileRow);
+                });
+                previewArea.classList.remove('hidden');
+            }
         });
 
-        ['drackleave', 'drop'].forEach(eventName => {
-            dropZoneLabel.addEventListener(eventName, (e) => {
-                e.preventDefault();
-                dropZoneLabel.classList.remove('drag-over');
-            }, false);
+        removeFile.addEventListener('click', () => {
+            fileInput.value = '';
+            fileList.innerHTML = '';
+            previewArea.classList.add('hidden');
         });
     </script>
 </body>
