@@ -1,61 +1,172 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Upload File - ArulzXD</title>
+    <title>File Cloud Uploader</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="icon" type="image/x-icon" href="https://files.catbox.moe/4j9u3m.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script>
-        tailwind.config = { darkMode: 'class', theme: { extend: {} } }
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                    }
+                }
+            }
+        }
     </script>
     <style>
-        * { transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease; }
-        .fade-in { animation: fadeIn 0.5s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        body {
+            background-color: #0b0f19;
+            background-image: 
+                radial-gradient(circle at 50% 0%, rgba(6, 182, 212, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 50% 100%, rgba(16, 185, 129, 0.03) 0%, transparent 50%);
+        }
+        .glass-card {
+            background: rgba(17, 24, 39, 0.65);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+        }
+        .drop-zone {
+            background: rgba(0, 0, 0, 0.25);
+            border: 2px dashed rgba(6, 182, 212, 0.25);
+            transition: all 0.2s ease-in-out;
+        }
+        .drop-zone:hover, .drop-zone.drag-over {
+            border-color: #06b6d4;
+            background: rgba(6, 182, 212, 0.04);
+        }
     </style>
 </head>
-<body class="min-h-screen bg-black text-white flex flex-col items-center justify-center p-4">
-    <div class="mb-6">
-        <a href="/" class="text-sm text-cyan-400 hover:underline">← Kembali ke Dashboard REST API</a>
-    </div>
-    
-    <div class="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-xl p-8 shadow-xl">
-        <h1 class="text-2xl font-bold text-center mb-6">File Cloud Uploader</h1>
+<body class="flex flex-col items-center justify-center min-h-screen p-4 text-gray-200 antialiased">
+
+    <!-- Kontainer Utama -->
+    <div class="w-full max-w-md flex flex-col">
         
-        <form id="uploadForm" action="/uploadfile" method="post" encType="multipart/form-data" class="space-y-6">
-            <div id="file-drop-area" class="border-2 border-dashed border-zinc-700 rounded-xl p-8 text-center cursor-pointer bg-zinc-950 hover:bg-zinc-800/50 transition">
-                <p class="text-md font-medium mb-1">Klik atau seret file Anda ke sini</p>
-                <p class="text-xs text-zinc-500">Mendukung semua format file</p>
-                <input type="file" name="file" id="fileInput" class="hidden" required />
+        <!-- Tombol Kembali yang Dibuat Lebih Manis -->
+        <a href="/" class="self-start inline-flex items-center text-xs font-semibold text-cyan-400 hover:text-cyan-300 transition-colors mb-5 group">
+            <svg class="w-4 h-4 mr-1.5 transform group-hover:-translate-x-0.5 transition-transform" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path>
+            </svg>
+            Kembali ke Dashboard REST API
+        </a>
+
+        <!-- Card Uploader Elegan -->
+        <div class="glass-card rounded-2xl shadow-2xl p-6 w-full text-center">
+            
+            <!-- Judul & Subtitle -->
+            <div class="mb-6">
+                <h1 class="text-xl font-extrabold text-white tracking-tight">File Cloud Uploader</h1>
+                <p class="text-xs text-gray-400 mt-1">Unggah berkas Anda secara instan ke server cloud privat</p>
             </div>
 
-            <div id="preview-area" class="hidden text-center p-4 bg-zinc-950 rounded-lg">
-                <span id="file-name" class="text-sm block truncate text-zinc-300"></span>
-                <button type="button" id="remove-file" class="mt-2 text-xs text-red-400 hover:underline">Hapus File</button>
-            </div>
-            
-            <button type="submit" id="uploadButton" class="w-full py-3 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-lg transition disabled:opacity-50">Mulai Upload</button>
-        </form>
+            <!-- Form Pengunggahan -->
+            <form action="/uploadfile" method="POST" enctype="multipart/form-data" id="uploadForm">
+                
+                <!-- Area Drop Zone Interaktif -->
+                <label for="fileInput" class="drop-zone rounded-xl p-6 mb-5 flex flex-col items-center justify-center cursor-pointer block group">
+                    <input type="file" name="file" id="fileInput" class="hidden" onchange="handleFileSelect(this)" required />
+                    
+                    <!-- Animasi Icon Awan Modern -->
+                    <div class="w-12 h-12 rounded-full bg-cyan-950/50 flex items-center justify-center text-cyan-400 group-hover:scale-105 transition-transform duration-200 mb-3 border border-cyan-900/40">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 16v-8m0 8l-3-3m3 3l3-3M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+
+                    <!-- Keterangan Teks -->
+                    <span id="dropZoneTitle" class="text-sm font-bold text-gray-200 group-hover:text-cyan-400 transition-colors">
+                        Klik atau seret file Anda ke sini
+                    </span>
+                    <span id="dropZoneSubtitle" class="text-xs text-gray-500 mt-1">
+                        Mendukung gambar, video, & dokumen dokumen
+                    </span>
+                </label>
+
+                <!-- Box Preview Nama File (Akan Muncul Jika File Dipilih) -->
+                <div id="filePreview" class="hidden bg-emerald-950/30 border border-emerald-900/50 rounded-xl p-3 mb-5 flex items-center justify-between text-left">
+                    <div class="flex items-center space-x-2.5 overflow-hidden">
+                        <div class="p-1.5 rounded-lg bg-emerald-900/40 text-emerald-400 shrink-0">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                        </div>
+                        <span id="fileName" class="text-xs font-semibold text-emerald-300 truncate tracking-wide">filename.jpg</span>
+                    </div>
+                    <button type="button" onclick="clearFileSelection(event)" class="text-gray-500 hover:text-rose-400 p-1 transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Tombol Submit Bergradasi -->
+                <button type="submit" class="w-full bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-500 hover:to-cyan-400 text-white text-sm font-bold py-3 px-4 rounded-xl shadow-lg shadow-cyan-950/50 hover:shadow-cyan-900/40 transition-all duration-200 transform active:scale-[0.99]">
+                    Mulai Upload
+                </button>
+            </form>
+        </div>
+
+        <!-- Footer Hak Cipta / Branding Tambahan -->
+        <p class="text-[11px] text-gray-600 text-center mt-4 tracking-wider">
+            &copy; 2026 ArulzXD Cloud Service. All rights reserved.
+        </p>
     </div>
 
+    <!-- Script Kontrol UI Dinamis -->
     <script>
-        const fileDropArea = document.getElementById('file-drop-area');
-        const fileInput = document.getElementById('fileInput');
-        const previewArea = document.getElementById('preview-area');
-        const fileName = document.getElementById('file-name');
-        const removeFile = document.getElementById('remove-file');
+        function handleFileSelect(input) {
+            const previewBox = document.getElementById('filePreview');
+            const fileNameText = document.getElementById('fileName');
+            const dropZoneTitle = document.getElementById('dropZoneTitle');
+            const dropZoneSubtitle = document.getElementById('dropZoneSubtitle');
 
-        fileDropArea.addEventListener('click', () => fileInput.click());
-        fileInput.addEventListener('change', (e) => {
-            if(e.target.files.length) {
-                fileName.textContent = e.target.files[0].name;
-                previewArea.classList.remove('hidden');
+            if (input.files && input.files[0]) {
+                fileNameText.textContent = input.files[0].name;
+                previewBox.classList.remove('hidden');
+                
+                // Ubah status dropzone menjadi aktif terpilih
+                dropZoneTitle.textContent = "File Berhasil Ditambahkan!";
+                dropZoneTitle.className = "text-sm font-bold text-cyan-400";
+                dropZoneSubtitle.textContent = "Ingin mengganti berkas? Klik lagi di sini";
             }
+        }
+
+        function clearFileSelection(event) {
+            event.preventDefault();
+            const input = document.getElementById('fileInput');
+            const previewBox = document.getElementById('filePreview');
+            const dropZoneTitle = document.getElementById('dropZoneTitle');
+            const dropZoneSubtitle = document.getElementById('dropZoneSubtitle');
+
+            input.value = ''; // Reset nilai input file
+            previewBox.classList.add('hidden');
+            
+            // Kembalikan teks semula
+            dropZoneTitle.textContent = "Klik atau seret file Anda ke sini";
+            dropZoneTitle.className = "text-sm font-bold text-gray-200 group-hover:text-cyan-400 transition-colors";
+            dropZoneSubtitle.textContent = "Mendukung gambar, video, & dokumen dokumen";
+        }
+
+        // Efek Visual Drag Over
+        const dropZoneLabel = document.querySelector('.drop-zone');
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZoneLabel.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                dropZoneLabel.classList.add('drag-over');
+            }, false);
         });
-        removeFile.addEventListener('click', () => {
-            fileInput.value = '';
-            previewArea.classList.add('hidden');
+
+        ['drackleave', 'drop'].forEach(eventName => {
+            dropZoneLabel.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                dropZoneLabel.classList.remove('drag-over');
+            }, false);
         });
     </script>
 </body>
