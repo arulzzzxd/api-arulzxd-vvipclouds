@@ -670,17 +670,31 @@ app.get('/', (req, res) => {
             </div>
         </div>
 
-        <nav class="flex flex-col gap-5 text-sm font-bold tracking-wider uppercase text-gray-300 light-mode:text-slate-700 flex-1 overflow-y-auto scrollbar-hide">
-            <a href="#api" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-2">HOME</a>
-            <a href="#apiList" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-2">DOCUMENTATION</a>
-            <button id="uploaderMenuBtn" class="flex items-center space-x-2 px-4 py-2 rounded-lg hover:bg-zinc-800 transition">
-            <span>File Upload</span>
+        <nav class="flex flex-col gap-4 text-xs font-bold tracking-wider uppercase text-gray-300 light-mode:text-slate-700 flex-1 overflow-y-auto scrollbar-hide py-2">
+            <a href="#api" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-3 px-2 py-1.5 rounded-lg hover:bg-white/5">
+                <i class="fa-solid fa-house text-sm text-cyan-400 w-5 text-center"></i> HOME
+            </a>
+            <a href="#apiList" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-3 px-2 py-1.5 rounded-lg hover:bg-white/5">
+                <i class="fa-solid fa-book text-sm text-cyan-400 w-5 text-center"></i> DOCUMENTATION
+            </a>
+            <button id="uploaderMenuBtn" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-3 px-2 py-1.5 rounded-lg hover:bg-white/5 text-left w-full focus:outline-none">
+                <i class="fa-solid fa-cloud-arrow-up text-sm text-cyan-400 w-5 text-center"></i> File Upload
             </button>
-            <a href="https://arulz-pastecode.vercel.app/" target="_blank" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-2">PASTECODE</a>
-            <hr class="border-white/10 my-2 light-mode:border-slate-200">
-            <a href="#" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-2 text-xs opacity-80">BUG REPORT</a>
-            <a href="https://wa.me/6285122629940" target="_blank" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-2 text-xs opacity-80">OWNER (WHATSAPP)</a>
-            <a href="https://t.me/Arulzxd" target="_blank" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-2 text-xs opacity-80">OWNER (TELEGRAM)</a>
+            <a href="https://arulz-pastecode.vercel.app/" target="_blank" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-3 px-2 py-1.5 rounded-lg hover:bg-white/5">
+                <i class="fa-solid fa-code text-sm text-cyan-400 w-5 text-center"></i> PASTECODE
+            </a>
+            
+            <hr class="border-white/10 my-1 light-mode:border-slate-200">
+            
+            <a href="#" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-3 px-2 py-1.5 rounded-lg hover:bg-white/5 text-[11px] opacity-80">
+                <i class="fa-solid fa-bug text-sm text-cyan-400 w-5 text-center"></i> BUG REPORT
+            </a>
+            <a href="https://wa.me/6285122629940" target="_blank" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-3 px-2 py-1.5 rounded-lg hover:bg-white/5 text-[11px] opacity-80">
+                <i class="fa-brands fa-whatsapp text-sm text-cyan-400 w-5 text-center"></i> OWNER (WHATSAPP)
+            </a>
+            <a href="https://t.me/Arulzxd" target="_blank" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-3 px-2 py-1.5 rounded-lg hover:bg-white/5 text-[11px] opacity-80">
+                <i class="fa-brands fa-telegram text-sm text-cyan-400 w-5 text-center"></i> OWNER (TELEGRAM)
+            </a>
         </nav>
     </div>
 
