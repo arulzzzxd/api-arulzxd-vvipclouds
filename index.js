@@ -35,7 +35,6 @@ const VALID_API_KEY = "arulzxd-keys";
 const PREMIUM_API_KEYS = ["arulz-premium", "key-vip-arulz", "owner-key-999"]; 
 
 const repoList = ['uploadergh', 'uploaderghv2', 'uploaderghv3'];
-const randomRepo = repoList[Math.floor(Math.random() * repoList.length)];
 const a = 'g';
 const b = 'h';
 const c = 'p';
@@ -43,8 +42,11 @@ const to = '_WaSUBUjo7g3YcCcyo';
 const ken = 'OgBEWRKS16qYr1C8Gyg'; 
 const githubToken = `${a}${b}${c}${to}${ken}`;
 const owner = 'arulzzzxd'; 
-const repo = randomRepo;
 const branch = 'main';
+
+// Fungsi helper untuk mengambil repo acak setiap kali dipanggil
+const getRandomRepo = () => repoList[Math.floor(Math.random() * repoList.length)];
+
 
 const playlist = [
   {
@@ -105,27 +107,32 @@ app.get('/files/*', async (req, res) => {
 
   const gitPath = requestedPath.startsWith('uploads/') ? requestedPath : `uploads/${requestedPath}`;
 
-  try {
-    const resp = await axios.get(`https://api.github.com/repos/${owner}/${repo}/contents/${gitPath}?ref=${branch}`, {
-      headers: {
-        Authorization: `Bearer ${githubToken}`,
-        Accept: 'application/vnd.github.v3.raw'
-      },
-      responseType: 'arraybuffer',
-      validateStatus: status => status < 500
-    });
+  // Lakukan perulangan pada repoList secara acak untuk mencari file yang cocok
+  const shuffledRepos = [...repoList].sort(() => Math.random() - 0.5);
 
-    if (resp.status === 200) {
-      const contentType = mime.lookup(requestedPath) || 'application/octet-stream';
-      res.set('Content-Type', contentType);
-      res.set('Cache-Control', 'public, max-age=3600');
-      return res.send(Buffer.from(resp.data));
+  for (const targetRepo of shuffledRepos) {
+    try {
+      const resp = await axios.get(`https://api.github.com/repos/${owner}/${targetRepo}/contents/${gitPath}?ref=${branch}`, {
+        headers: {
+          Authorization: `Bearer ${githubToken}`,
+          Accept: 'application/vnd.github.v3.raw'
+        },
+        responseType: 'arraybuffer',
+        validateStatus: status => status < 500
+      });
+
+      if (resp.status === 200) {
+        const contentType = mime.lookup(requestedPath) || 'application/octet-stream';
+        res.set('Content-Type', contentType);
+        res.set('Cache-Control', 'public, max-age=3600');
+        return res.send(Buffer.from(resp.data));
+      }
+    } catch (error) {
+      console.error(`Gagal cek di repo ${targetRepo}:`, error.message);
     }
-    return res.status(404).send('File tidak ditemukan di GitHub');
-  } catch (error) {
-    console.error('Error proxying file:', error.message || error);
-    return res.status(500).send('Gagal mengambil file dari GitHub');
   }
+
+  return res.status(404).send('File tidak ditemukan di seluruh GitHub Repository');
 });
 
 app.post('/uploadfile', async (req, res) => {
@@ -143,9 +150,12 @@ app.post('/uploadfile', async (req, res) => {
   let gitPath = `uploads/${fileName}`;
   let base64Content = Buffer.from(uploadedFile.data).toString('base64');
 
+  // PILIH REPO SECARA RANDOM SETIAP KALI UNGGAH
+  const selectedRepo = getRandomRepo(); 
+
   try {
-    await axios.put(`https://api.github.com/repos/${owner}/${repo}/contents/${gitPath}`, {
-      message: `Upload file ${fileName}`,
+    await axios.put(`https://api.github.com/repos/${owner}/${selectedRepo}/contents/${gitPath}`, {
+      message: `Upload file ${fileName} to ${selectedRepo}`,
       content: base64Content,
       branch: branch,
     }, {
