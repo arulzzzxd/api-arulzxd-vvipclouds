@@ -76,7 +76,7 @@ async function doUpscale(serverfilename, token, task, scale) {
 router.get('/', async (req, res) => {
     try {
         const imgUrl = req.query.url?.trim();
-        // Otomatis diset ke skala tertinggi '4' jika parameter &scale tidak diisi
+        // Otomatis diset ke skala '2' jika tidak diisi
         const scaleParam = req.query.scale?.trim() || '2';
 
         if (!imgUrl) {
@@ -115,6 +115,15 @@ router.get('/', async (req, res) => {
         });
     }
 });
+
+// --- CONFIG DROPDOWN SELECT ---
+// Properti ini dibaca otomatis oleh index.js Anda untuk merender element <select> di frontend
+router.paramsConfig = {
+    scale: {
+        type: "select",
+        options: ["2", "4"]
+    }
+};
 
 router.status = "ready"; 
 router.type = "free";
