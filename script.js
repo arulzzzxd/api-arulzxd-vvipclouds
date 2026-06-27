@@ -434,13 +434,13 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
     executeBtn.disabled = true;
     executeBtn.classList.add('btn-loading');
     
-    // Sembunyikan spinner bawaan agar tidak bertumpuk
+    // Sembunyikan spinner bawaan agar tidak merusak tata letak
     spinner.style.setProperty('display', 'none', 'important');
     spinner.classList.remove('active');
     
     responseDiv.classList.remove('hidden');
 
-    // Tampilan Loading di dalam kotak RESPONSE (Menggunakan 3 titik melompat, serasi dengan tombol)
+    // FIX: Loading di dalam kontainer RESPONSE sekarang menggunakan animasi 3 titik melompat (Serasi dengan tombol)
     responseContent.innerHTML = `
         <div class="flex items-center justify-center p-8 text-sm font-mono tracking-wider text-cyan-400 gap-1.5">
             <span>FETCHING RESPONSE</span>
@@ -455,7 +455,7 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
     // SIMPAN INNER HTML ASLI TOMBOL
     const originalBtnHtml = executeBtn.innerHTML;
 
-    // Tampilan Loading pada TOMBOL EKSEKUSI (Menggunakan 3 titik melompat)
+    // Loading pada TOMBOL EKSEKUSI menggunakan animasi 3 titik melompat
     executeBtn.innerHTML = `
         <div class="flex items-center justify-center gap-1">
             <span class="tracking-wide">LOADING</span>
@@ -596,7 +596,7 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
             copyResponseBtn.onclick = () => copyText(rawResponseText, "Response");
             actionContainer.appendChild(copyResponseBtn);
 
-            // 2. Tombol Download Response (JSON / Teks)
+            // 2. Tombol Download Response (Untuk mendownload file JSON / Teks)
             const downloadResponseBtn = document.createElement('button');
             downloadResponseBtn.type = "button";
             downloadResponseBtn.className = btnStyle;
@@ -618,7 +618,7 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
             };
             actionContainer.appendChild(downloadResponseBtn);
         } else {
-            // 3. Tombol Download Media (Unduh file apa saja secara dinamis)
+            // 3. Tombol Download Media (Bisa mendownload tipe biner apa saja secara dinamis)
             const downloadMediaBtn = document.createElement('button');
             downloadMediaBtn.type = "button";
             downloadMediaBtn.className = btnStyle;
@@ -670,8 +670,6 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
         executeBtn.innerHTML = originalBtnHtml;
     }
 }
-
-
 
 function clearResponse(catIdx, epIdx, endpointType) {
     const responseDiv = document.getElementById(`response-${catIdx}-${epIdx}`);
