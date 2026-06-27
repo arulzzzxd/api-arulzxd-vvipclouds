@@ -476,7 +476,7 @@ function updateLivePreview(catIdx, epIdx, method, basePath, endpointType) {
     }
 }
 
-async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
+async function executeRequest(e, catIdx, epIdx, method, path, async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
     e.preventDefault();
     if (isRequestInProgress) {
         showToast(i18n[currentLang].toastRequestWait, true);
@@ -623,9 +623,9 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
         else if (bytes >= 1024) sizeText = `${(bytes / 1024).toFixed(1)} KB`;
         else sizeText = `${bytes} B`;
 
-        // 1. Badge Atas: Hanya memuat status HTTP dan durasi waktu eksekusi
+        // 1. Badge Atas diubah warnanya menjadi Cyan transparan (Hanya memuat HTTP & Durasi)
         const metadataBadgeHtml = `
-            <div class="flex flex-wrap items-center gap-2 px-4 py-2 mb-4 text-xs font-mono font-bold rounded-lg bg-emerald-400 text-slate-900 border border-emerald-500/30 shadow-sm w-fit">
+            <div class="flex flex-wrap items-center gap-2 px-4 py-2 mb-4 text-xs font-mono font-bold rounded-lg bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 shadow-sm w-fit">
                 <span>HTTP ${response.status}</span>
                 <span class="opacity-40">•</span>
                 <span>${duration}ms</span>
@@ -639,11 +639,11 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
             ? 'px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-lg text-[11px] font-semibold transition-colors code-font border border-black/5 flex items-center gap-1.5 shadow-sm'
             : 'px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-[11px] font-semibold transition-colors code-font border border-white/5 flex items-center gap-1.5';
 
-        // Container utama di bagian bawah untuk membungkus badge info file dan deretan tombol
+        // Container utama di bagian bawah media/gambar preview
         const actionContainer = document.createElement('div');
         actionContainer.className = "flex flex-col gap-3 mb-3 border-b border-white/10 light-mode:border-slate-200 pb-3 mt-4";
 
-        // 2. Kotak Badge Info File Terpisah (Warna Cyan khas style API Anda)
+        // 2. Elemen yang dipindah dari lingkaran merah (Content-Type & File Size) dibuat menjadi badge Cyan transparan tersendiri
         const fileInfoBadge = document.createElement('div');
         fileInfoBadge.className = "flex items-center gap-2 px-3 py-1.5 text-xs font-mono font-bold rounded-lg bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 shadow-sm w-fit uppercase tracking-wider";
         fileInfoBadge.innerHTML = `
@@ -653,11 +653,11 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
         `;
         actionContainer.appendChild(fileInfoBadge);
 
-        // Container horizontal khusus untuk menyejajarkan deretan tombol aksi
+        // Container horizontal untuk menyejajarkan deretan tombol aksi di bagian paling bawah
         const buttonsFlexContainer = document.createElement('div');
         buttonsFlexContainer.className = "flex flex-wrap gap-2";
 
-        // Tombol Copy Response JSON diposisikan di bawah untuk semua tipe response berkas
+        // Tombol Copy Response JSON diposisikan di bawah info berkas
         const copyResponseBtn = document.createElement('button');
         copyResponseBtn.type = "button";
         copyResponseBtn.className = btnStyle;
@@ -721,7 +721,8 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
 
         actionContainer.appendChild(buttonsFlexContainer);
 
-        const badgeElement = responseContent.querySelector('.bg-emerald-400');
+        // Cari elemen badge cyan atas yang dibuat pertama kali, lalu sisipkan kontainer aksi tepat di bawahnya
+        const badgeElement = responseContent.querySelector('.bg-cyan-500\\/10');
         if (badgeElement) {
             badgeElement.insertAdjacentElement('afterend', actionContainer);
         } else {
@@ -743,7 +744,6 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
         executeBtn.innerHTML = originalBtnHtml;
     }
 }
-
 
 function clearResponse(catIdx, epIdx, endpointType) {
     const responseDiv = document.getElementById(`response-${catIdx}-${epIdx}`);
