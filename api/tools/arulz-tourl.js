@@ -1,15 +1,15 @@
 const express = require("express");
-const Busboy = require("busboy");
 const axios = require("axios");
 const FormData = require("form-data");
 
 const router = express.Router();
 
-router.post("/", (req, res) => {
-    const busboy = Busboy({ headers: req.headers });
-    const apikey = req.query.apikey;
-    
-    if (!apikey) {
+router.post("/", async (req, res) => {
+    try {
+        const apikey = req.query.apikey;
+        
+        // 1. Validasi Apikey
+        if (!apikey) {
             return res.status(403).json({
                 status: false,
                 message: "Parameter 'apikey' diperlukan."
@@ -23,51 +23,53 @@ router.post("/", (req, res) => {
             });
         }
 
-    let chunks = [];
-    let filename = "file";
-    let mimetype = "application/octet-stream";
-
-    busboy.on("file", (name, file, info) => {
-        filename = info.filename;
-        mimetype = info.mimeType;
-
-        file.on("data", data => chunks.push(data));
-    });
-
-    busboy.on("finish", async () => {
-        try {
-            const buffer = Buffer.concat(chunks);
-
-            const form = new FormData();
-            form.append("file", buffer, {
-                filename,
-                contentType: mimetype
-            });
-
-            const { data } = await axios.post(
-                "https://arulz-uploader.vercel.app/api/upload",
-                form,
-                {
-                    headers: form.getHeaders()
-                }
-            );
-
-            res.json({
-                status: true,
-                creator: "ArulzXD",
-                result: data
-            });
-        } catch (e) {
-            res.status(500).json({
+        // 2. Validasi File Upload (express-fileupload)
+        if (!req.files || Object.keys(req.files).length === 0 || !req.files.file) {
+            return res.status(400).json({
                 status: false,
-                message: e.message
+                message: "Tidak ada file yang diunggah. Pastikan key name form-data adalah 'file'."
             });
         }
-    });
 
-    req.pipe(busboy);
+        const uploadedFile = req.files.file;
+        const buffer = uploadedFile.data;
+        const filename = uploadedFile.name;
+        const mimetype = uploadedFile.mimetype;
+
+        // 3. Siapkan Form Data untuk di-forward
+        const form = new FormData();
+        form.append("file", buffer, {
+            filename: filename,
+            contentType: mimetype
+        });
+
+        // 4. Kirim ke URL Uploader Baru Anda
+        const { data } = await axios.post(
+            "https://api-arulzxd-vvipclouds.vercel.app/uploader",
+            form,
+            {
+                headers: {
+                    ...form.getHeaders()
+                }
+            }
+        );
+
+        // 5. Kembalikan Response Hasil Upload ke Client
+        return res.json({
+            status: true,
+            creator: "ArulzXD",
+            result: data
+        });
+
+    } catch (e) {
+        return res.status(500).json({
+            status: false,
+            message: "Gagal meneruskan berkas ke server uploader",
+            error: e.message
+        });
+    }
 });
 
-router.status = "error"; 
+router.status = "ready"; 
 router.type = "free";
 module.exports = router;
