@@ -411,6 +411,20 @@ function updateLivePreview(catIdx, epIdx, method, basePath, endpointType) {
     }
 }
 
+// Fungsi pembantu untuk membuat preview media yang responsif
+function createMediaPreview(url, contentType, fullPath) {
+    if (contentType?.startsWith('image/') || url.match(/\.(jpeg|jpg|gif|png|webp)/i)) {
+        return `<div class="flex justify-center p-2 bg-black/20 rounded-xl"><img src="${url}" class="media-image max-h-64 rounded-lg shadow-md cursor-zoom-in object-contain" alt="Preview"></div>`;
+    } else if (contentType?.startsWith('video/') || url.match(/\.(mp4|webm|mov)/i)) {
+        return `<video src="${url}" controls class="w-full max-h-64 rounded-lg shadow-md bg-black"></video>`;
+    } else if (contentType?.startsWith('audio/') || url.match(/\.(mp3|wav|ogg)/i)) {
+        return `<audio src="${url}" controls class="w-full mt-2"></audio>`;
+    } else if (contentType?.includes('application/pdf') || url.match(/\.pdf/i)) {
+        return `<iframe src="${url}" class="w-full h-96 rounded-lg border border-white/10"></iframe>`;
+    }
+    return `<div class="p-3 bg-zinc-800 rounded-lg text-xs font-mono break-all"><a href="${url}" target="_blank" class="text-cyan-400 hover:underline">${url}</a></div>`;
+}
+
 async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
     e.preventDefault();
     if (isRequestInProgress) {
@@ -434,17 +448,14 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
     executeBtn.disabled = true;
     executeBtn.classList.add('btn-loading');
     
-    // FIX: Sembunyikan spinner bawaan agar tidak merusak layout / bertumpuk dengan tulisan "Loading..."
     spinner.style.setProperty('display', 'none', 'important');
     spinner.classList.remove('active');
     
     responseDiv.classList.remove('hidden');
     responseContent.innerHTML = '<div class="spinner mx-auto"></div>';
 
-    // SIMPAN INNER HTML ASLI TOMBOL (Misal: "Execute ⚡")
     const originalBtnHtml = executeBtn.innerHTML;
 
-    // GANTI TEKS TOMBOL MENJADI TULISAN LOADING... + SPINNER MIKRO BARU DI SEBELAH KIRI
     executeBtn.innerHTML = `
         <span class="animate-spin-custom mr-2"></span>
         <span class="btn-loading-text">Loading...</span>
@@ -453,7 +464,6 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
     const rawFormData = new FormData(form);
     const queryParams = new URLSearchParams();
 
-    // CEK INPUT FILE
     let formHasFile = false;
     form.querySelectorAll('input[type="file"]').forEach(fileInput => {
         if (fileInput.files.length > 0) {
@@ -461,7 +471,6 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
         }
     });
 
-    // PAKSA POST JIKA MEMBAWA FILE
     let finalMethod = method.toUpperCase();
     if (formHasFile) {
         finalMethod = 'POST';
@@ -481,10 +490,8 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
             fullPath += '?' + queryParams.toString();
         } else {
             if (formHasFile) {
-                // Kirim Multipart Form Data untuk semua jenis file (pdf, zip, docx, gambar, video, dll)
                 fetchOptions.body = rawFormData;
             } else {
-                // Teks JSON biasa jika tidak ada file
                 fetchOptions.headers = { 'Content-Type': 'application/json' };
                 const jsonBody = {};
                 for (const [key, value] of rawFormData.entries()) {
@@ -602,16 +609,13 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
         responseContent.innerHTML = `<pre class="text-red-400 code-font text-sm p-2 bg-red-500/10 rounded-lg">Error: ${error.message}</pre>`;
         showToast(i18n[currentLang].toastRequestFailed, true);
     } finally {
-        // RESET KEADAAN TOMBOL KEMBALI SEPERTI SEMULA
         isRequestInProgress = false;
         executeBtn.disabled = false;
         executeBtn.classList.remove('btn-loading');
         
-        // Kembalikan properti display spinner lama bawaan agar normal untuk pemakaian berikutnya
         spinner.style.display = ''; 
         spinner.classList.remove('active');
         
-        // Kembalikan isi teks tombol asal semula ("Execute" / "Submit")
         executeBtn.innerHTML = originalBtnHtml;
     }
 }
@@ -697,6 +701,38 @@ function performSearch() {
         });
         noResults.classList.toggle('hidden', hasVisibleItems);
     });
+}
+
+// Fungsi pembantu pembukaan accordion kategori menu rest api
+function toggleCategory(catIdx) {
+    const catEl = document.getElementById(`cat-${catIdx}`);
+    const iconEl = document.getElementById(`cat-icon-${catIdx}`);
+    if (catEl && iconEl) {
+        const isHidden = catEl.classList.contains('hidden');
+        catEl.classList.toggle('hidden', !isHidden);
+        iconEl.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
+    }
+}
+
+// Fungsi pembantu pembukaan accordion individual endpoint item list
+function toggleEndpoint(catIdx, epIdx) {
+    const epEl = document.getElementById(`ep-${catIdx}-${epIdx}`);
+    const iconEl = document.getElementById(`ep-icon-${catIdx}-${epIdx}`);
+    if (epEl && iconEl) {
+        const isHidden = epEl.classList.contains('hidden');
+        epEl.classList.toggle('hidden', !isHidden);
+        iconEl.textContent = isHidden ? '-' : '+';
+    }
+}
+
+// Fungsi pembantu penutupan dropdown / sidebar bio profile kustom
+function closeSidebarMenu() {
+    const bioDropdown = document.getElementById('bioDropdown');
+    const menuOverlay = document.getElementById('menuOverlay');
+    if (bioDropdown && menuOverlay) {
+        bioDropdown.style.transform = 'translateX(100%)';
+        menuOverlay.classList.add('hidden');
+    }
 }
 
 function loadApis() {
@@ -807,54 +843,51 @@ function loadApis() {
                         <form id="form-${catIdx}-${epIdx}" onsubmit="executeRequest(event, ${catIdx}, ${epIdx}, '${method}', '${path}', '${epType}')">
                             <div class="space-y-4 mb-4">`;
 
-                // Cari potongan kode ini di dalam fungsi `loadApis()` pada script.js Anda:
-if (item.params) {
-    Object.keys(item.params).forEach(paramName => {
-        const pType = item.params[paramName];
-        const isRequired = true; 
-        let paramDesc = (pType && pType.type) ? pType.type : (pType || paramName);
+                if (item.params) {
+                    Object.keys(item.params).forEach(paramName => {
+                        const pType = item.params[paramName];
+                        const isRequired = true; 
+                        let paramDesc = (pType && pType.type) ? pType.type : (pType || paramName);
 
-        let inputValue = '';
-        let inputPlaceholder = `Masukkan ${paramName}`;
+                        let inputValue = '';
+                        let inputPlaceholder = `Masukkan ${paramName}`;
 
-        if (paramName.toLowerCase() === 'apikey') {
-            if (epType === 'premium') {
-                inputValue = '';
-                inputPlaceholder = 'Masukkan apikey premium';
-            } else {
-                inputValue = 'arulzxd-keys';
-                inputPlaceholder = 'Masukkan apikey';
-            }
-        }
+                        if (paramName.toLowerCase() === 'apikey') {
+                            if (epType === 'premium') {
+                                inputValue = '';
+                                inputPlaceholder = 'Masukkan apikey premium';
+                            } else {
+                                inputValue = 'arulzxd-keys';
+                                inputPlaceholder = 'Masukkan apikey';
+                            }
+                        }
 
-        html += `
-        <div>
-            <div class="flex items-center justify-between mb-1.5">
-                <label class="block text-xs font-semibold text-slate-300 light-mode:text-slate-700 code-font">
-                    ${paramName} ${isRequired ? '<span class="text-red-500">*</span>' : ''}
-                </label>
-                <span class="text-[10px] text-slate-500 light-mode:text-slate-400 italic font-normal">${paramDesc}</span>
-            </div>`;
+                        html += `
+                        <div>
+                            <div class="flex items-center justify-between mb-1.5">
+                                <label class="block text-xs font-semibold text-slate-300 light-mode:text-slate-700 code-font">
+                                    ${paramName} ${isRequired ? '<span class="text-red-500">*</span>' : ''}
+                                </label>
+                                <span class="text-[10px] text-slate-500 light-mode:text-slate-400 italic font-normal">${paramDesc}</span>
+                            </div>`;
 
-        // MODIFIKASI SELEKSI INPUT / SELECT DROPDOWN
-        if (pType === 'file' || paramName === 'file') {
-            html += `<input type="file" name="${paramName}" onchange="updateLivePreview(${catIdx}, ${epIdx}, '${method}', '${path}', '${epType}')" class="w-full px-3 py-2 rounded-lg bg-black/40 light-mode:bg-white border border-white/10 light-mode:border-slate-300 text-white light-mode:text-slate-900 focus:outline-none focus:border-cyan-500 text-xs file:mr-3 file:py-1 file:px-2.5 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-cyan-500/10 file:text-cyan-400 hover:file:bg-cyan-500/20" ${isRequired ? 'required' : ''}>`;
-        } 
-        else if (pType && pType.type === 'select' && Array.isArray(pType.options)) {
-            // JIKA PARAMETER ADALAH SELECT, BUAT ELEMEN DROPDOWN MENU
-            html += `<select name="${paramName}" onchange="updateLivePreview(${catIdx}, ${epIdx}, '${method}', '${path}', '${epType}')" class="w-full px-3 py-2 rounded-lg bg-black/40 light-mode:bg-white border border-white/10 light-mode:border-slate-300 text-cyan-400 light-mode:text-slate-900 focus:outline-none focus:border-cyan-500 code-font text-sm">`;
-            pType.options.forEach(opt => {
-                html += `<option value="${opt}" class="bg-slate-900 text-white">${opt}</option>`;
-            });
-            html += `</select>`;
-        } 
-        else {
-            html += `<input type="text" name="${paramName}" value="${inputValue}" oninput="updateLivePreview(${catIdx}, ${epIdx}, '${method}', '${path}', '${epType}')" class="w-full px-3 py-2 rounded-lg bg-black/40 light-mode:bg-white border border-white/10 light-mode:border-slate-300 text-white light-mode:text-slate-900 focus:outline-none focus:border-cyan-500 code-font text-sm" placeholder="${inputPlaceholder}" ${isRequired ? 'required' : ''}>`;
-        }
+                        if (pType === 'file' || paramName === 'file') {
+                            html += `<input type="file" name="${paramName}" onchange="updateLivePreview(${catIdx}, ${epIdx}, '${method}', '${path}', '${epType}')" class="w-full px-3 py-2 rounded-lg bg-black/40 light-mode:bg-white border border-white/10 light-mode:border-slate-300 text-white light-mode:text-slate-900 focus:outline-none focus:border-cyan-500 text-xs file:mr-3 file:py-1 file:px-2.5 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-cyan-500/10 file:text-cyan-400 hover:file:bg-cyan-500/20" ${isRequired ? 'required' : ''}>`;
+                        } 
+                        else if (pType && pType.type === 'select' && Array.isArray(pType.options)) {
+                            html += `<select name="${paramName}" onchange="updateLivePreview(${catIdx}, ${epIdx}, '${method}', '${path}', '${epType}')" class="w-full px-3 py-2 rounded-lg bg-black/40 light-mode:bg-white border border-white/10 light-mode:border-slate-300 text-cyan-400 light-mode:text-slate-900 focus:outline-none focus:border-cyan-500 code-font text-sm">`;
+                            pType.options.forEach(opt => {
+                                html += `<option value="${opt}" class="bg-slate-900 text-white">${opt}</option>`;
+                            });
+                            html += `</select>`;
+                        } 
+                        else {
+                            html += `<input type="text" name="${paramName}" value="${inputValue}" oninput="updateLivePreview(${catIdx}, ${epIdx}, '${method}', '${path}', '${epType}')" class="w-full px-3 py-2 rounded-lg bg-black/40 light-mode:bg-white border border-white/10 light-mode:border-slate-300 text-white light-mode:text-slate-900 focus:outline-none focus:border-cyan-500 code-font text-sm" placeholder="${inputPlaceholder}" ${isRequired ? 'required' : ''}>`;
+                        }
 
-        html += `</div>`;
-    });
-}
+                        html += `</div>`;
+                    });
+                }
                 
                 html += `
                             </div>
@@ -1034,7 +1067,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (uploaderBtn) {
         uploaderBtn.addEventListener('click', () => {
-            // MENGARAHKAN LANGSUNG KE ENDPOINT UPLOADER INTERNAL WEBSITE ANDA
             window.location.href = '/uploader'; 
         });
     }
@@ -1045,12 +1077,11 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Fetch list data API dari backend
     fetch('/api/apilist')
         .then(res => res.json())
         .then(data => {
             apiData = data;
-            loadApis(); // Jalankan fungsi render bawaan Anda
+            loadApis(); 
         })
         .catch(err => {
             const apiListEl = document.getElementById('apiList');
