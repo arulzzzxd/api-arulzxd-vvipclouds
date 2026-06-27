@@ -434,9 +434,9 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
     executeBtn.disabled = true;
     executeBtn.classList.add('btn-loading');
     
-    // PERBAIKAN: Sembunyikan spinner bawaan agar tidak bertumpuk dengan animasi baru
-    spinner.style.display = 'none';
-    spinner.classList.add('active');
+    // FIX: Sembunyikan spinner bawaan agar tidak merusak layout / bertumpuk dengan tulisan "Loading..."
+    spinner.style.setProperty('display', 'none', 'important');
+    spinner.classList.remove('active');
     
     responseDiv.classList.remove('hidden');
     responseContent.innerHTML = '<div class="spinner mx-auto"></div>';
@@ -444,7 +444,7 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
     // SIMPAN INNER HTML ASLI TOMBOL (Misal: "Execute ⚡")
     const originalBtnHtml = executeBtn.innerHTML;
 
-    // GANTI TEKS TOMBOL MENJADI TULISAN LOADING... + SPINNER MIKRO DI KIRI
+    // GANTI TEKS TOMBOL MENJADI TULISAN LOADING... + SPINNER MIKRO BARU DI SEBELAH KIRI
     executeBtn.innerHTML = `
         <span class="animate-spin-custom mr-2"></span>
         <span class="btn-loading-text">Loading...</span>
@@ -602,16 +602,16 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
         responseContent.innerHTML = `<pre class="text-red-400 code-font text-sm p-2 bg-red-500/10 rounded-lg">Error: ${error.message}</pre>`;
         showToast(i18n[currentLang].toastRequestFailed, true);
     } finally {
-        // KEMBALIKAN STATE TOMBOL KEMBALI NORMAL
+        // RESET KEADAAN TOMBOL KEMBALI SEPERTI SEMULA
         isRequestInProgress = false;
         executeBtn.disabled = false;
         executeBtn.classList.remove('btn-loading');
         
-        // Tampilkan kembali spinner bawaan lama (untuk request berikutnya)
-        spinner.style.display = '';
+        // Kembalikan properti display spinner lama bawaan agar normal untuk pemakaian berikutnya
+        spinner.style.display = ''; 
         spinner.classList.remove('active');
         
-        // Kembalikan isi teks tombol awal semula (misal: "Execute ⚡")
+        // Kembalikan isi teks tombol asal semula ("Execute" / "Submit")
         executeBtn.innerHTML = originalBtnHtml;
     }
 }
