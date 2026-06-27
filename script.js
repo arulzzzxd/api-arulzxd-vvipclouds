@@ -378,16 +378,20 @@ function updateLivePreview(catIdx, epIdx, method, basePath, endpointType) {
     const fileElements = form.querySelectorAll('input[type="file"]');
     fileElements.forEach(el => { if (el.files.length > 0) hasFile = true; });
 
-    // Masukkan parameter teks ke URL query jika metode GET/DELETE atau tidak memiliki file
+    // Ambil nilai apikey dari form jika diisi oleh user
+    let userApikey = formData.get('apikey') || 'arulzxd-keys';
+
     for (const [key, value] of formData.entries()) {
-        if (value && typeof value === 'string') {
+        if (value && typeof value === 'string' && key !== 'apikey') {
              params.append(key, value);
         }
     }
 
+    // Selalu tempelkan apikey di query string URL utama
+    params.append('apikey', userApikey);
     const queryStr = params.toString();
-    // Jika ada file berkas, parameter query biasanya ditaruh di body Form-Data, bukan di URL query string
-    const finalUrl = (queryStr && !hasFile) ? `${BASE_URL}${basePath}?${queryStr}` : `${BASE_URL}${basePath}`;
+    
+    const finalUrl = `${BASE_URL}${basePath}?${queryStr}`;
 
     const urlContainer = document.getElementById(`live-url-${catIdx}-${epIdx}`);
     const curlContainer = document.getElementById(`live-curl-${catIdx}-${epIdx}`);
@@ -397,32 +401,34 @@ function updateLivePreview(catIdx, epIdx, method, basePath, endpointType) {
         if (method === 'GET') {
             curlContainer.textContent = `curl -X GET "${finalUrl}"`;
         } 
-        // JIKA MENGGUNAKAN FILE UPLOAD (MULTIPART/FORM-DATA)
+        // JIKA FORM MENGANDUNG FILE (MULTIPART FORM DATA)
         else if (hasFile) {
             const formFields = [];
             for (const [key, value] of formData.entries()) {
+                if (key === 'apikey') continue; // apikey dipisah ke URL query agar aman
                 if (value instanceof File) {
-                    // Visualisasi file di cURL memakai tanda @
                     formFields.push(`-F "${key}=@${value.name || 'file'}"`);
                 } else if (value) {
                     formFields.push(`-F "${key}=${value}"`);
                 }
             }
-            curlContainer.textContent = `curl -X ${method} "${BASE_URL}${basePath}" ${formFields.join(' ')}`;
+            curlContainer.textContent = `curl -X ${method} "${finalUrl}" ${formFields.join(' ')}`;
         } 
-        // JIKA POST/PUT TEXT REGULER (JSON)
+        // JIKA POST JSON STANDAR
         else {
             const bodyParams = [];
             for (const [key, value] of formData.entries()) {
+                if (key === 'apikey') continue;
                 if (value && typeof value === 'string') {
                     bodyParams.push(`"${key}": "${value}"`);
                 }
             }
             const dataString = bodyParams.length ? ` -H "Content-Type: application/json" -d '{${bodyParams.join(', ')}}'` : '';
-            curlContainer.textContent = `curl -X ${method} "${BASE_URL}${basePath}"${dataString}`;
+            curlContainer.textContent = `curl -X ${method} "${finalUrl}"${dataString}`;
         }
     }
 }
+
 
 function toggleCategory(index) {
     const content = document.getElementById(`cat-${index}`);
