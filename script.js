@@ -411,20 +411,6 @@ function updateLivePreview(catIdx, epIdx, method, basePath, endpointType) {
     }
 }
 
-// Fungsi pembantu untuk membuat preview media yang responsif
-function createMediaPreview(url, contentType, fullPath) {
-    if (contentType?.startsWith('image/') || url.match(/\.(jpeg|jpg|gif|png|webp)/i)) {
-        return `<div class="flex justify-center p-2 bg-black/20 rounded-xl"><img src="${url}" class="media-image max-h-64 rounded-lg shadow-md cursor-zoom-in object-contain" alt="Preview"></div>`;
-    } else if (contentType?.startsWith('video/') || url.match(/\.(mp4|webm|mov)/i)) {
-        return `<video src="${url}" controls class="w-full max-h-64 rounded-lg shadow-md bg-black"></video>`;
-    } else if (contentType?.startsWith('audio/') || url.match(/\.(mp3|wav|ogg)/i)) {
-        return `<audio src="${url}" controls class="w-full mt-2"></audio>`;
-    } else if (contentType?.includes('application/pdf') || url.match(/\.pdf/i)) {
-        return `<iframe src="${url}" class="w-full h-96 rounded-lg border border-white/10"></iframe>`;
-    }
-    return `<div class="p-3 bg-zinc-800 rounded-lg text-xs font-mono break-all"><a href="${url}" target="_blank" class="text-cyan-400 hover:underline">${url}</a></div>`;
-}
-
 async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
     e.preventDefault();
     if (isRequestInProgress) {
@@ -448,17 +434,37 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
     executeBtn.disabled = true;
     executeBtn.classList.add('btn-loading');
     
+    // Sembunyikan spinner bawaan agar tidak bertumpuk
     spinner.style.setProperty('display', 'none', 'important');
     spinner.classList.remove('active');
     
     responseDiv.classList.remove('hidden');
-    responseContent.innerHTML = '<div class="spinner mx-auto"></div>';
 
+    // Tampilan Loading di dalam kotak RESPONSE (Menggunakan 3 titik melompat, serasi dengan tombol)
+    responseContent.innerHTML = `
+        <div class="flex items-center justify-center p-8 text-sm font-mono tracking-wider text-cyan-400 gap-1.5">
+            <span>FETCHING RESPONSE</span>
+            <span class="flex gap-1 items-center pt-1">
+                <span class="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-[bounce_1s_infinite_100ms]"></span>
+                <span class="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-[bounce_1s_infinite_200ms]"></span>
+                <span class="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-[bounce_1s_infinite_300ms]"></span>
+            </span>
+        </div>
+    `;
+
+    // SIMPAN INNER HTML ASLI TOMBOL
     const originalBtnHtml = executeBtn.innerHTML;
 
+    // Tampilan Loading pada TOMBOL EKSEKUSI (Menggunakan 3 titik melompat)
     executeBtn.innerHTML = `
-        <span class="animate-spin-custom mr-2"></span>
-        <span class="btn-loading-text">Loading...</span>
+        <div class="flex items-center justify-center gap-1">
+            <span class="tracking-wide">LOADING</span>
+            <span class="flex gap-0.5 ml-0.5">
+                <span class="w-1 h-1 bg-current rounded-full animate-[bounce_1s_infinite_100ms]"></span>
+                <span class="w-1 h-1 bg-current rounded-full animate-[bounce_1s_infinite_200ms]"></span>
+                <span class="w-1 h-1 bg-current rounded-full animate-[bounce_1s_infinite_300ms]"></span>
+            </span>
+        </div>
     `;
 
     const rawFormData = new FormData(form);
@@ -572,29 +578,74 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
 
         const isLightMode = body.classList.contains('light-mode');
         const btnStyle = isLightMode 
-            ? 'px-2.5 py-1 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded text-[11px] font-semibold transition-colors code-font border border-black/5'
-            : 'px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-white rounded text-[11px] font-semibold transition-colors code-font border border-white/5';
+            ? 'px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-lg text-[11px] font-semibold transition-colors code-font border border-black/5 flex items-center gap-1.5 shadow-sm'
+            : 'px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-[11px] font-semibold transition-colors code-font border border-white/5 flex items-center gap-1.5';
 
         const actionContainer = document.createElement('div');
         actionContainer.className = "flex flex-wrap gap-2 mb-3 border-b border-white/10 light-mode:border-slate-200 pb-3 mt-3";
 
-        const copyUrlBtn = document.createElement('button');
-        copyUrlBtn.type = "button";
-        copyUrlBtn.className = btnStyle;
-        copyUrlBtn.innerHTML = "🔗 Copy URL Request";
-        copyUrlBtn.onclick = () => {
-            const finalFullUrl = finalMethod === 'GET' ? fullPath : (queryParams.toString() ? `${fullPath}?${queryParams.toString()}` : fullPath);
-            copyText(finalFullUrl, "URL Request");
-        };
-        actionContainer.appendChild(copyUrlBtn);
-
         if (!isMedia) {
+            // 1. Tombol Copy Response JSON (Menggunakan SVG Icon)
             const copyResponseBtn = document.createElement('button');
             copyResponseBtn.type = "button";
             copyResponseBtn.className = btnStyle;
-            copyResponseBtn.innerHTML = "📋 Copy Response JSON";
+            copyResponseBtn.innerHTML = `
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+                <span>Copy Response JSON</span>
+            `;
             copyResponseBtn.onclick = () => copyText(rawResponseText, "Response");
             actionContainer.appendChild(copyResponseBtn);
+
+            // 2. Tombol Download Response (JSON / Teks)
+            const downloadResponseBtn = document.createElement('button');
+            downloadResponseBtn.type = "button";
+            downloadResponseBtn.className = btnStyle;
+            downloadResponseBtn.innerHTML = `
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                <span>Download Response</span>
+            `;
+            downloadResponseBtn.onclick = () => {
+                const blob = new Blob([rawResponseText], { type: cleanContentType });
+                const extension = cleanContentType.includes('json') ? 'json' : 'txt';
+                const downloadUrl = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = downloadUrl;
+                a.download = `response-${Date.now()}.${extension}`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(downloadUrl);
+            };
+            actionContainer.appendChild(downloadResponseBtn);
+        } else {
+            // 3. Tombol Download Media (Unduh file apa saja secara dinamis)
+            const downloadMediaBtn = document.createElement('button');
+            downloadMediaBtn.type = "button";
+            downloadMediaBtn.className = btnStyle;
+            downloadMediaBtn.innerHTML = `
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                <span>Download Media</span>
+            `;
+            downloadMediaBtn.onclick = async () => {
+                try {
+                    const mediaRes = await fetch(fullPath);
+                    const mediaBlob = await mediaRes.blob();
+                    const downloadUrl = URL.createObjectURL(mediaBlob);
+                    const a = document.createElement('a');
+                    a.href = downloadUrl;
+                    
+                    const ext = cleanContentType.split('/')[1] || 'bin';
+                    a.download = `media-${Date.now()}.${ext}`;
+                    
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(downloadUrl);
+                } catch (err) {
+                    showToast('Gagal mengunduh file media', true);
+                }
+            };
+            actionContainer.appendChild(downloadMediaBtn);
         }
 
         const badgeElement = responseContent.querySelector('.bg-emerald-400');
@@ -619,6 +670,7 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
         executeBtn.innerHTML = originalBtnHtml;
     }
 }
+
 
 
 function clearResponse(catIdx, epIdx, endpointType) {
@@ -701,38 +753,6 @@ function performSearch() {
         });
         noResults.classList.toggle('hidden', hasVisibleItems);
     });
-}
-
-// Fungsi pembantu pembukaan accordion kategori menu rest api
-function toggleCategory(catIdx) {
-    const catEl = document.getElementById(`cat-${catIdx}`);
-    const iconEl = document.getElementById(`cat-icon-${catIdx}`);
-    if (catEl && iconEl) {
-        const isHidden = catEl.classList.contains('hidden');
-        catEl.classList.toggle('hidden', !isHidden);
-        iconEl.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
-    }
-}
-
-// Fungsi pembantu pembukaan accordion individual endpoint item list
-function toggleEndpoint(catIdx, epIdx) {
-    const epEl = document.getElementById(`ep-${catIdx}-${epIdx}`);
-    const iconEl = document.getElementById(`ep-icon-${catIdx}-${epIdx}`);
-    if (epEl && iconEl) {
-        const isHidden = epEl.classList.contains('hidden');
-        epEl.classList.toggle('hidden', !isHidden);
-        iconEl.textContent = isHidden ? '-' : '+';
-    }
-}
-
-// Fungsi pembantu penutupan dropdown / sidebar bio profile kustom
-function closeSidebarMenu() {
-    const bioDropdown = document.getElementById('bioDropdown');
-    const menuOverlay = document.getElementById('menuOverlay');
-    if (bioDropdown && menuOverlay) {
-        bioDropdown.style.transform = 'translateX(100%)';
-        menuOverlay.classList.add('hidden');
-    }
 }
 
 function loadApis() {
@@ -843,51 +863,54 @@ function loadApis() {
                         <form id="form-${catIdx}-${epIdx}" onsubmit="executeRequest(event, ${catIdx}, ${epIdx}, '${method}', '${path}', '${epType}')">
                             <div class="space-y-4 mb-4">`;
 
-                if (item.params) {
-                    Object.keys(item.params).forEach(paramName => {
-                        const pType = item.params[paramName];
-                        const isRequired = true; 
-                        let paramDesc = (pType && pType.type) ? pType.type : (pType || paramName);
+                // Cari potongan kode ini di dalam fungsi `loadApis()` pada script.js Anda:
+if (item.params) {
+    Object.keys(item.params).forEach(paramName => {
+        const pType = item.params[paramName];
+        const isRequired = true; 
+        let paramDesc = (pType && pType.type) ? pType.type : (pType || paramName);
 
-                        let inputValue = '';
-                        let inputPlaceholder = `Masukkan ${paramName}`;
+        let inputValue = '';
+        let inputPlaceholder = `Masukkan ${paramName}`;
 
-                        if (paramName.toLowerCase() === 'apikey') {
-                            if (epType === 'premium') {
-                                inputValue = '';
-                                inputPlaceholder = 'Masukkan apikey premium';
-                            } else {
-                                inputValue = 'arulzxd-keys';
-                                inputPlaceholder = 'Masukkan apikey';
-                            }
-                        }
+        if (paramName.toLowerCase() === 'apikey') {
+            if (epType === 'premium') {
+                inputValue = '';
+                inputPlaceholder = 'Masukkan apikey premium';
+            } else {
+                inputValue = 'arulzxd-keys';
+                inputPlaceholder = 'Masukkan apikey';
+            }
+        }
 
-                        html += `
-                        <div>
-                            <div class="flex items-center justify-between mb-1.5">
-                                <label class="block text-xs font-semibold text-slate-300 light-mode:text-slate-700 code-font">
-                                    ${paramName} ${isRequired ? '<span class="text-red-500">*</span>' : ''}
-                                </label>
-                                <span class="text-[10px] text-slate-500 light-mode:text-slate-400 italic font-normal">${paramDesc}</span>
-                            </div>`;
+        html += `
+        <div>
+            <div class="flex items-center justify-between mb-1.5">
+                <label class="block text-xs font-semibold text-slate-300 light-mode:text-slate-700 code-font">
+                    ${paramName} ${isRequired ? '<span class="text-red-500">*</span>' : ''}
+                </label>
+                <span class="text-[10px] text-slate-500 light-mode:text-slate-400 italic font-normal">${paramDesc}</span>
+            </div>`;
 
-                        if (pType === 'file' || paramName === 'file') {
-                            html += `<input type="file" name="${paramName}" onchange="updateLivePreview(${catIdx}, ${epIdx}, '${method}', '${path}', '${epType}')" class="w-full px-3 py-2 rounded-lg bg-black/40 light-mode:bg-white border border-white/10 light-mode:border-slate-300 text-white light-mode:text-slate-900 focus:outline-none focus:border-cyan-500 text-xs file:mr-3 file:py-1 file:px-2.5 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-cyan-500/10 file:text-cyan-400 hover:file:bg-cyan-500/20" ${isRequired ? 'required' : ''}>`;
-                        } 
-                        else if (pType && pType.type === 'select' && Array.isArray(pType.options)) {
-                            html += `<select name="${paramName}" onchange="updateLivePreview(${catIdx}, ${epIdx}, '${method}', '${path}', '${epType}')" class="w-full px-3 py-2 rounded-lg bg-black/40 light-mode:bg-white border border-white/10 light-mode:border-slate-300 text-cyan-400 light-mode:text-slate-900 focus:outline-none focus:border-cyan-500 code-font text-sm">`;
-                            pType.options.forEach(opt => {
-                                html += `<option value="${opt}" class="bg-slate-900 text-white">${opt}</option>`;
-                            });
-                            html += `</select>`;
-                        } 
-                        else {
-                            html += `<input type="text" name="${paramName}" value="${inputValue}" oninput="updateLivePreview(${catIdx}, ${epIdx}, '${method}', '${path}', '${epType}')" class="w-full px-3 py-2 rounded-lg bg-black/40 light-mode:bg-white border border-white/10 light-mode:border-slate-300 text-white light-mode:text-slate-900 focus:outline-none focus:border-cyan-500 code-font text-sm" placeholder="${inputPlaceholder}" ${isRequired ? 'required' : ''}>`;
-                        }
+        // MODIFIKASI SELEKSI INPUT / SELECT DROPDOWN
+        if (pType === 'file' || paramName === 'file') {
+            html += `<input type="file" name="${paramName}" onchange="updateLivePreview(${catIdx}, ${epIdx}, '${method}', '${path}', '${epType}')" class="w-full px-3 py-2 rounded-lg bg-black/40 light-mode:bg-white border border-white/10 light-mode:border-slate-300 text-white light-mode:text-slate-900 focus:outline-none focus:border-cyan-500 text-xs file:mr-3 file:py-1 file:px-2.5 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-cyan-500/10 file:text-cyan-400 hover:file:bg-cyan-500/20" ${isRequired ? 'required' : ''}>`;
+        } 
+        else if (pType && pType.type === 'select' && Array.isArray(pType.options)) {
+            // JIKA PARAMETER ADALAH SELECT, BUAT ELEMEN DROPDOWN MENU
+            html += `<select name="${paramName}" onchange="updateLivePreview(${catIdx}, ${epIdx}, '${method}', '${path}', '${epType}')" class="w-full px-3 py-2 rounded-lg bg-black/40 light-mode:bg-white border border-white/10 light-mode:border-slate-300 text-cyan-400 light-mode:text-slate-900 focus:outline-none focus:border-cyan-500 code-font text-sm">`;
+            pType.options.forEach(opt => {
+                html += `<option value="${opt}" class="bg-slate-900 text-white">${opt}</option>`;
+            });
+            html += `</select>`;
+        } 
+        else {
+            html += `<input type="text" name="${paramName}" value="${inputValue}" oninput="updateLivePreview(${catIdx}, ${epIdx}, '${method}', '${path}', '${epType}')" class="w-full px-3 py-2 rounded-lg bg-black/40 light-mode:bg-white border border-white/10 light-mode:border-slate-300 text-white light-mode:text-slate-900 focus:outline-none focus:border-cyan-500 code-font text-sm" placeholder="${inputPlaceholder}" ${isRequired ? 'required' : ''}>`;
+        }
 
-                        html += `</div>`;
-                    });
-                }
+        html += `</div>`;
+    });
+}
                 
                 html += `
                             </div>
@@ -1067,6 +1090,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (uploaderBtn) {
         uploaderBtn.addEventListener('click', () => {
+            // MENGARAHKAN LANGSUNG KE ENDPOINT UPLOADER INTERNAL WEBSITE ANDA
             window.location.href = '/uploader'; 
         });
     }
@@ -1077,11 +1101,12 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Fetch list data API dari backend
     fetch('/api/apilist')
         .then(res => res.json())
         .then(data => {
             apiData = data;
-            loadApis(); 
+            loadApis(); // Jalankan fungsi render bawaan Anda
         })
         .catch(err => {
             const apiListEl = document.getElementById('apiList');
