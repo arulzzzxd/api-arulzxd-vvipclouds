@@ -1,5 +1,5 @@
 /* =========================================================================
-   SCRIPT.JS REST API (UPDATED)
+   SCRIPT.JS REST API (UPDATED & FIXED)
    ========================================================================= */
 
 const BASE_URL = window.location.origin;
@@ -87,6 +87,71 @@ const i18n = {
         batterySimulated: "Simulated"
     }
 };
+
+/* =========================================================================
+   ADDITIONAL / MISSING CORE FUNCTIONS
+   ========================================================================= */
+
+// Fungsi Toggle Grup Kategori Utama
+function toggleCategory(catIdx) {
+    const catDiv = document.getElementById(`cat-${catIdx}`);
+    const catIcon = document.getElementById(`cat-icon-${catIdx}`);
+    if (catDiv && catIcon) {
+        const isHidden = catDiv.classList.contains('hidden');
+        if (isHidden) {
+            catDiv.classList.remove('hidden');
+            catIcon.style.transform = 'rotate(180deg)';
+        } else {
+            catDiv.classList.add('hidden');
+            catIcon.style.transform = 'rotate(0deg)';
+        }
+    }
+}
+
+// Fungsi Toggle Detail Formulir Endpoint (+ / -)
+function toggleEndpoint(catIdx, epIdx) {
+    const epDiv = document.getElementById(`ep-${catIdx}-${epIdx}`);
+    const epIcon = document.getElementById(`ep-icon-${catIdx}-${epIdx}`);
+    if (epDiv && epIcon) {
+        const isHidden = epDiv.classList.contains('hidden');
+        if (isHidden) {
+            epDiv.classList.remove('hidden');
+            epIcon.textContent = '−';
+        } else {
+            epDiv.classList.add('hidden');
+            epIcon.textContent = '+';
+        }
+    }
+}
+
+// Fungsi Menutup Sidebar Menu Bio & Overlay
+function closeSidebarMenu() {
+    const bioDropdown = document.getElementById('bioDropdown');
+    const menuOverlay = document.getElementById('menuOverlay');
+    if (bioDropdown && menuOverlay) {
+        bioDropdown.style.transform = 'translateX(100%)';
+        menuOverlay.classList.add('hidden');
+    }
+}
+
+// Fungsi Generator Komponen Pratinjau Media Hasil Eksekusi
+function createMediaPreview(url, contentType, fullPath) {
+    const type = contentType || '';
+    if (type.startsWith('image/') || url.match(/\.(jpeg|jpg|gif|png|webp)/i)) {
+        return `<div class="mt-2 flex justify-center bg-black/20 p-2 rounded-lg border border-white/5"><img src="${url}" class="media-image max-h-64 rounded-lg object-contain cursor-pointer transition-transform hover:scale-[1.02]" alt="Preview"></div>`;
+    } else if (type.startsWith('video/') || url.match(/\.(mp4|webm|mov)/i)) {
+        return `<div class="mt-2 bg-black/20 p-2 rounded-lg border border-white/5"><video src="${url}" controls class="w-full max-h-64 rounded-lg"></video></div>`;
+    } else if (type.startsWith('audio/') || url.match(/\.(mp3|wav|ogg)/i)) {
+        return `<div class="mt-2 bg-black/20 p-3 rounded-lg border border-white/5"><audio src="${url}" controls class="w-full"></audio></div>`;
+    } else if (type.includes('application/pdf') || url.match(/\.pdf/i)) {
+        return `<div class="mt-2 bg-black/20 p-2 rounded-lg border border-white/5"><iframe src="${url}" class="w-full h-64 rounded-lg border-0"></iframe></div>`;
+    }
+    return `<div class="mt-2 p-3 bg-cyan-500/10 text-cyan-400 rounded-lg text-xs break-all border border-cyan-500/20">Media URL: <a href="${url}" target="_blank" class="underline hover:text-cyan-300">${url}</a></div>`;
+}
+
+/* =========================================================================
+   THEME & APPLICATION FUNCTIONS
+   ========================================================================= */
 
 function updateThemeBackground(theme) {
     if (themeBg) {
@@ -434,13 +499,11 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
     executeBtn.disabled = true;
     executeBtn.classList.add('btn-loading');
     
-    // Sembunyikan spinner bawaan agar tidak bertumpuk
     spinner.style.setProperty('display', 'none', 'important');
     spinner.classList.remove('active');
     
     responseDiv.classList.remove('hidden');
 
-    // Animasi Teks Loading di dalam kotak RESPONSE (Menggunakan 3 titik melompat)
     responseContent.innerHTML = `
         <div class="flex items-center justify-center p-8 text-sm font-mono tracking-wider text-cyan-400 gap-1.5">
             <span>FETCHING RESPONSE</span>
@@ -452,10 +515,8 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
         </div>
     `;
 
-    // Simpan inner HTML asli tombol eksekusi
     const originalBtnHtml = executeBtn.innerHTML;
 
-    // Animasi Teks Loading pada TOMBOL EKSEKUSI (Menggunakan 3 titik melompat)
     executeBtn.innerHTML = `
         <div class="flex items-center justify-center gap-1">
             <span class="tracking-wide">LOADING</span>
@@ -585,7 +646,6 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
         actionContainer.className = "flex flex-wrap gap-2 mb-3 border-b border-white/10 light-mode:border-slate-200 pb-3 mt-3";
 
         if (!isMedia) {
-            // 1. Tombol Copy Response JSON (Menggunakan SVG Icon)
             const copyResponseBtn = document.createElement('button');
             copyResponseBtn.type = "button";
             copyResponseBtn.className = btnStyle;
@@ -596,7 +656,6 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
             copyResponseBtn.onclick = () => copyText(rawResponseText, "Response");
             actionContainer.appendChild(copyResponseBtn);
 
-            // 2. Tombol Download Response (Untuk mendownload teks/JSON apa saja)
             const downloadResponseBtn = document.createElement('button');
             downloadResponseBtn.type = "button";
             downloadResponseBtn.className = btnStyle;
@@ -618,7 +677,6 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
             };
             actionContainer.appendChild(downloadResponseBtn);
         } else {
-            // 3. Tombol Download Media (Mengunduh file biner media gambar/video/audio dll)
             const downloadMediaBtn = document.createElement('button');
             downloadMediaBtn.type = "button";
             downloadMediaBtn.className = btnStyle;
@@ -861,54 +919,51 @@ function loadApis() {
                         <form id="form-${catIdx}-${epIdx}" onsubmit="executeRequest(event, ${catIdx}, ${epIdx}, '${method}', '${path}', '${epType}')">
                             <div class="space-y-4 mb-4">`;
 
-                // Cari potongan kode ini di dalam fungsi `loadApis()` pada script.js Anda:
-if (item.params) {
-    Object.keys(item.params).forEach(paramName => {
-        const pType = item.params[paramName];
-        const isRequired = true; 
-        let paramDesc = (pType && pType.type) ? pType.type : (pType || paramName);
+                if (item.params) {
+                    Object.keys(item.params).forEach(paramName => {
+                        const pType = item.params[paramName];
+                        const isRequired = true; 
+                        let paramDesc = (pType && pType.type) ? pType.type : (pType || paramName);
 
-        let inputValue = '';
-        let inputPlaceholder = `Masukkan ${paramName}`;
+                        let inputValue = '';
+                        let inputPlaceholder = `Masukkan ${paramName}`;
 
-        if (paramName.toLowerCase() === 'apikey') {
-            if (epType === 'premium') {
-                inputValue = '';
-                inputPlaceholder = 'Masukkan apikey premium';
-            } else {
-                inputValue = 'arulzxd-keys';
-                inputPlaceholder = 'Masukkan apikey';
-            }
-        }
+                        if (paramName.toLowerCase() === 'apikey') {
+                            if (epType === 'premium') {
+                                inputValue = '';
+                                inputPlaceholder = 'Masukkan apikey premium';
+                            } else {
+                                inputValue = 'arulzxd-keys';
+                                inputPlaceholder = 'Masukkan apikey';
+                            }
+                        }
 
-        html += `
-        <div>
-            <div class="flex items-center justify-between mb-1.5">
-                <label class="block text-xs font-semibold text-slate-300 light-mode:text-slate-700 code-font">
-                    ${paramName} ${isRequired ? '<span class="text-red-500">*</span>' : ''}
-                </label>
-                <span class="text-[10px] text-slate-500 light-mode:text-slate-400 italic font-normal">${paramDesc}</span>
-            </div>`;
+                        html += `
+                        <div>
+                            <div class="flex items-center justify-between mb-1.5">
+                                <label class="block text-xs font-semibold text-slate-300 light-mode:text-slate-700 code-font">
+                                    ${paramName} ${isRequired ? '<span class="text-red-500">*</span>' : ''}
+                                </label>
+                                <span class="text-[10px] text-slate-500 light-mode:text-slate-400 italic font-normal">${paramDesc}</span>
+                            </div>`;
 
-        // MODIFIKASI SELEKSI INPUT / SELECT DROPDOWN
-        if (pType === 'file' || paramName === 'file') {
-            html += `<input type="file" name="${paramName}" onchange="updateLivePreview(${catIdx}, ${epIdx}, '${method}', '${path}', '${epType}')" class="w-full px-3 py-2 rounded-lg bg-black/40 light-mode:bg-white border border-white/10 light-mode:border-slate-300 text-white light-mode:text-slate-900 focus:outline-none focus:border-cyan-500 text-xs file:mr-3 file:py-1 file:px-2.5 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-cyan-500/10 file:text-cyan-400 hover:file:bg-cyan-500/20" ${isRequired ? 'required' : ''}>`;
-        } 
-        else if (pType && pType.type === 'select' && Array.isArray(pType.options)) {
-            // JIKA PARAMETER ADALAH SELECT, BUAT ELEMEN DROPDOWN MENU
-            html += `<select name="${paramName}" onchange="updateLivePreview(${catIdx}, ${epIdx}, '${method}', '${path}', '${epType}')" class="w-full px-3 py-2 rounded-lg bg-black/40 light-mode:bg-white border border-white/10 light-mode:border-slate-300 text-cyan-400 light-mode:text-slate-900 focus:outline-none focus:border-cyan-500 code-font text-sm">`;
-            pType.options.forEach(opt => {
-                html += `<option value="${opt}" class="bg-slate-900 text-white">${opt}</option>`;
-            });
-            html += `</select>`;
-        } 
-        else {
-            html += `<input type="text" name="${paramName}" value="${inputValue}" oninput="updateLivePreview(${catIdx}, ${epIdx}, '${method}', '${path}', '${epType}')" class="w-full px-3 py-2 rounded-lg bg-black/40 light-mode:bg-white border border-white/10 light-mode:border-slate-300 text-white light-mode:text-slate-900 focus:outline-none focus:border-cyan-500 code-font text-sm" placeholder="${inputPlaceholder}" ${isRequired ? 'required' : ''}>`;
-        }
+                        if (pType === 'file' || paramName === 'file') {
+                            html += `<input type="file" name="${paramName}" onchange="updateLivePreview(${catIdx}, ${epIdx}, '${method}', '${path}', '${epType}')" class="w-full px-3 py-2 rounded-lg bg-black/40 light-mode:bg-white border border-white/10 light-mode:border-slate-300 text-white light-mode:text-slate-900 focus:outline-none focus:border-cyan-500 text-xs file:mr-3 file:py-1 file:px-2.5 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-cyan-500/10 file:text-cyan-400 hover:file:bg-cyan-500/20" ${isRequired ? 'required' : ''}>`;
+                        } 
+                        else if (pType && pType.type === 'select' && Array.isArray(pType.options)) {
+                            html += `<select name="${paramName}" onchange="updateLivePreview(${catIdx}, ${epIdx}, '${method}', '${path}', '${epType}')" class="w-full px-3 py-2 rounded-lg bg-black/40 light-mode:bg-white border border-white/10 light-mode:border-slate-300 text-cyan-400 light-mode:text-slate-900 focus:outline-none focus:border-cyan-500 code-font text-sm">`;
+                            pType.options.forEach(opt => {
+                                html += `<option value="${opt}" class="bg-slate-900 text-white">${opt}</option>`;
+                            });
+                            html += `</select>`;
+                        } 
+                        else {
+                            html += `<input type="text" name="${paramName}" value="${inputValue}" oninput="updateLivePreview(${catIdx}, ${epIdx}, '${method}', '${path}', '${epType}')" class="w-full px-3 py-2 rounded-lg bg-black/40 light-mode:bg-white border border-white/10 light-mode:border-slate-300 text-white light-mode:text-slate-900 focus:outline-none focus:border-cyan-500 code-font text-sm" placeholder="${inputPlaceholder}" ${isRequired ? 'required' : ''}>`;
+                        }
 
-        html += `</div>`;
-    });
-}
+                        html += `</div>`;
+                    });
+                }
                 
                 html += `
                             </div>
@@ -1088,7 +1143,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (uploaderBtn) {
         uploaderBtn.addEventListener('click', () => {
-            // MENGARAHKAN LANGSUNG KE ENDPOINT UPLOADER INTERNAL WEBSITE ANDA
             window.location.href = '/uploader'; 
         });
     }
@@ -1099,12 +1153,11 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Fetch list data API dari backend
     fetch('/api/apilist')
         .then(res => res.json())
         .then(data => {
             apiData = data;
-            loadApis(); // Jalankan fungsi render bawaan Anda
+            loadApis(); 
         })
         .catch(err => {
             const apiListEl = document.getElementById('apiList');
