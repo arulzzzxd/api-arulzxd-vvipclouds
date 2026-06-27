@@ -6,24 +6,7 @@ const router = express.Router();
 
 router.post("/", async (req, res) => {
     try {
-        const apikey = req.query.apikey;
-        
-        // 1. Validasi Apikey di Server Lokal Anda
-        if (!apikey) {
-            return res.status(403).json({
-                status: false,
-                message: "Parameter 'apikey' diperlukan."
-            });
-        }
-
-        if (apikey !== "arulzxd-keys") {
-            return res.status(403).json({
-                status: false,
-                message: "Apikey tidak valid."
-            });
-        }
-
-        // 2. Validasi File Upload (express-fileupload)
+        // 1. Validasi File Upload (express-fileupload)
         if (!req.files || Object.keys(req.files).length === 0 || !req.files.file) {
             return res.status(400).json({
                 status: false,
@@ -36,35 +19,33 @@ router.post("/", async (req, res) => {
         const filename = uploadedFile.name;
         const mimetype = uploadedFile.mimetype;
 
-        // 3. Siapkan Form Data
+        // 2. Siapkan Form Data
         const form = new FormData();
         form.append("file", buffer, {
             filename: filename,
             contentType: mimetype
         });
-        
-        // --- TRIPEL INPUT APIKEY AGAR PASTI TERBACA OLEH TARGET ---
-        // Memasukkan apikey ke dalam Body Form-Data target
-        form.append("apikey", apikey);
 
-        // Memasukkan apikey ke dalam URL Query target
-        const targetUrl = `https://api-arulzxd-vvipclouds.vercel.app/uploader?apikey=${apikey}`;
-        
-        // 4. Kirim ke URL Uploader Target dengan Headers Tambahan
+        const targetUrl = `https://api-arulzxd-vvipclouds.vercel.app/uploader`;
+
+        // 3. Kirim ke URL Uploader Target dengan Headers Tambahan + Content-Length yang Valid
         const { data } = await axios.post(
             targetUrl,
             form,
             {
                 headers: {
                     ...form.getHeaders(),
-                    // Memasukkan apikey ke dalam Header (jika target membacanya via header)
-                    "apikey": apikey,
+                    // PENTING: Menghitung ukuran asli form untuk mencegah chunked encoding error di target server
+                    "Content-Length": form.getLengthSync(),
                     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-                }
+                },
+                // Tambahkan maxContentLength & maxBodyLength agar tidak error saat upload file berukuran besar
+                maxContentLength: Infinity,
+                maxBodyLength: Infinity
             }
         );
 
-        // 5. Kembalikan Response Hasil Upload ke Client
+        // 4. Kembalikan Response Hasil Upload ke Client
         return res.json({
             status: true,
             creator: "ArulzXD",
@@ -72,7 +53,7 @@ router.post("/", async (req, res) => {
         });
 
     } catch (e) {
-        // Jika server target melempar error berupa objek JSON, kita tampilkan secara utuh
+        // Jika server target melempar error berupa objek JSON, tampilkan secara utuh
         if (e.response && e.response.data) {
             return res.status(e.response.status || 500).json(e.response.data);
         }
