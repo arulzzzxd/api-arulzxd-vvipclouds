@@ -623,15 +623,12 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
         else if (bytes >= 1024) sizeText = `${(bytes / 1024).toFixed(1)} KB`;
         else sizeText = `${bytes} B`;
 
+        // Style Badge Atas disesuaikan (Hanya memuat HTTP Status dan Durasi Waktu)
         const metadataBadgeHtml = `
-            <div class="flex flex-wrap items-center gap-2 px-4 py-2 mb-4 text-xs font-mono font-bold rounded-lg bg-emerald-400 text-slate-900 border border-emerald-500/30 shadow-sm w-fit">
+            <div class="flex flex-wrap items-center gap-2 px-4 py-2 mb-2 text-xs font-mono font-bold rounded-lg bg-emerald-400 text-slate-900 border border-emerald-500/30 shadow-sm w-fit">
                 <span>HTTP ${response.status}</span>
                 <span class="opacity-40">•</span>
                 <span>${duration}ms</span>
-                <span class="opacity-40">•</span>
-                <span>${cleanContentType}</span>
-                <span class="opacity-40">•</span>
-                <span>${sizeText}</span>
             </div>
         `;
 
@@ -642,8 +639,23 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
             ? 'px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-lg text-[11px] font-semibold transition-colors code-font border border-black/5 flex items-center gap-1.5 shadow-sm'
             : 'px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-[11px] font-semibold transition-colors code-font border border-white/5 flex items-center gap-1.5';
 
+        // Kontainer vertikal utama untuk tombol aksi bawah dan baris info ukuran berkas
         const actionContainer = document.createElement('div');
-        actionContainer.className = "flex flex-wrap gap-2 mb-3 border-b border-white/10 light-mode:border-slate-200 pb-3 mt-3";
+        actionContainer.className = "flex flex-col gap-2 mb-3 border-b border-white/10 light-mode:border-slate-200 pb-3 mt-3";
+
+        // Pembuatan Baris Info Terpisah: MimeType • file size XX KB
+        const fileInfoRow = document.createElement('div');
+        fileInfoRow.className = "flex items-center gap-2 text-xs font-mono font-bold text-slate-400 light-mode:text-slate-600 uppercase tracking-wider mb-1";
+        fileInfoRow.innerHTML = `
+            <span class="text-cyan-400 light-mode:text-cyan-600">${cleanContentType}</span>
+            <span class="opacity-40">•</span>
+            <span>file size ${sizeText}</span>
+        `;
+        actionContainer.appendChild(fileInfoRow);
+
+        // Kontainer horizontal khusus deretan tombol aksi
+        const buttonsFlexContainer = document.createElement('div');
+        buttonsFlexContainer.className = "flex flex-wrap gap-2";
 
         if (!isMedia) {
             const copyResponseBtn = document.createElement('button');
@@ -654,7 +666,7 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
                 <span>Copy Response JSON</span>
             `;
             copyResponseBtn.onclick = () => copyText(rawResponseText, "Response");
-            actionContainer.appendChild(copyResponseBtn);
+            buttonsFlexContainer.appendChild(copyResponseBtn);
 
             const downloadResponseBtn = document.createElement('button');
             downloadResponseBtn.type = "button";
@@ -675,7 +687,7 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
                 document.body.removeChild(a);
                 URL.revokeObjectURL(downloadUrl);
             };
-            actionContainer.appendChild(downloadResponseBtn);
+            buttonsFlexContainer.appendChild(downloadResponseBtn);
         } else {
             const downloadMediaBtn = document.createElement('button');
             downloadMediaBtn.type = "button";
@@ -703,8 +715,542 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
                     showToast('Gagal mengunduh file media', true);
                 }
             };
-            actionContainer.appendChild(downloadMediaBtn);
+            buttonsFlexContainer.appendChild(downloadMediaBtn);
         }
+
+        actionContainer.appendChild(buttonsFlexContainer);
+
+        const badgeElement = responseContent.querySelector('.bg-emerald-400');
+        if (badgeElement) {
+            badgeElement.insertAdjacentElement('afterend', actionContainer);
+        } else {
+            responseContent.insertBefore(actionContainer, responseContent.firstChild);
+        }
+
+        showToast(i18n[currentLang].toastRequestSuccess);
+    } catch (error) {
+        responseContent.innerHTML = `<pre class="text-red-400 code-font text-sm p-2 bg-red-500/10 rounded-lg">Error: ${error.message}</pre>`;
+        showToast(i18n[currentLang].toastRequestFailed, true);
+    } finally {
+        isRequestInProgress = false;
+        executeBtn.disabled = false;
+        executeBtn.classList.remove('btn-loading');
+        
+        spinner.style.display = ''; 
+        spinner.classList.remove('active');
+        
+        executeBtn.innerHTML = originalBtnHtml;
+    }
+}
+async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
+    e.preventDefault();
+    if (isRequestInProgress) {
+        showToast(i18n[currentLang].toastRequestWait, true);
+        return;
+    }
+
+    const form = document.getElementById(`form-${catIdx}-${epIdx}`);
+    const responseDiv = document.getElementById(`response-${catIdx}-${epIdx}`);
+    const responseContent = document.getElementById(`response-content-${catIdx}-${epIdx}`);
+    const executeBtn = form.querySelector('button[type="submit"]');
+
+    let spinner = executeBtn.querySelector('.local-spinner');
+    if (!spinner) {
+        spinner = document.createElement('span');
+        spinner.className = 'local-spinner ml-2';
+        executeBtn.appendChild(spinner);
+    }
+
+    isRequestInProgress = true;
+    executeBtn.disabled = true;
+    executeBtn.classList.add('btn-loading');
+    
+    spinner.style.setProperty('display', 'none', 'important');
+    spinner.classList.remove('active');
+    
+    responseDiv.classList.remove('hidden');
+
+    responseContent.innerHTML = `
+        <div class="flex items-center justify-center p-8 text-sm font-mono tracking-wider text-cyan-400 gap-1.5">
+            <span>FETCHING RESPONSE</span>
+            <span class="flex gap-1 items-center pt-1">
+                <span class="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-[bounce_1s_infinite_100ms]"></span>
+                <span class="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-[bounce_1s_infinite_200ms]"></span>
+                <span class="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-[bounce_1s_infinite_300ms]"></span>
+            </span>
+        </div>
+    `;
+
+    const originalBtnHtml = executeBtn.innerHTML;
+
+    executeBtn.innerHTML = `
+        <div class="flex items-center justify-center gap-1">
+            <span class="tracking-wide">LOADING</span>
+            <span class="flex gap-0.5 ml-0.5">
+                <span class="w-1 h-1 bg-current rounded-full animate-[bounce_1s_infinite_100ms]"></span>
+                <span class="w-1 h-1 bg-current rounded-full animate-[bounce_1s_infinite_200ms]"></span>
+                <span class="w-1 h-1 bg-current rounded-full animate-[bounce_1s_infinite_300ms]"></span>
+            </span>
+        </div>
+    `;
+
+    const rawFormData = new FormData(form);
+    const queryParams = new URLSearchParams();
+
+    let formHasFile = false;
+    form.querySelectorAll('input[type="file"]').forEach(fileInput => {
+        if (fileInput.files.length > 0) {
+            formHasFile = true;
+        }
+    });
+
+    let finalMethod = method.toUpperCase();
+    if (formHasFile) {
+        finalMethod = 'POST';
+    }
+
+    let fetchOptions = { method: finalMethod };
+    let fullPath = `${BASE_URL}${path.split('?')[0]}`;
+    let isMedia = false;
+
+    try {
+        if (finalMethod === 'GET' || finalMethod === 'DELETE') {
+            for (const [key, value] of rawFormData.entries()) {
+                if (value && typeof value === 'string') {
+                    queryParams.append(key, value);
+                }
+            }
+            fullPath += '?' + queryParams.toString();
+        } else {
+            if (formHasFile) {
+                fetchOptions.body = rawFormData;
+            } else {
+                fetchOptions.headers = { 'Content-Type': 'application/json' };
+                const jsonBody = {};
+                for (const [key, value] of rawFormData.entries()) {
+                    if (value) jsonBody[key] = value;
+                }
+                fetchOptions.body = JSON.stringify(jsonBody);
+            }
+        }
+
+        const startTime = performance.now();
+        const response = await fetch(fullPath, fetchOptions);
+        const endTime = performance.now();
+        const duration = Math.round(endTime - startTime);
+
+        if (response.status === 403 || response.status === 503) {
+            const data = await response.json();
+            responseContent.innerHTML = `<pre class="text-red-400 code-font text-sm overflow-auto p-2 bg-black/50 rounded-lg">${JSON.stringify(data, null, 2)}</pre>`;
+            showToast(data.message || "Akses Ditolak!", true);
+            return;
+        }
+
+        if (!response.ok) throw new Error(`HTTP Error ${response.status}`);
+
+        const contentType = response.headers.get("content-type") || "application/octet-stream";
+        const cleanContentType = contentType.split(';')[0].trim();
+        const contentLength = response.headers.get("content-length");
+
+        let sizeText = "0 B";
+        let bytes = contentLength ? parseInt(contentLength, 10) : 0;
+        let rawResponseText = "";
+        let finalInnerContent = "";
+
+        if (cleanContentType.includes("application/json")) {
+            const data = await response.json();
+            rawResponseText = JSON.stringify(data, null, 2);
+
+            if (!bytes) bytes = new Blob([rawResponseText]).size;
+
+            let detectedMediaUrl = null;
+            if (data.url && typeof data.url === 'string' && data.url.startsWith('http')) detectedMediaUrl = data.url;
+            else if (data.result && data.result.url && typeof data.result.url === 'string') detectedMediaUrl = data.result.url;
+
+            if (detectedMediaUrl && (detectedMediaUrl.match(/\.(jpeg|jpg|gif|png|webp|mp4|mp3|webm|mov|wav|ogg|pdf|docx|xlsx|zip|txt|js)/i))) {
+                 finalInnerContent = createMediaPreview(detectedMediaUrl, null, detectedMediaUrl) + `<div class="mt-4 text-xs font-bold text-slate-500 uppercase">RAW JSON DATA</div><pre id="raw-text-${catIdx}-${epIdx}" class="code-font text-sm overflow-auto text-cyan-400 p-2 bg-black/50 rounded-lg mt-2">${rawResponseText}</pre>`;
+                 isMedia = true;
+            } else {
+                 finalInnerContent = `<pre id="raw-text-${catIdx}-${epIdx}" class="code-font text-sm overflow-auto text-cyan-400 p-2">${rawResponseText}</pre>`;
+            }
+        } else if (cleanContentType.startsWith("image/") || cleanContentType.startsWith("video/") || cleanContentType.startsWith("audio/") || cleanContentType.includes("application/pdf")) {
+            isMedia = true;
+            const blob = await response.blob();
+            if (!bytes) bytes = blob.size;
+            const blobUrl = URL.createObjectURL(blob);
+            finalInnerContent = createMediaPreview(blobUrl, cleanContentType, fullPath);
+        } else {
+            rawResponseText = await response.text();
+            if (!bytes) bytes = new Blob([rawResponseText]).size;
+            finalInnerContent = `<pre id="raw-text-${catIdx}-${epIdx}" class="code-font text-sm overflow-auto p-2">${rawResponseText}</pre>`;
+        }
+
+        if (bytes >= 1048576) sizeText = `${(bytes / 1048576).toFixed(1)} MB`;
+        else if (bytes >= 1024) sizeText = `${(bytes / 1024).toFixed(1)} KB`;
+        else sizeText = `${bytes} B`;
+
+        // Style Badge Atas disesuaikan (Hanya memuat HTTP Status dan Durasi Waktu)
+        const metadataBadgeHtml = `
+            <div class="flex flex-wrap items-center gap-2 px-4 py-2 mb-2 text-xs font-mono font-bold rounded-lg bg-emerald-400 text-slate-900 border border-emerald-500/30 shadow-sm w-fit">
+                <span>HTTP ${response.status}</span>
+                <span class="opacity-40">•</span>
+                <span>${duration}ms</span>
+            </div>
+        `;
+
+        responseContent.innerHTML = metadataBadgeHtml + finalInnerContent;
+
+        const isLightMode = body.classList.contains('light-mode');
+        const btnStyle = isLightMode 
+            ? 'px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-lg text-[11px] font-semibold transition-colors code-font border border-black/5 flex items-center gap-1.5 shadow-sm'
+            : 'px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-[11px] font-semibold transition-colors code-font border border-white/5 flex items-center gap-1.5';
+
+        // Kontainer vertikal utama untuk tombol aksi bawah dan baris info ukuran berkas
+        const actionContainer = document.createElement('div');
+        actionContainer.className = "flex flex-col gap-2 mb-3 border-b border-white/10 light-mode:border-slate-200 pb-3 mt-3";
+
+        // Pembuatan Baris Info Terpisah: MimeType • file size XX KB
+        const fileInfoRow = document.createElement('div');
+        fileInfoRow.className = "flex items-center gap-2 text-xs font-mono font-bold text-slate-400 light-mode:text-slate-600 uppercase tracking-wider mb-1";
+        fileInfoRow.innerHTML = `
+            <span class="text-cyan-400 light-mode:text-cyan-600">${cleanContentType}</span>
+            <span class="opacity-40">•</span>
+            <span>file size ${sizeText}</span>
+        `;
+        actionContainer.appendChild(fileInfoRow);
+
+        // Kontainer horizontal khusus deretan tombol aksi
+        const buttonsFlexContainer = document.createElement('div');
+        buttonsFlexContainer.className = "flex flex-wrap gap-2";
+
+        if (!isMedia) {
+            const copyResponseBtn = document.createElement('button');
+            copyResponseBtn.type = "button";
+            copyResponseBtn.className = btnStyle;
+            copyResponseBtn.innerHTML = `
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+                <span>Copy Response JSON</span>
+            `;
+            copyResponseBtn.onclick = () => copyText(rawResponseText, "Response");
+            buttonsFlexContainer.appendChild(copyResponseBtn);
+
+            const downloadResponseBtn = document.createElement('button');
+            downloadResponseBtn.type = "button";
+            downloadResponseBtn.className = btnStyle;
+            downloadResponseBtn.innerHTML = `
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                <span>Download Response</span>
+            `;
+            downloadResponseBtn.onclick = () => {
+                const blob = new Blob([rawResponseText], { type: cleanContentType });
+                const extension = cleanContentType.includes('json') ? 'json' : 'txt';
+                const downloadUrl = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = downloadUrl;
+                a.download = `response-${Date.now()}.${extension}`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(downloadUrl);
+            };
+            buttonsFlexContainer.appendChild(downloadResponseBtn);
+        } else {
+            const downloadMediaBtn = document.createElement('button');
+            downloadMediaBtn.type = "button";
+            downloadMediaBtn.className = btnStyle;
+            downloadMediaBtn.innerHTML = `
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                <span>Download Media</span>
+            `;
+            downloadMediaBtn.onclick = async () => {
+                try {
+                    const mediaRes = await fetch(fullPath);
+                    const mediaBlob = await mediaRes.blob();
+                    const downloadUrl = URL.createObjectURL(mediaBlob);
+                    const a = document.createElement('a');
+                    a.href = downloadUrl;
+                    
+                    const ext = cleanContentType.split('/')[1] || 'bin';
+                    a.download = `media-${Date.now()}.${ext}`;
+                    
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(downloadUrl);
+                } catch (err) {
+                    showToast('Gagal mengunduh file media', true);
+                }
+            };
+            buttonsFlexContainer.appendChild(downloadMediaBtn);
+        }
+
+        actionContainer.appendChild(buttonsFlexContainer);
+
+        const badgeElement = responseContent.querySelector('.bg-emerald-400');
+        if (badgeElement) {
+            badgeElement.insertAdjacentElement('afterend', actionContainer);
+        } else {
+            responseContent.insertBefore(actionContainer, responseContent.firstChild);
+        }
+
+        showToast(i18n[currentLang].toastRequestSuccess);
+    } catch (error) {
+        responseContent.innerHTML = `<pre class="text-red-400 code-font text-sm p-2 bg-red-500/10 rounded-lg">Error: ${error.message}</pre>`;
+        showToast(i18n[currentLang].toastRequestFailed, true);
+    } finally {
+        isRequestInProgress = false;
+        executeBtn.disabled = false;
+        executeBtn.classList.remove('btn-loading');
+        
+        spinner.style.display = ''; 
+        spinner.classList.remove('active');
+        
+        executeBtn.innerHTML = originalBtnHtml;
+    }
+}
+async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
+    e.preventDefault();
+    if (isRequestInProgress) {
+        showToast(i18n[currentLang].toastRequestWait, true);
+        return;
+    }
+
+    const form = document.getElementById(`form-${catIdx}-${epIdx}`);
+    const responseDiv = document.getElementById(`response-${catIdx}-${epIdx}`);
+    const responseContent = document.getElementById(`response-content-${catIdx}-${epIdx}`);
+    const executeBtn = form.querySelector('button[type="submit"]');
+
+    let spinner = executeBtn.querySelector('.local-spinner');
+    if (!spinner) {
+        spinner = document.createElement('span');
+        spinner.className = 'local-spinner ml-2';
+        executeBtn.appendChild(spinner);
+    }
+
+    isRequestInProgress = true;
+    executeBtn.disabled = true;
+    executeBtn.classList.add('btn-loading');
+    
+    spinner.style.setProperty('display', 'none', 'important');
+    spinner.classList.remove('active');
+    
+    responseDiv.classList.remove('hidden');
+
+    responseContent.innerHTML = `
+        <div class="flex items-center justify-center p-8 text-sm font-mono tracking-wider text-cyan-400 gap-1.5">
+            <span>FETCHING RESPONSE</span>
+            <span class="flex gap-1 items-center pt-1">
+                <span class="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-[bounce_1s_infinite_100ms]"></span>
+                <span class="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-[bounce_1s_infinite_200ms]"></span>
+                <span class="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-[bounce_1s_infinite_300ms]"></span>
+            </span>
+        </div>
+    `;
+
+    const originalBtnHtml = executeBtn.innerHTML;
+
+    executeBtn.innerHTML = `
+        <div class="flex items-center justify-center gap-1">
+            <span class="tracking-wide">LOADING</span>
+            <span class="flex gap-0.5 ml-0.5">
+                <span class="w-1 h-1 bg-current rounded-full animate-[bounce_1s_infinite_100ms]"></span>
+                <span class="w-1 h-1 bg-current rounded-full animate-[bounce_1s_infinite_200ms]"></span>
+                <span class="w-1 h-1 bg-current rounded-full animate-[bounce_1s_infinite_300ms]"></span>
+            </span>
+        </div>
+    `;
+
+    const rawFormData = new FormData(form);
+    const queryParams = new URLSearchParams();
+
+    let formHasFile = false;
+    form.querySelectorAll('input[type="file"]').forEach(fileInput => {
+        if (fileInput.files.length > 0) {
+            formHasFile = true;
+        }
+    });
+
+    let finalMethod = method.toUpperCase();
+    if (formHasFile) {
+        finalMethod = 'POST';
+    }
+
+    let fetchOptions = { method: finalMethod };
+    let fullPath = `${BASE_URL}${path.split('?')[0]}`;
+    let isMedia = false;
+
+    try {
+        if (finalMethod === 'GET' || finalMethod === 'DELETE') {
+            for (const [key, value] of rawFormData.entries()) {
+                if (value && typeof value === 'string') {
+                    queryParams.append(key, value);
+                }
+            }
+            fullPath += '?' + queryParams.toString();
+        } else {
+            if (formHasFile) {
+                fetchOptions.body = rawFormData;
+            } else {
+                fetchOptions.headers = { 'Content-Type': 'application/json' };
+                const jsonBody = {};
+                for (const [key, value] of rawFormData.entries()) {
+                    if (value) jsonBody[key] = value;
+                }
+                fetchOptions.body = JSON.stringify(jsonBody);
+            }
+        }
+
+        const startTime = performance.now();
+        const response = await fetch(fullPath, fetchOptions);
+        const endTime = performance.now();
+        const duration = Math.round(endTime - startTime);
+
+        if (response.status === 403 || response.status === 503) {
+            const data = await response.json();
+            responseContent.innerHTML = `<pre class="text-red-400 code-font text-sm overflow-auto p-2 bg-black/50 rounded-lg">${JSON.stringify(data, null, 2)}</pre>`;
+            showToast(data.message || "Akses Ditolak!", true);
+            return;
+        }
+
+        if (!response.ok) throw new Error(`HTTP Error ${response.status}`);
+
+        const contentType = response.headers.get("content-type") || "application/octet-stream";
+        const cleanContentType = contentType.split(';')[0].trim();
+        const contentLength = response.headers.get("content-length");
+
+        let sizeText = "0 B";
+        let bytes = contentLength ? parseInt(contentLength, 10) : 0;
+        let rawResponseText = "";
+        let finalInnerContent = "";
+
+        if (cleanContentType.includes("application/json")) {
+            const data = await response.json();
+            rawResponseText = JSON.stringify(data, null, 2);
+
+            if (!bytes) bytes = new Blob([rawResponseText]).size;
+
+            let detectedMediaUrl = null;
+            if (data.url && typeof data.url === 'string' && data.url.startsWith('http')) detectedMediaUrl = data.url;
+            else if (data.result && data.result.url && typeof data.result.url === 'string') detectedMediaUrl = data.result.url;
+
+            if (detectedMediaUrl && (detectedMediaUrl.match(/\.(jpeg|jpg|gif|png|webp|mp4|mp3|webm|mov|wav|ogg|pdf|docx|xlsx|zip|txt|js)/i))) {
+                 finalInnerContent = createMediaPreview(detectedMediaUrl, null, detectedMediaUrl) + `<div class="mt-4 text-xs font-bold text-slate-500 uppercase">RAW JSON DATA</div><pre id="raw-text-${catIdx}-${epIdx}" class="code-font text-sm overflow-auto text-cyan-400 p-2 bg-black/50 rounded-lg mt-2">${rawResponseText}</pre>`;
+                 isMedia = true;
+            } else {
+                 finalInnerContent = `<pre id="raw-text-${catIdx}-${epIdx}" class="code-font text-sm overflow-auto text-cyan-400 p-2">${rawResponseText}</pre>`;
+            }
+        } else if (cleanContentType.startsWith("image/") || cleanContentType.startsWith("video/") || cleanContentType.startsWith("audio/") || cleanContentType.includes("application/pdf")) {
+            isMedia = true;
+            const blob = await response.blob();
+            if (!bytes) bytes = blob.size;
+            const blobUrl = URL.createObjectURL(blob);
+            finalInnerContent = createMediaPreview(blobUrl, cleanContentType, fullPath);
+        } else {
+            rawResponseText = await response.text();
+            if (!bytes) bytes = new Blob([rawResponseText]).size;
+            finalInnerContent = `<pre id="raw-text-${catIdx}-${epIdx}" class="code-font text-sm overflow-auto p-2">${rawResponseText}</pre>`;
+        }
+
+        if (bytes >= 1048576) sizeText = `${(bytes / 1048576).toFixed(1)} MB`;
+        else if (bytes >= 1024) sizeText = `${(bytes / 1024).toFixed(1)} KB`;
+        else sizeText = `${bytes} B`;
+
+        // Style Badge Atas disesuaikan (Hanya memuat HTTP Status dan Durasi Waktu)
+        const metadataBadgeHtml = `
+            <div class="flex flex-wrap items-center gap-2 px-4 py-2 mb-2 text-xs font-mono font-bold rounded-lg bg-emerald-400 text-slate-900 border border-emerald-500/30 shadow-sm w-fit">
+                <span>HTTP ${response.status}</span>
+                <span class="opacity-40">•</span>
+                <span>${duration}ms</span>
+            </div>
+        `;
+
+        responseContent.innerHTML = metadataBadgeHtml + finalInnerContent;
+
+        const isLightMode = body.classList.contains('light-mode');
+        const btnStyle = isLightMode 
+            ? 'px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-lg text-[11px] font-semibold transition-colors code-font border border-black/5 flex items-center gap-1.5 shadow-sm'
+            : 'px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-[11px] font-semibold transition-colors code-font border border-white/5 flex items-center gap-1.5';
+
+        // Kontainer vertikal utama untuk tombol aksi bawah dan baris info ukuran berkas
+        const actionContainer = document.createElement('div');
+        actionContainer.className = "flex flex-col gap-2 mb-3 border-b border-white/10 light-mode:border-slate-200 pb-3 mt-3";
+
+        // Pembuatan Baris Info Terpisah: MimeType • file size XX KB
+        const fileInfoRow = document.createElement('div');
+        fileInfoRow.className = "flex items-center gap-2 text-xs font-mono font-bold text-slate-400 light-mode:text-slate-600 uppercase tracking-wider mb-1";
+        fileInfoRow.innerHTML = `
+            <span class="text-cyan-400 light-mode:text-cyan-600">${cleanContentType}</span>
+            <span class="opacity-40">•</span>
+            <span>file size ${sizeText}</span>
+        `;
+        actionContainer.appendChild(fileInfoRow);
+
+        // Kontainer horizontal khusus deretan tombol aksi
+        const buttonsFlexContainer = document.createElement('div');
+        buttonsFlexContainer.className = "flex flex-wrap gap-2";
+
+        if (!isMedia) {
+            const copyResponseBtn = document.createElement('button');
+            copyResponseBtn.type = "button";
+            copyResponseBtn.className = btnStyle;
+            copyResponseBtn.innerHTML = `
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+                <span>Copy Response JSON</span>
+            `;
+            copyResponseBtn.onclick = () => copyText(rawResponseText, "Response");
+            buttonsFlexContainer.appendChild(copyResponseBtn);
+
+            const downloadResponseBtn = document.createElement('button');
+            downloadResponseBtn.type = "button";
+            downloadResponseBtn.className = btnStyle;
+            downloadResponseBtn.innerHTML = `
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                <span>Download Response</span>
+            `;
+            downloadResponseBtn.onclick = () => {
+                const blob = new Blob([rawResponseText], { type: cleanContentType });
+                const extension = cleanContentType.includes('json') ? 'json' : 'txt';
+                const downloadUrl = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = downloadUrl;
+                a.download = `response-${Date.now()}.${extension}`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(downloadUrl);
+            };
+            buttonsFlexContainer.appendChild(downloadResponseBtn);
+        } else {
+            const downloadMediaBtn = document.createElement('button');
+            downloadMediaBtn.type = "button";
+            downloadMediaBtn.className = btnStyle;
+            downloadMediaBtn.innerHTML = `
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                <span>Download Media</span>
+            `;
+            downloadMediaBtn.onclick = async () => {
+                try {
+                    const mediaRes = await fetch(fullPath);
+                    const mediaBlob = await mediaRes.blob();
+                    const downloadUrl = URL.createObjectURL(mediaBlob);
+                    const a = document.createElement('a');
+                    a.href = downloadUrl;
+                    
+                    const ext = cleanContentType.split('/')[1] || 'bin';
+                    a.download = `media-${Date.now()}.${ext}`;
+                    
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(downloadUrl);
+                } catch (err) {
+                    showToast('Gagal mengunduh file media', true);
+                }
+            };
+            buttonsFlexContainer.appendChild(downloadMediaBtn);
+        }
+
+        actionContainer.appendChild(buttonsFlexContainer);
 
         const badgeElement = responseContent.querySelector('.bg-emerald-400');
         if (badgeElement) {
