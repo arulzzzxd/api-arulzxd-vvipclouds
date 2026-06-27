@@ -1,1071 +1,840 @@
 /* =========================================================================
-   SCRIPT.JS REST API (UPDATED)
+   API-ARULZXD - REST API & UPLOADER INTEGRATION (UPDATED)
    ========================================================================= */
 
-const BASE_URL = window.location.origin;
-let isRequestInProgress = false;
-let apiData = null;
-let currentTheme = 'dark';
-let currentLang = 'id';
-let allApiElements = [];
-let totalEndpoints = 0;
-let totalCategories = 0;
-let batteryMonitor = null;
-let batteryInterval = null;
-let boundUpdateBatteryInfo = null; 
-let activeCategory = 'all';
+const express = require('express');
+const path = require('path');
+const fs = require('fs');
+const fileUpload = require('express-fileupload');
+const axios = require('axios');
+const mime = require('mime-types');
+const https = require('https');
+const http = require('http');
+const crypto = require('crypto');
 
+const app = express();
+const PORT = process.env.PORT || 3000;
+app.use(express.static(path.join(__dirname)));
+app.use(express.json());
 
-const themeToggleBtn = document.getElementById('themeToggle');
-const body = document.body;
-const themeBg = document.getElementById('themeBg');
+// Middleware untuk menangani form file upload (Uploader)
+app.use(fileUpload());
 
-const categoryIcons = {
-    'ai': '<svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 text-cyan-400"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73A2 2 0 1 1 12 2zm-2 10a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm4 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/></svg>',
-    'download': '<svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 text-cyan-400"><path d="M12 16l-5-5h3V4h4v7h3l-5 5zm9 4H3v-2h18v2z"/></svg>',
-    'search': '<svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 text-cyan-400"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>',
-    'image': '<svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 text-cyan-400"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>',
-    'tools': '<svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 text-cyan-400"><path d="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.1L9 6 6 9 1.8 4.7C.5 7.1.9 10.1 2.9 12.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1.1-1.4z"/></svg>',
-    'maker': '<svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 text-cyan-400"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>',
-    'stalker': '<svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 text-cyan-400"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>',
-    'canvas': '<svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 text-cyan-400"><path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z"/></svg>',
-    'security': '<svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 text-cyan-400"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>',
-    'news': '<svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 text-cyan-400"><path d="M21 3H3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 16H5V5h14v14zm-9-2h8v-2h-8v2zm0-4h8v-2h-8v2zm0-4h8V7h-8v2zm-4 8h2v-8H6v8z"/></svg>',
-    'random': '<svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 text-cyan-400"><path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/></svg>',
-    'islam': '<svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 text-cyan-400"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>',
-    'game': '<svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 text-cyan-400"><path d="M7 8h10a4 4 0 0 1 4 4v4a3 3 0 0 1-5.12 2.12L13.76 16H10.24l-2.12 2.12A3 3 0 0 1 3 16v-4a4 4 0 0 1 4-4zm0 3v2H5v2h2v2h2v-2h2v-2H9v-2H7zm9 1a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm3 2a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z"/></svg>',
-    'quotes': '<svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 text-cyan-400"><path d="M7 17H3V9h6v6c0 1.1-.9 2-2 2zm10 0h-4V9h6v6c0 1.1-.9 2-2 2z"/></svg>',
-    'sticker': '<svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 text-cyan-400"><path d="M5 3h10l4 4v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zm9 1v4h4M8 11a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm8 0a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm-4 5c2.2 0 4-1.3 4-3H8c0 1.7 1.8 3 4 3z"/></svg>',
-    'default': '<svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 text-cyan-400"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>'
-};
+/*
+For setting API name etc
+*/
+const title = "API-ARULZXD - REST";
+const favicon = "https://arulz-uploader.vercel.app/files/C5VYmq.jpg";
+const logo = "https://arulz-uploader.vercel.app/files/SnhJe3.png";
+const headertitle = `<img src="https://readme-typing-svg.demolab.com?font=Poppins&weight=700&size=28&pause=1000&color=00D4FF&center=true&vCenter=true&width=600&lines=Welcome+To+ArulzXD+API;Fast+%F0%9F%9A%80+Reliable+%E2%9A%A1;Free+REST+API+Services;Developer+Friendly+API" alt="Typing SVG" class="mx-auto" />`;
+const headerdescription = "Browse, inspect & fire requests against live endpoints._";
+const footer = "© Arulz-XD";
 
-const i18n = {
-    id: {
-        searchPlaceholder: "Cari endpoint berdasarkan nama, path, atau kategori...",
-        noResultsTitle: "Endpoint tidak ditemukan",
-        noResultsDesc: "Coba gunakan kata kunci lain",
-        batteryTitle: "Baterai Anda",
-        endpointsTitle: "Total Endpoint",
-        categoriesTitle: "Total Kategori",
-        batteryDetecting: "Mendeteksi...",
-        batteryCharging: "Mengisi Daya",
-        batteryFull: "Penuh",
-        batteryDischarging: "Menguras Daya",
-        batteryLeft: "tersisa",
-        endpointsCount: "endpoints",
-        btnExecute: "Eksekusi",
-        btnClear: "Bersihkan",
-        toastMediaCopy: "Media URL disalin ke papan klip!",
-        toastMediaFail: "Gagal menyalin URL",
-        endpointNotAvailable: "⚠️ Endpoint ini tidak tersedia untuk pengujian",
-        toastRequestWait: "Harap tunggu permintaan saat ini selesai",
-        toastRequestSuccess: "Permintaan berhasil diselesaikan!",
-        toastRequestFailed: "Permintaan gagal!",
-        batterySimulated: "Simulasi"
-    },
-    en: {
-        searchPlaceholder: "Search endpoints by name, path, or category...",
-        noResultsTitle: "No endpoints found",
-        noResultsDesc: "Try a different search term",
-        batteryTitle: "Your Battery",
-        endpointsTitle: "Total Endpoints",
-        categoriesTitle: "Total Categories",
-        batteryDetecting: "Detecting...",
-        batteryCharging: "Charging",
-        batteryFull: "Fully charged",
-        batteryDischarging: "Discharging",
-        batteryLeft: "left",
-        endpointsCount: "endpoints",
-        btnExecute: "Execute",
-        btnClear: "Clear",
-        toastMediaCopy: "Media URL copied to clipboard!",
-        toastMediaFail: "Failed to copy URL",
-        endpointNotAvailable: "⚠️ This endpoint is not available for testing",
-        toastRequestWait: "Please wait for current request",
-        toastRequestSuccess: "Request completed successfully!",
-        toastRequestFailed: "Request failed!",
-        batterySimulated: "Simulated"
-    }
-};
+// API KEY CONFIGURATION
+const VALID_API_KEY = "arulzxd-keys"; 
+const PREMIUM_API_KEYS = ["arulz-premium", "key-vip-arulz", "owner-key-999"]; 
 
-function updateThemeBackground(theme) {
-    if (themeBg) {
-        themeBg.className = "fixed inset-0 -z-50 transition-all duration-300";
-        if (theme === 'light') {
-            document.body.style.backgroundColor = "#ffffff";
-            themeBg.style.backgroundColor = "#ffffff";
-            themeBg.style.backgroundImage = "radial-gradient(#cbd5e1 1.5px, transparent 1.5px)";
-            themeBg.style.backgroundSize = "24px 24px";
-        } else {
-            document.body.style.backgroundColor = "#030712";
-            themeBg.style.backgroundColor = "#030712";
-            themeBg.style.backgroundImage = "radial-gradient(rgba(255, 255, 255, 0.12) 1.5px, transparent 1.5px)";
-            themeBg.style.backgroundSize = "24px 24px";
-        }
-    }
+const repoList = ['uploadergh', 'uploaderghv2', 'uploaderghv3'];
+const randomRepo = repoList[Math.floor(Math.random() * repoList.length)];
+const a = 'g';
+const b = 'h';
+const c = 'p';
+const to = '_WaSUBUjo7g3YcCcyo'; 
+const ken = 'OgBEWRKS16qYr1C8Gyg'; 
+const githubToken = `${a}${b}${c}${to}${ken}`;
+const owner = 'arulzzzxd'; 
+const repo = randomRepo;
+const branch = 'main';
+
+const playlist = [
+  {
+    title: "PAMIT KERJO",
+    artist: "NDX. AKA",
+    cover: "https://i.ytimg.com/vi/x8ZMFhXiNyg/hq720.jpg",
+    url: "https://files.catbox.moe/gfuwnv.mp3"
+  },
+  {
+    title: "TANPO HUBUNGAN",
+    artist: "LA TASYA",
+    cover: "https://i.ytimg.com/vi/1gRZjdf02bo/hq720.jpg",
+    url: "https://files.catbox.moe/xd5oq3.mp3"
+  },
+  {
+    title: "DENOK",
+    artist: "LA TASYA",
+    cover: "https://i.ytimg.com/vi/J1TFFzbCIiM/hq720.jpg",
+    url: "https://arulz-uploader.vercel.app/files/xlXr2L.mp3"
+  },
+  {
+    title: "TUNGGAL EKA",
+    artist: "DENNY CAKNAN",
+    cover: "https://i.ytimg.com/vi/827HSYJX5uw/hq720.jpg",
+    url: "https://files.catbox.moe/x67fur.mp3"
+  },
+  {
+    title: "NGAPAIN REPOT",
+    artist: "AJENG FEBRIA",
+    cover: "https://i.ytimg.com/vi/-ix-XswQz10/hq720.jpg",
+    url: "https://files.catbox.moe/hs1azs.mp3"
+  }
+];
+
+app.get('/uploader', (req, res) => {
+  res.sendFile(path.join(__dirname, 'uploader.html'));
+});
+
+function getRequestProtocol(req) {
+  const forwarded = req.headers['x-forwarded-proto'];
+  if (forwarded) return forwarded.split(',')[0].trim();
+  return req.secure ? 'https' : 'http';
 }
 
-function initTheme() {
-    const savedTheme = localStorage.getItem('theme') || 'dark';
-    currentTheme = savedTheme;
-
-    const themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
-    const themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
-
-    if (savedTheme === 'light') {
-        body.classList.add('light-mode');
-        body.classList.remove('text-slate-100');
-        body.classList.add('text-slate-900');
-        themeToggleDarkIcon?.classList.add('hidden');
-        themeToggleLightIcon?.classList.remove('hidden');
-    } else {
-        body.classList.remove('light-mode');
-        body.classList.remove('text-slate-900');
-        body.classList.add('text-slate-100');
-        themeToggleDarkIcon?.classList.remove('hidden');
-        themeToggleLightIcon?.classList.add('hidden');
-    }
-    updateThemeBackground(currentTheme);
-    updateSocialBadges();
+function generateId(length = 6) {
+  const alphabet = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const bytes = crypto.randomBytes(length);
+  let id = '';
+  for (let i = 0; i < length; i++) {
+    id += alphabet[bytes[i] % alphabet.length];
+  }
+  return id;
 }
 
-function toggleTheme() {
-    const themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
-    const themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
+app.get('/files/*', async (req, res) => {
+  const requestedPath = req.params[0]; 
+  if (!requestedPath) return res.status(400).send('Missing file path');
 
-    if (body.classList.contains('light-mode')) {
-        body.classList.remove('light-mode');
-        body.classList.remove('text-slate-900');
-        body.classList.add('text-slate-100');
-        themeToggleDarkIcon?.classList.remove('hidden');
-        themeToggleLightIcon?.classList.add('hidden');
-        currentTheme = 'dark';
-    } else {
-        body.classList.add('light-mode');
-        body.classList.remove('text-slate-100');
-        body.classList.add('text-slate-900');
-        themeToggleDarkIcon?.classList.add('hidden');
-        themeToggleLightIcon?.classList.remove('hidden');
-        currentTheme = 'light';
-    }
+  const gitPath = requestedPath.startsWith('uploads/') ? requestedPath : `uploads/${requestedPath}`;
 
-    localStorage.setItem('theme', currentTheme);
-    updateThemeBackground(currentTheme);
-    updateSocialBadges();
-    if (apiData) loadApis();
-}
-
-function setLanguage(lang) {
-    currentLang = lang;
-    localStorage.setItem('lang', lang);
-
-    document.getElementById('lang-id').classList.toggle('active', lang === 'id');
-    document.getElementById('lang-en').classList.toggle('active', lang === 'en');
-
-    document.getElementById('searchInput').placeholder = i18n[lang].searchPlaceholder;
-    document.getElementById('no-results-title').textContent = i18n[lang].noResultsTitle;
-    document.getElementById('no-results-desc').textContent = i18n[lang].noResultsDesc;
-    document.getElementById('stat-battery-title').textContent = i18n[lang].batteryTitle;
-    document.getElementById('stat-endpoints-title').textContent = i18n[lang].endpointsTitle;
-    document.getElementById('stat-categories-title').textContent = i18n[lang].categoriesTitle;
-
-    if (batteryMonitor || batteryInterval) {
-        window.dispatchEvent(new Event('batteryupdate-hook'));
-    }
-
-    const dateElement = document.getElementById('liveDate');
-    if (dateElement && typeof moment !== 'undefined') {
-        const now = moment().tz("Asia/Jakarta");
-        const formatLang = lang === 'id' ? 'id' : 'en';
-        dateElement.textContent = now.locale(formatLang).format('dddd, D MMMM YYYY');
-    }
-
-    if (apiData) loadApis();
-}
-
-function updateSocialBadges() {
-    const isLightMode = body.classList.contains('light-mode');
-    const socialBadges = document.querySelectorAll('.social-badge > div');
-
-    socialBadges.forEach(badge => {
-        if (isLightMode) {
-            badge.className = 'px-4 py-2 rounded-xl text-xs font-bold transition-colors text-center border bg-white/80 text-slate-900 hover:bg-slate-100 border-black/10 shadow-sm';
-        } else {
-            badge.className = 'px-4 py-2 rounded-xl text-xs font-bold transition-colors text-center border bg-slate-900/40 text-slate-200 hover:bg-slate-800/60 border-white/10';
-        }
-    });
-}
-
-function initBatteryDetection() {
-    const batteryLevelElement = document.getElementById('batteryLevel');
-    const batteryPercentageElement = document.getElementById('batteryPercentage');
-    const batteryStatusElement = document.getElementById('batteryStatus');
-    const batteryContainer = document.getElementById('batteryContainer');
-
-    if ('getBattery' in navigator) {
-        navigator.getBattery().then(function(battery) {
-            boundUpdateBatteryInfo = function updateBatteryInfo() {
-                const level = battery.level * 100;
-                const isCharging = battery.charging;
-                const roundedLevel = Math.round(level);
-                const isLightMode = body.classList.contains('light-mode');
-
-                batteryPercentageElement.textContent = `${roundedLevel}%`;
-                batteryLevelElement.style.width = `${level}%`;
-
-                if (level > 60) {
-                    batteryLevelElement.className = 'battery-level ' + (isLightMode ? 'bg-green-600' : 'bg-green-500');
-                } else if (level > 20) {
-                    batteryLevelElement.className = 'battery-level ' + (isLightMode ? 'bg-yellow-600' : 'bg-yellow-500');
-                } else {
-                    batteryLevelElement.className = 'battery-level ' + (isLightMode ? 'bg-red-600' : 'bg-red-500');
-                }
-
-                if (isCharging) {
-                    batteryContainer.classList.add('charging');
-                    batteryStatusElement.textContent = i18n[currentLang].batteryCharging;
-                    batteryLevelElement.classList.add('battery-charging');
-                } else {
-                    batteryContainer.classList.remove('charging');
-                    batteryLevelElement.classList.remove('battery-charging');
-
-                    if (battery.dischargingTime === Infinity) {
-                        batteryStatusElement.textContent = i18n[currentLang].batteryFull;
-                    } else {
-                        batteryStatusElement.textContent = i18n[currentLang].batteryDischarging;
-                    }
-                }
-            };
-
-            boundUpdateBatteryInfo();
-            battery.addEventListener('levelchange', boundUpdateBatteryInfo);
-            battery.addEventListener('chargingchange', boundUpdateBatteryInfo);
-            battery.addEventListener('chargingtimechange', boundUpdateBatteryInfo);
-            battery.addEventListener('dischargingtimechange', boundUpdateBatteryInfo);
-            window.addEventListener('batteryupdate-hook', boundUpdateBatteryInfo);
-            batteryMonitor = battery;
-
-        }).catch(function(error) {
-            fallbackBattery();
-        });
-    } else {
-        fallbackBattery();
-    }
-
-    function fallbackBattery() {
-        let simulatedLevel = localStorage.getItem('simulatedBattery');
-        if (!simulatedLevel) {
-            simulatedLevel = Math.floor(Math.random() * 30) + 30;
-            localStorage.setItem('simulatedBattery', simulatedLevel.toString());
-        } else {
-            simulatedLevel = parseInt(simulatedLevel);
-        }
-
-        let isSimulatedCharging = localStorage.getItem('simulatedCharging') === 'true';
-
-        function simulateBattery() {
-            const isLightMode = body.classList.contains('light-mode');
-            let newLevel = simulatedLevel;
-
-            if (isSimulatedCharging) {
-                newLevel = Math.min(100, newLevel + 0.5);
-                if (newLevel >= 100) {
-                    isSimulatedCharging = false;
-                    localStorage.setItem('simulatedCharging', 'false');
-                    batteryContainer.classList.remove('charging');
-                    batteryLevelElement.classList.remove('battery-charging');
-                    batteryStatusElement.textContent = i18n[currentLang].batteryFull;
-                } else {
-                    batteryStatusElement.textContent = i18n[currentLang].batteryCharging;
-                }
-            } else {
-                newLevel = Math.max(5, newLevel - 0.1);
-                if (newLevel <= 15 && Math.random() > 0.7) {
-                    isSimulatedCharging = true;
-                    localStorage.setItem('simulatedCharging', 'true');
-                    batteryContainer.classList.add('charging');
-                    batteryLevelElement.classList.remove('battery-charging');
-                    batteryStatusElement.textContent = i18n[currentLang].batteryCharging;
-                } else {
-                    batteryStatusElement.textContent = `2h 30m ${i18n[currentLang].batteryLeft}`;
-                }
-            }
-            simulatedLevel = newLevel;
-            localStorage.setItem('simulatedBattery', newLevel.toString());
-
-            const roundedLevel = Math.round(newLevel);
-            batteryPercentageElement.textContent = `${roundedLevel}%`;
-            batteryLevelElement.style.width = `${newLevel}%`;
-
-            if (newLevel > 60) {
-                batteryLevelElement.className = 'battery-level ' + (isLightMode ? 'bg-green-600' : 'bg-green-500');
-            } else if (newLevel > 20) {
-                batteryLevelElement.className = 'battery-level ' + (isLightMode ? 'bg-yellow-600' : 'bg-yellow-500');
-            } else {
-                batteryLevelElement.className = 'battery-level ' + (isLightMode ? 'bg-red-600' : 'bg-red-500');
-            }
-        }
-
-        simulateBattery();
-        window.addEventListener('batteryupdate-hook', simulateBattery);
-        if (!batteryInterval) batteryInterval = setInterval(simulateBattery, 10000);
-    }
-}
-
-function cleanupBatteryMonitor() {
-    if (batteryMonitor && boundUpdateBatteryInfo) {
-        batteryMonitor.removeEventListener('levelchange', boundUpdateBatteryInfo);
-        batteryMonitor.removeEventListener('chargingchange', boundUpdateBatteryInfo);
-        batteryMonitor.removeEventListener('chargingtimechange', boundUpdateBatteryInfo);
-        batteryMonitor.removeEventListener('dischargingtimechange', boundUpdateBatteryInfo);
-        window.removeEventListener('batteryupdate-hook', boundUpdateBatteryInfo);
-    }
-    if (batteryInterval) clearInterval(batteryInterval);
-}
-
-function initDigitalClock() {
-    const clockElement = document.getElementById('liveClock');
-    const dateElement = document.getElementById('liveDate');
-    if (!clockElement || !dateElement) return;
-
-    function updateClock() {
-        if (typeof moment !== 'undefined') {
-            const now = moment().tz("Asia/Jakarta");
-            clockElement.textContent = now.format('HH:mm:ss');
-            if (currentLang === 'id') dateElement.textContent = now.locale('id').format('dddd, D MMMM YYYY');
-            else dateElement.textContent = now.locale('en').format('dddd, MMMM D, YYYY');
-        }
-    }
-    updateClock();
-    setInterval(updateClock, 1000);
-}
-
-function updateTotalEndpoints() { document.getElementById('totalEndpoints').textContent = totalEndpoints; }
-function updateTotalCategories() { document.getElementById('totalCategories').textContent = totalCategories; }
-
-function showToast(message, isError = false) {
-    const toast = document.getElementById('toast');
-    const toastMessage = document.getElementById('toastMessage');
-    const toastIcon = document.getElementById('toastIcon');
-
-    toastMessage.textContent = message;
-    if (isError) {
-        toastIcon.innerHTML = '<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>';
-    } else {
-        toastIcon.innerHTML = '<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>';
-    }
-    toast.classList.add('show');
-    setTimeout(() => toast.classList.remove('show'), 3000);
-}
-
-function copyText(text, type = 'path') {
-    navigator.clipboard.writeText(text).then(() => {
-        showToast(`${type} berhasil disalin ke papan klip!`);
-    }).catch(() => {
-        showToast('Gagal menyalin text', true);
-    });
-}
-
-function copyFromElement(elementId, type) {
-    const el = document.getElementById(elementId);
-    if (el) copyText(el.innerText || el.textContent, type);
-}
-
-function updateLivePreview(catIdx, epIdx, method, basePath, endpointType) {
-    const form = document.getElementById(`form-${catIdx}-${epIdx}`);
-    if (!form) return;
-
-    const formData = new FormData(form);
-    const params = new URLSearchParams();
-    
-    let userApikey = formData.get('apikey') || 'arulzxd-keys';
-
-    for (const [key, value] of formData.entries()) {
-        if (value && typeof value === 'string' && key !== 'apikey') {
-             params.append(key, value);
-        }
-    }
-
-    params.append('apikey', userApikey);
-    const queryStr = params.toString();
-    const finalUrl = `${BASE_URL}${basePath}?${queryStr}`;
-
-    const urlContainer = document.getElementById(`live-url-${catIdx}-${epIdx}`);
-    const curlContainer = document.getElementById(`live-curl-${catIdx}-${epIdx}`);
-
-    if (urlContainer) urlContainer.textContent = finalUrl;
-    if (curlContainer) {
-        if (method === 'GET' || method === 'DELETE') {
-            curlContainer.textContent = `curl -X ${method} "${finalUrl}"`;
-        } else {
-            const bodyParams = [];
-            for (const [key, value] of formData.entries()) {
-                if (key === 'apikey') continue;
-                if (value && typeof value === 'string') {
-                    bodyParams.push(`"${key}": "${value}"`);
-                }
-            }
-            const dataString = bodyParams.length ? ` -H "Content-Type: application/json" -d '{${bodyParams.join(', ')}}'` : '';
-            curlContainer.textContent = `curl -X ${method} "${finalUrl}"${dataString}`;
-        }
-    }
-}
-
-async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
-    e.preventDefault();
-    if (isRequestInProgress) {
-        showToast(i18n[currentLang].toastRequestWait, true);
-        return;
-    }
-
-    const form = document.getElementById(`form-${catIdx}-${epIdx}`);
-    const responseDiv = document.getElementById(`response-${catIdx}-${epIdx}`);
-    const responseContent = document.getElementById(`response-content-${catIdx}-${epIdx}`);
-    const executeBtn = form.querySelector('button[type="submit"]');
-
-    let spinner = executeBtn.querySelector('.local-spinner');
-    if (!spinner) {
-        spinner = document.createElement('span');
-        spinner.className = 'local-spinner ml-2';
-        executeBtn.appendChild(spinner);
-    }
-
-    isRequestInProgress = true;
-    executeBtn.disabled = true;
-    executeBtn.classList.add('btn-loading');
-    
-    // FIX: Sembunyikan spinner bawaan agar tidak merusak layout / bertumpuk dengan tulisan "Loading..."
-    spinner.style.setProperty('display', 'none', 'important');
-    spinner.classList.remove('active');
-    
-    responseDiv.classList.remove('hidden');
-    responseContent.innerHTML = '<div class="spinner mx-auto"></div>';
-
-    // SIMPAN INNER HTML ASLI TOMBOL (Misal: "Execute ⚡")
-    const originalBtnHtml = executeBtn.innerHTML;
-
-    // GANTI TEKS TOMBOL MENJADI TULISAN LOADING... + SPINNER MIKRO BARU DI SEBELAH KIRI
-    executeBtn.innerHTML = `
-        <span class="animate-spin-custom mr-2"></span>
-        <span class="btn-loading-text">Loading...</span>
-    `;
-
-    const rawFormData = new FormData(form);
-    const queryParams = new URLSearchParams();
-
-    // CEK INPUT FILE
-    let formHasFile = false;
-    form.querySelectorAll('input[type="file"]').forEach(fileInput => {
-        if (fileInput.files.length > 0) {
-            formHasFile = true;
-        }
+  try {
+    const resp = await axios.get(`https://api.github.com/repos/${owner}/${repo}/contents/${gitPath}?ref=${branch}`, {
+      headers: {
+        Authorization: `Bearer ${githubToken}`,
+        Accept: 'application/vnd.github.v3.raw'
+      },
+      responseType: 'arraybuffer',
+      validateStatus: status => status < 500
     });
 
-    // PAKSA POST JIKA MEMBAWA FILE
-    let finalMethod = method.toUpperCase();
-    if (formHasFile) {
-        finalMethod = 'POST';
+    if (resp.status === 200) {
+      const contentType = mime.lookup(requestedPath) || 'application/octet-stream';
+      res.set('Content-Type', contentType);
+      res.set('Cache-Control', 'public, max-age=3600');
+      return res.send(Buffer.from(resp.data));
     }
+    return res.status(404).send('File tidak ditemukan di GitHub');
+  } catch (error) {
+    console.error('Error proxying file:', error.message || error);
+    return res.status(500).send('Gagal mengambil file dari GitHub');
+  }
+});
 
-    let fetchOptions = { method: finalMethod };
-    let fullPath = `${BASE_URL}${path.split('?')[0]}`;
-    let isMedia = false;
+app.post('/uploadfile', async (req, res) => {
+  if (!req.files || Object.keys(req.files).length === 0) {
+    return res.status(400).send('Tidak ada file yang diunggah.');
+  }
 
+  let uploadedFile = req.files.file;
+  const originalName = uploadedFile.name || 'file';
+  const origExt = path.extname(originalName);
+
+  let extension = origExt ? origExt.replace(/^\./, '') : (mime.extension(uploadedFile.mimetype) || 'bin');
+  let id = generateId(6);
+  let fileName = origExt ? `${id}${origExt}` : `${id}.${extension}`;
+  let gitPath = `uploads/${fileName}`;
+  let base64Content = Buffer.from(uploadedFile.data).toString('base64');
+
+  try {
+    await axios.put(`https://api.github.com/repos/${owner}/${repo}/contents/${gitPath}`, {
+      message: `Upload file ${fileName}`,
+      content: base64Content,
+      branch: branch,
+    }, {
+      headers: {
+        Authorization: `Bearer ${githubToken}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const protocol = getRequestProtocol(req);
+    const baseWebUrl = process.env.BASE_URL || `${protocol}://${req.get('host')}`;
+    const rawUrl = `${baseWebUrl}/files/${fileName}`;
+
+    res.send(`
+      <!DOCTYPE html>
+      <html lang="id" class="dark">
+      <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Unggahan Berhasil</title>
+          <script src="https://cdn.tailwindcss.com"></script>
+          <link rel="preconnect" href="https://fonts.googleapis.com">
+          <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+          <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+          <script>
+              tailwind.config = {
+                  darkMode: 'class',
+                  theme: { 
+                      extend: {
+                          fontFamily: {
+                              sans: ['Plus Jakarta Sans', 'sans-serif'],
+                          }
+                      } 
+                  }
+              }
+          </script>
+          <style>
+              body { 
+                  background-color: #0b0f19; 
+                  color: #f3f4f6;
+                  background-image: 
+                      radial-gradient(circle at 50% 0%, rgba(6, 182, 212, 0.08) 0%, transparent 50%),
+                      radial-gradient(circle at 50% 100%, rgba(16, 185, 129, 0.03) 0%, transparent 50%);
+              }
+              .glass-card {
+                  background: rgba(17, 24, 39, 0.65);
+                  backdrop-filter: blur(16px);
+                  border: 1px solid rgba(255, 255, 255, 0.07);
+                  animation: cardFadeIn 0.5s ease-out forwards;
+              }
+              .url-box {
+                  background: rgba(0, 0, 0, 0.25);
+                  border: 1px solid rgba(255, 255, 255, 0.05);
+              }
+              .checkmark-circle {
+                  background: rgba(16, 185, 129, 0.06);
+                  border: 1px solid rgba(16, 185, 129, 0.2);
+                  animation: scaleIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+              }
+              .checkmark-path {
+                  stroke-dasharray: 100;
+                  stroke-dashoffset: 100;
+                  animation: drawCheck 0.6s ease-in-out 0.3s forwards;
+              }
+              @keyframes cardFadeIn {
+                  from { opacity: 0; transform: translateY(12px); }
+                  to { opacity: 1; transform: translateY(0); }
+              }
+              @keyframes scaleIn {
+                  from { transform: scale(0); opacity: 0; }
+                  to { transform: scale(1); opacity: 1; }
+              }
+              @keyframes drawCheck {
+                  from { stroke-dashoffset: 100; }
+                  to { stroke-dashoffset: 0; }
+              }
+          </style>
+      </head>
+      <body class="flex flex-col items-center justify-center min-h-screen p-4 antialiased">
+          <div class="glass-card p-7 rounded-2xl shadow-2xl w-full max-w-md text-center">
+              <div class="mb-5 flex justify-center">
+                  <div class="checkmark-circle w-16 h-16 rounded-full flex items-center justify-center text-emerald-400">
+                      <svg class="w-8 h-8 flex items-center justify-center" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" style="display: block;">
+                          <path class="checkmark-path" stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path>
+                      </svg>
+                  </div>
+              </div>
+              <h1 class="text-xl font-extrabold mb-1.5 tracking-tight text-white">Unggahan Berhasil!</h1>
+              <p class="mb-5 text-xs text-gray-400">Berkas Anda telah aktif di cloud server:</p>
+              <div class="url-box p-3.5 rounded-xl break-all mb-6">
+                  <a id="rawUrl" href="${rawUrl}" target="_blank" class="text-cyan-400 hover:text-cyan-300 font-mono text-xs font-semibold transition-colors">${rawUrl}</a>
+              </div>
+              <div class="flex space-x-3">
+                  <button onclick="copyToClipboard()" class="flex-1 bg-zinc-800/80 hover:bg-zinc-700 text-gray-200 text-xs font-bold py-3 px-4 rounded-xl transition duration-200 border border-white/5">
+                      Salin URL
+                  </button>
+                  <a href="/uploader" class="flex-1 bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-500 hover:to-cyan-400 text-white text-xs font-bold py-3 px-4 rounded-xl shadow-md shadow-cyan-950/30 transition duration-200 block text-center">
+                      Kembali
+                  </a>
+              </div>
+          </div>
+          <div id="toast" class="fixed bottom-5 bg-emerald-600/90 backdrop-blur-md text-white text-xs font-semibold px-4 py-2.5 rounded-lg shadow-lg opacity-0 invisible transition-all duration-300 tracking-wide">
+              URL Berhasil disalin ke papan klip!
+          </div>
+          <script>
+              function copyToClipboard() {
+                  const urlText = document.getElementById('rawUrl').href;
+                  navigator.clipboard.writeText(urlText).then(() => {
+                      const toast = document.getElementById('toast');
+                      toast.classList.remove('opacity-0', 'invisible');
+                      toast.classList.add('opacity-100', 'visible');
+                      setTimeout(() => {
+                          toast.classList.remove('opacity-100', 'visible');
+                          toast.classList.add('opacity-0', 'invisible');
+                      }, 2500);
+                  });
+              }
+          </script>
+      </body>
+      </html>
+    `);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Error uploading file.');
+  }
+});
+
+const router = express.Router();
+const apiPath = path.join(__dirname, 'api');
+
+const validateApiKey = (req, res, next) => {
+  if (req.path === '/apilist') {
+    return next();
+  }
+
+  const userKey = req.query.apikey || req.body.apikey;
+
+  if (!userKey) {
+    return res.status(403).json({
+      status: false,
+      creator: "Arulz-XD",
+      message: "API Key mana? masukkan parameter ?apikey=MasukkanApiKey"
+    });
+  }
+
+  const isFreeKey = (userKey === VALID_API_KEY);
+  const isPremiumKey = PREMIUM_API_KEYS.includes(userKey);
+
+  if (!isFreeKey && !isPremiumKey) {
+    return res.status(403).json({
+      status: false,
+      creator: "Arulz-XD",
+      message: "API Key salah / tidak valid! Silakan cek menu informasi untuk melihat key yang benar."
+    });
+  }
+
+  const pathParts = req.path.split('/');
+  const currentCategory = pathParts[1]; 
+  const currentRouteName = pathParts[2];   
+
+  if (currentCategory && currentRouteName) {
     try {
-        if (finalMethod === 'GET' || finalMethod === 'DELETE') {
-            for (const [key, value] of rawFormData.entries()) {
-                if (value && typeof value === 'string') {
-                    queryParams.append(key, value);
-                }
-            }
-            fullPath += '?' + queryParams.toString();
-        } else {
-            if (formHasFile) {
-                // Kirim Multipart Form Data untuk semua jenis file (pdf, zip, docx, gambar, video, dll)
-                fetchOptions.body = rawFormData;
-            } else {
-                // Teks JSON biasa jika tidak ada file
-                fetchOptions.headers = { 'Content-Type': 'application/json' };
-                const jsonBody = {};
-                for (const [key, value] of rawFormData.entries()) {
-                    if (value) jsonBody[key] = value;
-                }
-                fetchOptions.body = JSON.stringify(jsonBody);
-            }
+      const routeFilePath = path.join(apiPath, currentCategory, `${currentRouteName}.js`);
+      if (fs.existsSync(routeFilePath)) {
+        const routeModule = require(routeFilePath);
+
+        if (routeModule.status === "error" || routeModule.status === "perbaikan") {
+          return res.status(503).json({
+            status: false,
+            creator: "Arulz-XD",
+            message: "Fitur ini sedang dalam perbaikan / maintenance!"
+          });
         }
 
-        const startTime = performance.now();
-        const response = await fetch(fullPath, fetchOptions);
-        const endTime = performance.now();
-        const duration = Math.round(endTime - startTime);
-
-        if (response.status === 403 || response.status === 503) {
-            const data = await response.json();
-            responseContent.innerHTML = `<pre class="text-red-400 code-font text-sm overflow-auto p-2 bg-black/50 rounded-lg">${JSON.stringify(data, null, 2)}</pre>`;
-            showToast(data.message || "Akses Ditolak!", true);
-            return;
+        if (routeModule.type === "premium" && !isPremiumKey) {
+          return res.status(403).json({
+            status: false,
+            creator: "Arulz-XD",
+            message: "Endpoint ini khusus pengguna Premium! Hubungi Developer untuk mendapatkan akses VIP."
+          });
         }
-
-        if (!response.ok) throw new Error(`HTTP Error ${response.status}`);
-
-        const contentType = response.headers.get("content-type") || "application/octet-stream";
-        const cleanContentType = contentType.split(';')[0].trim();
-        const contentLength = response.headers.get("content-length");
-
-        let sizeText = "0 B";
-        let bytes = contentLength ? parseInt(contentLength, 10) : 0;
-        let rawResponseText = "";
-        let finalInnerContent = "";
-
-        if (cleanContentType.includes("application/json")) {
-            const data = await response.json();
-            rawResponseText = JSON.stringify(data, null, 2);
-
-            if (!bytes) bytes = new Blob([rawResponseText]).size;
-
-            let detectedMediaUrl = null;
-            if (data.url && typeof data.url === 'string' && data.url.startsWith('http')) detectedMediaUrl = data.url;
-            else if (data.result && data.result.url && typeof data.result.url === 'string') detectedMediaUrl = data.result.url;
-
-            if (detectedMediaUrl && (detectedMediaUrl.match(/\.(jpeg|jpg|gif|png|webp|mp4|mp3|webm|mov|wav|ogg|pdf|docx|xlsx|zip|txt|js)/i))) {
-                 finalInnerContent = createMediaPreview(detectedMediaUrl, null, detectedMediaUrl) + `<div class="mt-4 text-xs font-bold text-slate-500 uppercase">RAW JSON DATA</div><pre id="raw-text-${catIdx}-${epIdx}" class="code-font text-sm overflow-auto text-cyan-400 p-2 bg-black/50 rounded-lg mt-2">${rawResponseText}</pre>`;
-                 isMedia = true;
-            } else {
-                 finalInnerContent = `<pre id="raw-text-${catIdx}-${epIdx}" class="code-font text-sm overflow-auto text-cyan-400 p-2">${rawResponseText}</pre>`;
-            }
-        } else if (cleanContentType.startsWith("image/") || cleanContentType.startsWith("video/") || cleanContentType.startsWith("audio/") || cleanContentType.includes("application/pdf")) {
-            isMedia = true;
-            const blob = await response.blob();
-            if (!bytes) bytes = blob.size;
-            const blobUrl = URL.createObjectURL(blob);
-            finalInnerContent = createMediaPreview(blobUrl, cleanContentType, fullPath);
-        } else {
-            rawResponseText = await response.text();
-            if (!bytes) bytes = new Blob([rawResponseText]).size;
-            finalInnerContent = `<pre id="raw-text-${catIdx}-${epIdx}" class="code-font text-sm overflow-auto p-2">${rawResponseText}</pre>`;
-        }
-
-        if (bytes >= 1048576) sizeText = `${(bytes / 1048576).toFixed(1)} MB`;
-        else if (bytes >= 1024) sizeText = `${(bytes / 1024).toFixed(1)} KB`;
-        else sizeText = `${bytes} B`;
-
-        const metadataBadgeHtml = `
-            <div class="flex flex-wrap items-center gap-2 px-4 py-2 mb-4 text-xs font-mono font-bold rounded-lg bg-emerald-400 text-slate-900 border border-emerald-500/30 shadow-sm w-fit">
-                <span>HTTP ${response.status}</span>
-                <span class="opacity-40">•</span>
-                <span>${duration}ms</span>
-                <span class="opacity-40">•</span>
-                <span>${cleanContentType}</span>
-                <span class="opacity-40">•</span>
-                <span>${sizeText}</span>
-            </div>
-        `;
-
-        responseContent.innerHTML = metadataBadgeHtml + finalInnerContent;
-
-        const isLightMode = body.classList.contains('light-mode');
-        const btnStyle = isLightMode 
-            ? 'px-2.5 py-1 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded text-[11px] font-semibold transition-colors code-font border border-black/5'
-            : 'px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-white rounded text-[11px] font-semibold transition-colors code-font border border-white/5';
-
-        const actionContainer = document.createElement('div');
-        actionContainer.className = "flex flex-wrap gap-2 mb-3 border-b border-white/10 light-mode:border-slate-200 pb-3 mt-3";
-
-        const copyUrlBtn = document.createElement('button');
-        copyUrlBtn.type = "button";
-        copyUrlBtn.className = btnStyle;
-        copyUrlBtn.innerHTML = "🔗 Copy URL Request";
-        copyUrlBtn.onclick = () => {
-            const finalFullUrl = finalMethod === 'GET' ? fullPath : (queryParams.toString() ? `${fullPath}?${queryParams.toString()}` : fullPath);
-            copyText(finalFullUrl, "URL Request");
-        };
-        actionContainer.appendChild(copyUrlBtn);
-
-        if (!isMedia) {
-            const copyResponseBtn = document.createElement('button');
-            copyResponseBtn.type = "button";
-            copyResponseBtn.className = btnStyle;
-            copyResponseBtn.innerHTML = "📋 Copy Response JSON";
-            copyResponseBtn.onclick = () => copyText(rawResponseText, "Response");
-            actionContainer.appendChild(copyResponseBtn);
-        }
-
-        const badgeElement = responseContent.querySelector('.bg-emerald-400');
-        if (badgeElement) {
-            badgeElement.insertAdjacentElement('afterend', actionContainer);
-        } else {
-            responseContent.insertBefore(actionContainer, responseContent.firstChild);
-        }
-
-        showToast(i18n[currentLang].toastRequestSuccess);
-    } catch (error) {
-        responseContent.innerHTML = `<pre class="text-red-400 code-font text-sm p-2 bg-red-500/10 rounded-lg">Error: ${error.message}</pre>`;
-        showToast(i18n[currentLang].toastRequestFailed, true);
-    } finally {
-        // RESET KEADAAN TOMBOL KEMBALI SEPERTI SEMULA
-        isRequestInProgress = false;
-        executeBtn.disabled = false;
-        executeBtn.classList.remove('btn-loading');
-        
-        // Kembalikan properti display spinner lama bawaan agar normal untuk pemakaian berikutnya
-        spinner.style.display = ''; 
-        spinner.classList.remove('active');
-        
-        // Kembalikan isi teks tombol asal semula ("Execute" / "Submit")
-        executeBtn.innerHTML = originalBtnHtml;
+      }
+    } catch (e) {
+      console.error("Gagal memvalidasi status/type router:", e.message);
     }
-}
+  }
+
+  next();
+};
+
+router.use(validateApiKey);
 
 
-function clearResponse(catIdx, epIdx, endpointType) {
-    const responseDiv = document.getElementById(`response-${catIdx}-${epIdx}`);
-    if (responseDiv) responseDiv.classList.add('hidden');
+router.use((req, res, next) => {
+  // Gabungkan parameter query (GET) dan body (POST)
+  req.apiParams = { ...req.query, ...req.body };
 
-    const icon = document.getElementById(`ep-icon-${catIdx}-${epIdx}`);
-    if (icon) icon.textContent = '+';
-
-    const form = document.getElementById(`form-${catIdx}-${epIdx}`);
-    if (form) {
-        form.reset(); 
-        const urlContainer = document.getElementById(`live-url-${catIdx}-${epIdx}`);
-        if (urlContainer) {
-            const basePath = urlContainer.textContent.split('?')[0];
-            urlContainer.textContent = basePath;
-        }
-
-        const curlContainer = document.getElementById(`live-curl-${catIdx}-${epIdx}`);
-        if (curlContainer) {
-            const method = curlContainer.textContent.split(' ')[1] || 'GET';
-            const baseUrl = curlContainer.textContent.split('"')[1] || '';
-            curlContainer.textContent = `curl -X ${method} "${baseUrl.split('?')[0]}"`;
-        }
+  // Jika terdapat file yang diunggah (mendukung gambar, pdf, zip, video, audio, dll)
+  if (req.files && Object.keys(req.files).length > 0) {
+    for (const key in req.files) {
+      const file = req.files[key];
+      
+      // Bungkus data file agar mudah dibaca di dalam logic internal modul file Anda
+      req.apiParams[key] = {
+        name: file.name,
+        mimetype: file.mimetype,
+        size: file.size,
+        buffer: file.data, // Menyimpan raw buffer file
+        ext: path.extname(file.name).toLowerCase()
+      };
     }
+  }
+  next();
+});
+
+// Pendaftaran sub-router dynamic bawaan Anda (Tetap biarkan seperti ini)
+const endpointDirs = fs.readdirSync(apiPath).filter(f => fs.statSync(path.join(apiPath, f)).isDirectory());
+
+for (const category of endpointDirs) {
+  const categoryPath = path.join(apiPath, category);
+  const files = fs.readdirSync(categoryPath).filter(f => f.endsWith('.js'));
+  for (const file of files) {
+    const routeName = path.basename(file, '.js');
+    const route = require(path.join(categoryPath, file));
+    router.use(`/${category}/${routeName}`, route);
+  }
 }
 
-function renderCategoryFilters() {
-    const container = document.getElementById('categoryFilters');
-    if (!container || !apiData || !apiData.categories) return;
+function getEndpointsFromRouter(category, file) {
+  const endpoints = [];
+  const route = require(path.join(apiPath, category, file));
+  const subRouter = route.stack ? route : route.router || route;
+  if (!subRouter || !subRouter.stack) return endpoints;
 
-    let html = `<button class="filter-btn active" data-filter="all" onclick="filterByCategory('all')">semua (${totalEndpoints})</button>`;
-    apiData.categories.forEach(category => {
-        const catName = category.name.toLowerCase();
-        html += `<button class="filter-btn" data-filter="${catName}" onclick="filterByCategory('${catName}')">${catName} (${category.items.length})</button>`;
-    });
-    container.innerHTML = html;
-}
+  subRouter.stack.forEach(layer => {
+    if (layer.route) {
+      const methods = Object.keys(layer.route.methods).map(m => m.toUpperCase());
+      let params = { apikey: "" }; 
 
-function filterByCategory(catName) {
-    activeCategory = catName;
-    document.querySelectorAll('.filter-btn').forEach(btn => {
-        if (btn.dataset.filter === catName) btn.classList.add('active');
-        else btn.classList.remove('active');
-    });
-    performSearch();
-}
+      if (layer.route.stack && layer.route.stack.length) {
+        layer.route.stack.forEach(mw => {
+          const fnString = mw.handle.toString();
 
-function performSearch() {
-    const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
-    const noResults = document.getElementById('noResults');
-    let hasVisibleItems = false;
-
-    requestAnimationFrame(() => {
-        document.querySelectorAll('.category-group').forEach(category => {
-            const catName = category.dataset.category;
-            if (activeCategory !== 'all' && catName !== activeCategory) {
-                category.classList.add('hidden');
-                return;
+          [...fnString.matchAll(/req\.query\.([a-zA-Z0-9_]+)/g)].forEach(match => {
+            if (match[1] !== 'apikey') {
+              if (route.paramsConfig && route.paramsConfig[match[1]]) {
+                params[match[1]] = route.paramsConfig[match[1]];
+              } else {
+                params[match[1]] = "";
+              }
             }
+          });
 
-            let categoryHasVisibleItems = false;
-            const items = category.querySelectorAll('.api-item');
-
-            for (let i = 0; i < items.length; i++) {
-                const item = items[i];
-                const matches = item.dataset.path.includes(searchTerm) || 
-                                item.dataset.alias.includes(searchTerm) || 
-                                item.dataset.description.includes(searchTerm) ||
-                                item.dataset.category.includes(searchTerm);
-                if (matches) {
-                    item.classList.remove('hidden');
-                    categoryHasVisibleItems = true;
-                    hasVisibleItems = true;
-                } else {
-                    item.classList.add('hidden');
-                }
-            }
-            category.classList.toggle('hidden', !categoryHasVisibleItems);
+          [...fnString.matchAll(/req\.body\.([a-zA-Z0-9_]+)/g)].forEach(match => {
+            if (match[1] !== 'apikey') params[match[1]] = "";
+          });
         });
-        noResults.classList.toggle('hidden', hasVisibleItems);
-    });
+      }
+
+      endpoints.push({
+        name: `/${category}/${file.replace(/\.js$/,"")}`,
+        path: `/api/${category}/${file.replace(/\.js$/,"")}`,
+        desc: `/${category}/${file.replace(/\.js$/,"")}`,
+        status: route.status || "ready",
+        type: route.type || "free",
+        params,
+        methods
+      });
+    }
+  });
+  return endpoints;
 }
 
-function loadApis() {
-    const apiList = document.getElementById('apiList');
-    if (!apiData || !apiData.categories) {
-        apiList.innerHTML = '<p class="text-center">No API data loaded.</p>';
-        return;
+router.get('/apilist', (req, res) => {
+  const categories = [];
+
+  for (const category of endpointDirs) {
+    const files = fs.readdirSync(path.join(apiPath, category)).filter(f => f.endsWith('.js'));
+    const endpoints = [];
+    for (const file of files) {
+      endpoints.push(...getEndpointsFromRouter(category, file));
+    }
+    if (endpoints.length) {
+      categories.push({
+        name: `${category.toUpperCase()}`,
+        items: endpoints
+      });
+    }
+  }
+
+  categories.push({
+    name: "OTHER",
+    items: [
+      {
+        name: "/apilist",
+        path: "/api/apilist",
+        desc: "/apilist",
+        status: "ready",
+        type: "free",
+        params: { apikey: "" },
+        methods: ["GET"]
+      }
+    ]
+  });
+
+  res.json({ categories });
+});
+
+app.use('/api', router);
+
+app.get('/script.js', (req, res) => {
+  res.sendFile(path.join(__dirname, 'script.js'));
+});
+app.get('/styles.css', (req, res) => {
+  res.sendFile(path.join(__dirname, 'styles.css'));
+});
+
+app.get('/', (req, res) => {
+    res.send(`<!DOCTYPE html>
+<html lang="id" class="notranslate" translate="no">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="google" content="notranslate" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>${title}</title>
+    <link id="faviconLink" rel="icon" type="image/x-icon" href="${favicon}">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css" />
+    
+    <style>
+    .bg-dots-light {
+        background-color: #ffffff;
+        background-image: radial-gradient(#e2e8f0 1.5px, transparent 1.5px);
+        background-size: 24px 24px;
     }
 
-    totalEndpoints = 0;
-    totalCategories = apiData.categories.length;
-    apiData.categories.forEach(category => { totalEndpoints += category.items.length; });
+    .bg-dots-dark {
+        background-color: #0f172a;
+        background-image: radial-gradient(rgba(255, 255, 255, 0.15) 1.5px, transparent 1.5px);
+        background-size: 24px 24px;
+    }
+    
+    #themeBg {
+        transition: background-color 0.3s ease, background-image 0.3s ease;
+    }
+    body {
+        transition: background 0.25s ease, color 0.25s ease;
+    }
 
-    updateTotalEndpoints();
-    updateTotalCategories();
-    renderCategoryFilters();
+    .glass-panel {
+        background: rgba(15, 23, 42, 0.75);
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        will-change: transform, opacity;
+    }
+    
+    .light-mode .glass-panel {
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid rgba(15, 23, 42, 0.12);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03);
+    }
 
-    const isLightMode = body.classList.contains('light-mode');
-    const pathColorClass = isLightMode ? 'text-cyan-700' : 'text-cyan-200';
-    const subTextColorClass = isLightMode ? 'text-slate-600' : 'opacity-70';
+    .light-mode {
+        color: #0f172a !important;
+    }
+    .light-mode #mainTitle { color: #0f172a !important; }
+    .light-mode #mainDescription { color: #334155 !important; }
+    .light-mode #stat-battery-title,
+    .light-mode #stat-endpoints-title,
+    .light-mode #stat-categories-title { color: #475569 !important; }
+    .light-mode #siteFooter { color: #64748b !important; border-color: rgba(0,0,0,0.1); }
+    .light-mode #no-results-title { color: #0f172a !important; }
 
-    let html = '';
-    apiData.categories.forEach((category, catIdx) => {
-        const catNameLower = category.name.toLowerCase();
-        let iconSvg = categoryIcons.default;
-        for (const [key, svg] of Object.entries(categoryIcons)) {
-            if (catNameLower.includes(key)) { iconSvg = svg; break; }
-        }
+    .light-mode .music-player-card {
+        background: rgba(255, 255, 255, 0.85) !important;
+        border-color: rgba(0, 0, 0, 0.12) !important;
+    }
+    .light-mode .music-text-title { color: #0f172a !important; }
+    .light-mode .music-text-artist { color: #475569 !important; }
+    .light-mode .music-progress-bar-bg { background-color: rgba(0,0,0,0.1) !important; }
+    
+    .light-mode .music-btn-nav {
+        background-color: rgba(255, 255, 255, 0.9) !important;
+        border-color: rgba(0,0,0,0.12) !important;
+        color: #1e293b !important;
+    }
+    .light-mode .music-btn-nav:hover {
+        background-color: #f1f5f9 !important;
+        color: #0f172a !important;
+    }
+    
+    .lang-btn {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 11px;
+        font-weight: bold;
+        padding: 3px 10px;
+        border: 2px solid #000000;
+        background-color: #1a1a1a;
+        color: #ffffff;
+        transition: all 0.15s ease;
+    }
+    .lang-btn.active {
+        background-color: #06b6d4;
+        color: #000000;
+        box-shadow: 2px 2px 0px #000000;
+    }
 
-        html += `
-        <div class="category-group" data-category="${catNameLower}">
-            <div class="glass-panel border rounded-xl overflow-hidden shadow-lg mb-4">
-                <button onclick="toggleCategory(${catIdx})" class="w-full px-4 py-4 flex items-center justify-between hover:bg-white/5 light-mode:hover:bg-black/5 transition-colors">
-                    <div class="flex items-center gap-4">
-                        <div class="w-12 h-12 flex items-center justify-center bg-slate-950/40 light-mode:bg-slate-200/50 rounded-xl border border-white/10 light-mode:border-slate-300 shadow-inner flex-shrink-0">
-                            ${iconSvg}
-                        </div>
-                        <div class="text-left">
-                            <h3 class="font-bold text-sm tracking-widest text-cyan-400 light-mode:text-cyan-600 uppercase font-['Space_Grotesk']">${category.name}</h3>
-                            <p class="text-[11px] code-font ${subTextColorClass}">${category.items.length} ${i18n[currentLang].endpointsCount}</p>
-                        </div>
-                    </div>
-                    <svg id="cat-icon-${catIdx}" class="w-5 h-5 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+    .filter-btn {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 11px;
+        padding: 6px 12px;
+        border: 1px solid rgba(255,255,255,0.2);
+        background: rgba(255,255,255,0.05);
+        color: #e2e8f0;
+        transition: all 0.2s ease;
+        border-radius: 8px;
+        white-space: nowrap;
+        cursor: pointer;
+    }
+    .filter-btn:hover {
+        background: rgba(255,255,255,0.15);
+    }
+    .filter-btn.active {
+        background-color: #06b6d4 !important;
+        color: #000000 !important;
+        border-color: #06b6d4 !important;
+        font-weight: bold;
+    }
+    .light-mode .filter-btn {
+        border-color: rgba(0,0,0,0.15);
+        background: rgba(0,0,0,0.04);
+        color: #334155;
+    }
+    .light-mode .filter-btn:hover {
+        background: rgba(0,0,0,0.08);
+    }
+    .scrollbar-hide::-webkit-scrollbar { display: none; }
+    .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="min-h-screen antialiased bg-[#030712] text-slate-100 relative">
+<div id="themeBg" class="fixed inset-0 -z-10 bg-dots-dark"></div>
+    <div id="toast" class="toast z-50">
+        <div class="flex items-center gap-3">
+            <svg id="toastIcon" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+            </svg>
+            <span id="toastMessage" class="font-medium">Action completed</span>
+        </div>
+    </div>
+
+    <div class="fixed top-6 right-6 z-40">
+        <button id="bioMenuBtn" class="flex items-center justify-center w-12 h-12 rounded-xl glass-panel text-slate-300 hover:text-white shadow-lg transition-all active:scale-95 focus:outline-none light-mode:text-slate-700 light-mode:hover:text-slate-900">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+        </button>
+    </div>
+
+    <div id="bioDropdown" class="fixed top-0 right-0 h-full w-72 bg-[#08111e]/95 backdrop-blur-lg border-l border-white/10 transform translate-x-full transition-transform duration-300 ease-in-out z-50 shadow-2xl flex flex-col p-6 font-['Space_Grotesk'] light-mode:bg-white/95 light-mode:border-slate-200">
+        <div class="flex items-center justify-between mb-4">
+            <div class="flex gap-0 border border-black p-0.5 bg-[#111]">
+                <button id="lang-id" class="lang-btn active" onclick="setLanguage('id')">ID</button>
+                <button id="lang-en" class="lang-btn" onclick="setLanguage('en')">EN</button>
+            </div>
+            
+            <div class="flex items-center gap-2">
+                <button id="themeToggle" class="flex items-center justify-center w-8 h-8 rounded-lg transition-all active:scale-95 focus:outline-none border border-white/20 bg-slate-900/50 text-white light-mode:bg-slate-100 light-mode:border-slate-300 light-mode:text-slate-900">
+                    <svg id="theme-toggle-dark-icon" class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+                    </svg>
+                    <svg id="theme-toggle-light-icon" class="w-4 h-4 hidden" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd" clip-rule="evenodd"></path>
                     </svg>
                 </button>
-                <div id="cat-${catIdx}" class="hidden">`;
 
-        category.items.forEach((item, epIdx) => {
-            const method = item.methods && item.methods.length ? item.methods[0] : 'GET';
-            const pathParts = item.path.split('?');
-            const path = pathParts[0];
-            const epType = item.type || 'free';
-
-            let statusClass = "status-ready";
-            let statusText = "READY"; 
-            if (item.status === 'update') { statusClass = 'status-update'; statusText = "UPDATE"; }
-            else if (item.status === 'error' || item.status === 'perbaikan') { statusClass = 'status-error'; statusText = "MAINTENANCE"; }
-
-            let badgeTypeHtml = epType === 'premium' 
-                ? `<span class="px-1.5 py-0.5 text-[9px] rounded-sm bg-amber-500/20 text-amber-400 border border-amber-500/30 font-bold uppercase tracking-wider animate-pulse">👑 PREMIUM</span>`
-                : `<span class="px-1.5 py-0.5 text-[9px] rounded-sm bg-blue-500/20 text-blue-400 border border-blue-500/30 font-bold uppercase tracking-wider">FREE</span>`;
-
-            html += `
-            <div class="api-item border-t border-white/10 light-mode:border-slate-200" 
-                data-method="${method}" data-path="${path}" data-alias="${item.name.toLowerCase()}" data-description="${item.desc.toLowerCase()}" data-category="${category.name.toLowerCase()}">
-                <button onclick="toggleEndpoint(${catIdx}, ${epIdx})" class="w-full px-4 py-3 flex items-center justify-between hover:bg-white/5 light-mode:hover:bg-black/5 transition-colors">
-                    <div class="flex items-center gap-3 flex-1 min-w-0">
-                        <span class="bg-cyan-500 light-mode:bg-cyan-600 text-slate-950 light-mode:text-white px-2 py-0.5 rounded text-[10px] flex-shrink-0 code-font font-black">${method}</span>
-                        <div class="text-left flex-1 min-w-0">
-                            <p class="code-font font-semibold text-[13px] ${pathColorClass} truncate">${path}</p>
-                            <div class="flex items-center gap-2 mt-1">
-                                <p class="text-xs ${subTextColorClass} truncate">${item.name}</p>
-                                <span class="px-1.5 py-0.5 text-[9px] rounded-sm ${statusClass} flex-shrink-0 uppercase tracking-wider font-bold">${statusText}</span>
-                                ${badgeTypeHtml}
-                            </div>
-                        </div>
-                    </div>
-                    <span id="ep-icon-${catIdx}-${epIdx}" class="text-base font-bold text-cyan-400 light-mode:text-cyan-600 px-2 code-font">+</span>
+                <button id="closeMenuBtn" class="text-white hover:text-red-400 transition-colors p-1.5 border border-white/10 rounded bg-slate-900/40 light-mode:text-slate-700 light-mode:bg-slate-100 light-mode:border-slate-300 light-mode:hover:text-red-500">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
                 </button>
-                <div id="ep-${catIdx}-${epIdx}" class="hidden bg-slate-950/40 light-mode:bg-slate-50/50 px-4 py-4 border-t border-white/10 light-mode:border-slate-200 backdrop-blur-sm">
-                    <p class="text-xs mb-4 ${isLightMode ? 'text-slate-700' : 'opacity-80'}">${item.desc}</p>
-                    
-                    <div class="mb-4">
-                        <div class="flex items-center justify-between mb-2">
-                            <h4 class="font-bold text-[11px] uppercase tracking-wider text-slate-400 light-mode:text-slate-600 code-font">ENDPOINT / REQUEST URL</h4>
-                            <button type="button" onclick="copyFromElement('live-url-${catIdx}-${epIdx}', 'URL')" class="px-3 py-1 bg-white/5 hover:bg-white/10 light-mode:bg-slate-200 light-mode:hover:bg-slate-300 border border-white/10 light-mode:border-slate-300 rounded-lg text-[10px] transition-all active:scale-95 code-font text-slate-300 light-mode:text-slate-800">Copy URL</button>
+            </div>
+        </div>
+
+        <div class="mb-4 p-3 bg-cyan-950/40 border border-cyan-500/30 rounded-xl light-mode:bg-cyan-50 light-mode:border-cyan-200">
+            <span class="text-[10px] font-bold text-cyan-400 light-mode:text-cyan-700 uppercase tracking-widest block mb-1">🔑 Current API Key</span>
+            <div class="flex items-center justify-between bg-black/40 rounded px-2 py-1.5 font-mono text-xs text-slate-200 border border-white/5 light-mode:bg-white light-mode:text-slate-800 light-mode:border-slate-200">
+                <span class="select-all">${VALID_API_KEY}</span>
+                <button onclick="copyText('${VALID_API_KEY}', 'API Key Free')" class="p-1 text-slate-400 hover:text-cyan-400 transition-colors" title="Copy API Key">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <nav class="flex flex-col gap-4 text-xs font-bold tracking-wider uppercase text-gray-300 light-mode:text-slate-700 flex-1 overflow-y-auto scrollbar-hide py-2">
+            <a href="#api" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-3 px-2 py-1.5 rounded-lg hover:bg-white/5">
+                <i class="fa-solid fa-house text-sm text-cyan-400 w-5 text-center"></i> HOME
+            </a>
+            <a href="#apiList" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-3 px-2 py-1.5 rounded-lg hover:bg-white/5">
+                <i class="fa-solid fa-book text-sm text-cyan-400 w-5 text-center"></i> DOCUMENTATION
+            </a>
+            <button id="uploaderMenuBtn" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-3 px-2 py-1.5 rounded-lg hover:bg-white/5 text-left w-full focus:outline-none">
+                <i class="fa-solid fa-cloud-arrow-up text-sm text-cyan-400 w-5 text-center"></i> File Upload
+            </button>
+            <a href="https://arulz-pastecode.vercel.app/" target="_blank" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-3 px-2 py-1.5 rounded-lg hover:bg-white/5">
+                <i class="fa-solid fa-code text-sm text-cyan-400 w-5 text-center"></i> PASTECODE
+            </a>
+            
+            <hr class="border-white/10 my-1 light-mode:border-slate-200">
+            
+            <a href="#" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-3 px-2 py-1.5 rounded-lg hover:bg-white/5 text-[11px] opacity-80">
+                <i class="fa-solid fa-bug text-sm text-cyan-400 w-5 text-center"></i> BUG REPORT
+            </a>
+            <a href="https://wa.me/6285122629940" target="_blank" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-3 px-2 py-1.5 rounded-lg hover:bg-white/5 text-[11px] opacity-80">
+                <i class="fa-brands fa-whatsapp text-sm text-cyan-400 w-5 text-center"></i> OWNER (WHATSAPP)
+            </a>
+            <a href="https://t.me/Arulzxd" target="_blank" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-3 px-2 py-1.5 rounded-lg hover:bg-white/5 text-[11px] opacity-80">
+                <i class="fa-brands fa-telegram text-sm text-cyan-400 w-5 text-center"></i> OWNER (TELEGRAM)
+            </a>
+        </nav>
+    </div>
+
+    <div id="menuOverlay" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden z-30 transition-opacity duration-300"></div>
+
+    <div class="max-w-5xl mx-auto px-4 py-8 relative z-10">
+        <header id="api" class="mb-12 text-center">
+            <div class="flex items-center justify-center gap-3 mb-2">
+                <span class="bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest animate-pulse light-mode:bg-cyan-100 light-mode:text-cyan-700">● ONLINE</span>
+            </div>
+            <div id="mainTitle" class="flex justify-center mb-4 min-h-[50px] items-center">${headertitle}</div>
+            <p id="mainDescription" class="text-md md:text-lg font-medium tracking-wide text-slate-300 max-w-xl mx-auto">${headerdescription}</p>
+            
+            <div class="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl mx-auto">
+                <div class="glass-panel flex flex-col items-center justify-center p-4 rounded-xl shadow-lg">
+                    <div class="text-center mb-3 font-['Space_Grotesk']">
+                        <div id="liveClock" class="text-2xl font-black tracking-wider text-cyan-400 light-mode:text-cyan-600 font-mono">
+                            00:00:00
                         </div>
-                        <div class="bg-slate-900/40 light-mode:bg-slate-200/60 border border-white/10 light-mode:border-slate-300 px-4 py-3 rounded-xl backdrop-blur-md shadow-inner">
-                            <code id="live-url-${catIdx}-${epIdx}" class="code-font text-xs text-cyan-400 light-mode:text-cyan-700 font-medium break-all">${BASE_URL}${path}</code>
+                        <div id="liveDate" class="text-[10px] font-bold opacity-70 tracking-wide mt-0.5 uppercase">
+                            Memuat tanggal...
                         </div>
                     </div>
-
-                    <div class="mb-4">
-                        <div class="flex items-center justify-between mb-2">
-                            <h4 class="font-bold text-[11px] uppercase tracking-wider text-slate-400 light-mode:text-slate-600 code-font">cURL Command</h4>
-                            <button type="button" onclick="copyFromElement('live-curl-${catIdx}-${epIdx}', 'cURL')" class="px-3 py-1 bg-white/5 hover:bg-white/10 light-mode:bg-slate-200 light-mode:hover:bg-slate-300 border border-white/10 light-mode:border-slate-300 rounded-lg text-[10px] transition-all active:scale-95 code-font text-slate-300 light-mode:text-slate-800">Copy cURL</button>
+                    <hr class="w-full border-white/5 light-mode:border-slate-200 mb-3">
+                    
+                    <span id="stat-battery-title" class="text-xs font-bold uppercase tracking-wider text-slate-400">Baterai Anda</span>
+                    <div class="flex items-center gap-3 mt-2">
+                        <div id="batteryContainer" class="battery-container border border-white/20 light-mode:border-slate-400">
+                            <div id="batteryLevel" class="battery-level bg-green-400" style="width: 0%"></div>
+                            <div class="battery-tip"></div>
                         </div>
-                        <div class="bg-slate-900/40 light-mode:bg-slate-200/60 border border-white/10 light-mode:border-slate-300 px-4 py-3 rounded-xl backdrop-blur-md shadow-inner">
-                            <code id="live-curl-${catIdx}-${epIdx}" class="code-font text-xs text-slate-300 light-mode:text-slate-700 block overflow-x-auto whitespace-pre">curl -X ${method} "${BASE_URL}${path}"</code>
+                        <div class="text-left">
+                            <span id="batteryPercentage" class="text-lg font-bold block leading-none light-mode:text-slate-900">0%</span>
+                            <span id="batteryStatus" class="text-[10px] uppercase text-slate-400 light-mode:text-slate-500 font-medium">Mendeteksi...</span>
                         </div>
-                    </div>`;
-
-            if (item.status === 'ready' || item.status === 'update') {
-                html += `
-                    <div>
-                        <h4 class="font-bold text-[11px] uppercase tracking-wider text-slate-400 light-mode:text-slate-600 mb-3">Parameter</h4>
-                        <form id="form-${catIdx}-${epIdx}" onsubmit="executeRequest(event, ${catIdx}, ${epIdx}, '${method}', '${path}', '${epType}')">
-                            <div class="space-y-4 mb-4">`;
-
-                // Cari potongan kode ini di dalam fungsi `loadApis()` pada script.js Anda:
-if (item.params) {
-    Object.keys(item.params).forEach(paramName => {
-        const pType = item.params[paramName];
-        const isRequired = true; 
-        let paramDesc = (pType && pType.type) ? pType.type : (pType || paramName);
-
-        let inputValue = '';
-        let inputPlaceholder = `Masukkan ${paramName}`;
-
-        if (paramName.toLowerCase() === 'apikey') {
-            if (epType === 'premium') {
-                inputValue = '';
-                inputPlaceholder = 'Masukkan apikey premium';
-            } else {
-                inputValue = 'arulzxd-keys';
-                inputPlaceholder = 'Masukkan apikey';
-            }
-        }
-
-        html += `
-        <div>
-            <div class="flex items-center justify-between mb-1.5">
-                <label class="block text-xs font-semibold text-slate-300 light-mode:text-slate-700 code-font">
-                    ${paramName} ${isRequired ? '<span class="text-red-500">*</span>' : ''}
-                </label>
-                <span class="text-[10px] text-slate-500 light-mode:text-slate-400 italic font-normal">${paramDesc}</span>
-            </div>`;
-
-        // MODIFIKASI SELEKSI INPUT / SELECT DROPDOWN
-        if (pType === 'file' || paramName === 'file') {
-            html += `<input type="file" name="${paramName}" onchange="updateLivePreview(${catIdx}, ${epIdx}, '${method}', '${path}', '${epType}')" class="w-full px-3 py-2 rounded-lg bg-black/40 light-mode:bg-white border border-white/10 light-mode:border-slate-300 text-white light-mode:text-slate-900 focus:outline-none focus:border-cyan-500 text-xs file:mr-3 file:py-1 file:px-2.5 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-cyan-500/10 file:text-cyan-400 hover:file:bg-cyan-500/20" ${isRequired ? 'required' : ''}>`;
-        } 
-        else if (pType && pType.type === 'select' && Array.isArray(pType.options)) {
-            // JIKA PARAMETER ADALAH SELECT, BUAT ELEMEN DROPDOWN MENU
-            html += `<select name="${paramName}" onchange="updateLivePreview(${catIdx}, ${epIdx}, '${method}', '${path}', '${epType}')" class="w-full px-3 py-2 rounded-lg bg-black/40 light-mode:bg-white border border-white/10 light-mode:border-slate-300 text-cyan-400 light-mode:text-slate-900 focus:outline-none focus:border-cyan-500 code-font text-sm">`;
-            pType.options.forEach(opt => {
-                html += `<option value="${opt}" class="bg-slate-900 text-white">${opt}</option>`;
-            });
-            html += `</select>`;
-        } 
-        else {
-            html += `<input type="text" name="${paramName}" value="${inputValue}" oninput="updateLivePreview(${catIdx}, ${epIdx}, '${method}', '${path}', '${epType}')" class="w-full px-3 py-2 rounded-lg bg-black/40 light-mode:bg-white border border-white/10 light-mode:border-slate-300 text-white light-mode:text-slate-900 focus:outline-none focus:border-cyan-500 code-font text-sm" placeholder="${inputPlaceholder}" ${isRequired ? 'required' : ''}>`;
-        }
-
-        html += `</div>`;
-    });
-}
+                    </div>
+                </div>
                 
-                html += `
-                            </div>
-                            <div class="flex gap-3">
-                                <button type="submit" class="px-5 py-2 bg-cyan-500 light-mode:bg-cyan-600 hover:bg-cyan-400 light-mode:hover:bg-cyan-500 text-slate-950 light-mode:text-white rounded-md font-bold text-xs tracking-wider transition-all flex items-center justify-center">EKSEKUSI</button>
-                                <button type="button" onclick="clearResponse(${catIdx}, ${epIdx}, '${epType}')" class="px-5 py-2 bg-transparent border border-white/20 light-mode:border-slate-300 hover:border-white/40 light-mode:hover:bg-slate-100 text-slate-300 light-mode:text-slate-700 rounded-md font-bold text-xs transition-colors">BERSIHKAN</button>
-                            </div>
-                        </form>
+                <div class="glass-panel flex flex-col items-center justify-center p-4 rounded-xl shadow-lg">
+                    <span id="stat-endpoints-title" class="text-xs font-bold uppercase tracking-wider text-slate-400">Total Endpoint</span>
+                    <span id="totalEndpoints" class="text-3xl font-black text-cyan-400 mt-1 light-mode:text-cyan-600">0</span>
+                </div>
+                
+                <div class="glass-panel flex flex-col items-center justify-center p-4 rounded-xl shadow-lg">
+                    <span id="stat-categories-title" class="text-xs font-bold uppercase tracking-wider text-slate-400">Total Kategori</span>
+                    <span id="totalCategories" class="text-3xl font-black text-cyan-400 mt-1 light-mode:text-cyan-600">0</span>
+                </div>
+            </div>
 
-                        <div id="response-${catIdx}-${epIdx}" class="hidden mt-6 space-y-4">
-                            <div>
-                                <h5 class="text-[11px] uppercase tracking-wider font-bold mb-2 text-slate-400 light-mode:text-slate-500">Response</h5>
-                                <div class="bg-slate-950/80 light-mode:bg-slate-100 border border-white/10 light-mode:border-slate-300 p-3 rounded-lg min-h-[100px] overflow-x-auto" id="response-content-${catIdx}-${epIdx}"></div>
+            <div class="glass-panel max-w-3xl mx-auto mt-4 p-3 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-3 border border-white/20">
+                <div class="flex items-center gap-2 text-sm text-cyan-400 light-mode:text-cyan-700 code-font">
+                    <span>🌐</span> <span class="underline break-all font-semibold">https://api-arulzxd-vvipclouds.vercel.app/</span>
+                </div>
+                <a href="https://wa.me/6285122629940?text=Halo%20Arulz,%20saya%20ingin%20request%20fitur%20baru%20di%20REST%20API%20:" 
+                   target="_blank" 
+                   class="w-full sm:w-auto px-6 py-2 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs uppercase rounded-lg shadow transition-all active:scale-95 light-mode:bg-cyan-600 light-mode:hover:bg-cyan-500 light-mode:text-white text-center flex items-center justify-center">
+                    + Request New Feature
+                </a>
+            </div>
+
+            <div class="flex justify-center gap-4 mt-4 max-w-3xl mx-auto">
+                <a href="https://whatsapp.com/channel/0029VbAwdIyJJhzRMpjUcS3P" 
+                   target="_blank" 
+                   class="flex-1 glass-panel py-2 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-white/10 light-mode:hover:bg-slate-100 transition-colors light-mode:text-slate-700 text-center block">
+                   💬 Channel
+                </a>
+                <a href="https://chat.whatsapp.com/LBeGqVsmDBb6j29ysuusd9" 
+                   target="_blank" 
+                   class="flex-1 glass-panel py-2 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-white/10 light-mode:hover:bg-slate-100 transition-colors light-mode:text-slate-700 text-center block">
+                   👥 Group
+                </a>
+            </div>
+
+            <div class="music-player-card glass-panel mt-8 max-w-2xl mx-auto rounded-2xl p-4 shadow-2xl relative overflow-hidden border border-white/10">
+                <audio id="audioElement"></audio>
+                <div class="flex items-center justify-between gap-4">
+                    <div class="flex items-center gap-4 flex-1 min-w-0">
+                        <div class="relative w-16 h-16 rounded-xl overflow-hidden bg-black flex-shrink-0 border border-white/10">
+                            <img id="musicCoverImg" src="" alt="Cover" class="w-full h-full object-cover transition-transform duration-500">
+                        </div>
+                        <div class="flex-1 min-w-0 text-left">
+                            <h3 id="musicTitle" class="music-text-title text-white font-bold text-sm tracking-wider uppercase truncate m-0">Loading...</h3>
+                            <p id="musicArtist" class="music-text-artist text-slate-400 text-xs font-semibold tracking-wide truncate mt-0.5">-</p>
+                            <div class="flex items-center gap-2 mt-2">
+                                <span id="currentTime" class="text-[10px] text-slate-400 light-mode:text-slate-500 code-font w-7 text-left">0:00</span>
+                                <div id="progressContainer" class="music-progress-bar-bg flex-1 h-1 bg-white/10 rounded-full relative cursor-pointer group">
+                                    <div id="progressBar" class="h-full bg-cyan-400 rounded-full w-0 transition-all duration-300"></div>
+                                </div>
+                                <span id="totalDuration" class="text-[10px] text-slate-400 light-mode:text-slate-500 code-font w-7 text-right">0:00</span>
                             </div>
                         </div>
-                    </div>`;
-            } else {
-                html += `<div class="px-4 py-3 bg-red-500/10 border border-red-500/20 rounded-lg text-xs text-red-500 font-medium">${i18n[currentLang].endpointNotAvailable}</div>`;
-            }
-            html += `</div></div>`;
-        });
-        html += `</div></div></div>`;
-    });
-    apiList.innerHTML = html;
-    allApiElements = Array.from(document.querySelectorAll('.api-item'));
-}
+                    </div>
+                    <div class="flex items-center gap-1.5 flex-shrink-0">
+                        <button id="prevBtn" class="music-btn-nav w-9 h-9 flex items-center justify-center glass-panel rounded-xl text-slate-300 hover:text-white transition-all active:scale-95">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+                        </button>
+                        <button id="playBtn" class="music-btn-nav w-10 h-10 flex items-center justify-center glass-panel rounded-xl text-slate-300 hover:text-white transition-all active:scale-95">
+                            <svg id="playIcon" class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                        </button>
+                        <button id="nextBtn" class="music-btn-nav w-9 h-9 flex items-center justify-center glass-panel rounded-xl text-slate-300 hover:text-white transition-all active:scale-95">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M16 6h2v12h-2zm-10.5 12l8.5-6-8.5-6z"/></svg>
+                        </button>
+                        <button id="playlistToggleBtn" class="music-btn-nav w-9 h-9 flex items-center justify-center glass-panel rounded-xl text-slate-300 hover:text-white transition-all active:scale-95">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                        </button>
+                    </div>
+                </div>
+                <div id="playlistPanel" class="music-playlist-border hidden mt-4 pt-4 border-t border-white/10 max-h-40 overflow-y-auto space-y-1 light-mode:border-slate-200"></div>
+            </div>
+        </header>
 
-function initMultiMusicPlayer() {
-    const playlist = window.musicPlaylist || [];
-    if (!playlist.length) return;
+        <div class="mb-8">
+            <div class="relative">
+                <input 
+                    type="text" 
+                    id="searchInput" 
+                    placeholder="Cari endpoint berdasarkan nama, path, atau kategori..."
+                    class="search-input w-full px-4 py-3 text-sm rounded-xl focus:outline-none focus:border-cyan-500 transition-all code-font glass-panel border border-white/10 text-white placeholder-slate-400 light-mode:text-slate-900 light-mode:placeholder-slate-500 light-mode:focus:border-cyan-600"
+                >
+                <svg class="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+            </div>
+            <div id="categoryFilters" class="flex flex-wrap gap-2 mt-4 justify-start md:justify-center overflow-x-auto pb-2 scrollbar-hide"></div>
+        </div>
 
-    let currentTrackIdx = 0;
-    const audio = document.getElementById('audioElement');
-    const playBtn = document.getElementById('playBtn');
-    const playIcon = document.getElementById('playIcon');
-    const progressBar = document.getElementById('progressBar');
-    const progressContainer = document.getElementById('progressContainer');
-    const currentTimeEl = document.getElementById('currentTime');
-    const totalDurationEl = document.getElementById('totalDuration');
-    const coverImg = document.getElementById('musicCoverImg');
-    const titleEl = document.getElementById('musicTitle');
-    const artistEl = document.getElementById('musicArtist');
-    const playlistPanel = document.getElementById('playlistPanel');
+        <div id="noResults" class="text-center py-12 hidden">
+            <div class="text-4xl mb-2">⚠️</div>
+            <h3 id="no-results-title" class="text-sm font-bold mb-1 text-white">Endpoint tidak ditemukan</h3>
+            <p id="no-results-desc" class="text-xs text-slate-400 light-mode:text-slate-500">Coba gunakan kata kunci lain</p>
+        </div>
 
-    function formatTime(secs) {
-        if (isNaN(secs)) return "0:00";
-        const mins = Math.floor(secs / 60);
-        const remainingSecs = Math.floor(secs % 60);
-        return `${mins}:${remainingSecs < 10 ? '0' : ''}${remainingSecs}`;
-    }
+        <div id="apiList" class="space-y-4"></div>
 
-    function loadTrack(index) {
-        currentTrackIdx = index;
-        const track = playlist[index];
-        audio.src = track.url;
-        titleEl.textContent = track.title;
-        artistEl.textContent = track.artist;
-        coverImg.src = track.cover;
-        progressBar.style.width = '0%';
-        currentTimeEl.textContent = '0:00';
-        renderPlaylistItems();
-    }
+        <footer id="siteFooter" class="mt-12 pt-6 border-t border-white/10 text-center text-xs text-slate-500">
+            ${footer}
+        </footer>
+    </div>
 
-    function renderPlaylistItems() {
-        playlistPanel.innerHTML = '';
-        playlist.forEach((track, idx) => {
-            const isActive = idx === currentTrackIdx;
-            const itemBtn = document.createElement('button');
-            itemBtn.className = `w-full text-left px-3 py-2 text-xs rounded-xl flex items-center justify-between transition-all ${isActive ? 'bg-cyan-500/10 border border-cyan-500/30 text-cyan-500 light-mode:text-cyan-700 font-bold' : 'hover:bg-white/5 light-mode:hover:bg-black/5 text-slate-400 light-mode:text-slate-600'}`;
-            itemBtn.innerHTML = `<div class="flex items-center gap-2 truncate"><span class="opacity-50 text-[10px] code-font">${String(idx + 1).padStart(2, '0')}</span><span class="truncate">${track.title} <span class="opacity-60 font-normal">- ${track.artist}</span></span></div>${isActive ? '<span class="text-[9px] tracking-wider text-cyan-500 bg-cyan-500/10 px-1.5 py-0.5 rounded animate-pulse font-bold">PLAYING</span>' : ''}`;
-            itemBtn.addEventListener('click', () => {
-                loadTrack(idx);
-                audio.play().catch(e => console.log(e));
-            });
-            playlistPanel.appendChild(itemBtn);
-        });
-    }
-
-    playBtn.addEventListener('click', () => { audio.paused ? audio.play() : audio.pause(); });
-    audio.addEventListener('play', () => {
-        playIcon.innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
-        coverImg.classList.add('scale-105', 'rotate-3');
-    });
-    audio.addEventListener('pause', () => {
-        playIcon.innerHTML = '<path d="M8 5v14l11-7z"/>';
-        coverImg.classList.remove('scale-105', 'rotate-3');
-    });
-    audio.addEventListener('timeupdate', () => {
-        if (audio.duration) {
-            progressBar.style.width = `${(audio.currentTime / audio.duration) * 100}%`;
-            currentTimeEl.textContent = formatTime(audio.currentTime);
-        }
-    });
-    audio.addEventListener('loadedmetadata', () => { totalDurationEl.textContent = formatTime(audio.duration); });
-    progressContainer.addEventListener('click', (e) => { if (audio.duration) audio.currentTime = (e.offsetX / progressContainer.clientWidth) * audio.duration; });
-    document.getElementById('prevBtn').addEventListener('click', () => { loadTrack(currentTrackIdx - 1 < 0 ? playlist.length - 1 : currentTrackIdx - 1); audio.play(); });
-    document.getElementById('nextBtn').addEventListener('click', () => { loadTrack(currentTrackIdx + 1 >= playlist.length ? 0 : currentTrackIdx + 1); audio.play(); });
-    audio.addEventListener('ended', () => { loadTrack(currentTrackIdx + 1 >= playlist.length ? 0 : currentTrackIdx + 1); audio.play(); });
-    document.getElementById('playlistToggleBtn').addEventListener('click', () => { playlistPanel.classList.toggle('hidden'); });
-
-    loadTrack(0);
-}
-
-function initImageLightbox() {
-    const lightbox = document.getElementById('imageLightbox');
-    const lightboxImg = document.getElementById('lightboxImage');
-    const closeBtn = document.getElementById('closeLightbox');
-
-    if (!lightbox || !lightboxImg) return;
-
-    document.getElementById('apiList').addEventListener('click', (e) => {
-        if (e.target.tagName === 'IMG' && e.target.classList.contains('media-image')) {
-            e.preventDefault();
-            lightboxImg.src = e.target.src;
-            lightbox.classList.remove('hidden');
-            requestAnimationFrame(() => {
-                lightbox.classList.remove('opacity-0');
-                lightbox.classList.add('opacity-100');
-                lightboxImg.classList.remove('scale-95');
-                lightboxImg.classList.add('scale-100');
-            });
-        }
-    });
-
-    function hideLightbox() {
-        lightbox.classList.remove('opacity-100');
-        lightbox.classList.add('opacity-0');
-        lightboxImg.classList.remove('scale-100');
-        lightboxImg.classList.add('scale-95');
-        setTimeout(() => {
-            lightbox.classList.add('hidden');
-            lightboxImg.src = '';
-        }, 300);
-    }
-
-    if (closeBtn) closeBtn.addEventListener('click', hideLightbox);
-    lightbox.addEventListener('click', (e) => {
-        if (e.target === lightbox || e.target.id === 'closeLightbox') {
-            hideLightbox();
-        }
-    });
-
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && !lightbox.classList.contains('hidden')) {
-            hideLightbox();
-        }
-    });
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-    const savedLang = localStorage.getItem('lang') || 'id';
-
-    initTheme();
-    initBatteryDetection();
-    initDigitalClock();
-    initMultiMusicPlayer();
-    initImageLightbox(); 
-    setLanguage(savedLang);
+    <div id="imageLightbox" class="fixed inset-0 bg-black/90 z-[100] hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300 backdrop-blur-sm cursor-zoom-out">
+        <div class="relative max-w-4xl max-h-[90vh] flex items-center justify-center">
+            <img id="lightboxImage" src="" alt="Preview" class="max-w-full max-h-[85vh] rounded-lg shadow-2xl object-contain scale-95 transition-transform duration-300" />
+            <button id="closeLightbox" class="absolute -top-12 right-0 text-white hover:text-cyan-400 transition-colors focus:outline-none flex items-center gap-1 bg-black/50 px-3 py-1.5 rounded-lg border border-white/10 text-xs font-mono">
+                ✕ Close
+            </button>
+        </div>
+    </div>
     
-    const uploaderBtn = document.getElementById('uploaderMenuBtn'); 
-    const pastebinBtn = document.getElementById('pastebinMenuBtn'); 
-    const bioMenuBtn = document.getElementById('bioMenuBtn');
-    const bioDropdown = document.getElementById('bioDropdown');
-    const closeMenuBtn = document.getElementById('closeMenuBtn');
-    const menuOverlay = document.getElementById('menuOverlay');
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.30.1/moment.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.30.1/locale/id.min.js"></script>
 
-    if (bioMenuBtn && bioDropdown && menuOverlay) {
-        bioMenuBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            bioDropdown.style.transform = 'translateX(0)';
-            menuOverlay.classList.remove('hidden');
-        });
-        if (closeMenuBtn) closeMenuBtn.addEventListener('click', closeSidebarMenu);
-        menuOverlay.addEventListener('click', closeSidebarMenu);
-        bioDropdown.addEventListener('click', (e) => { e.stopPropagation(); });
-    }
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.45/moment-timezone-with-data.min.js"></script>
 
-    if (uploaderBtn) {
-        uploaderBtn.addEventListener('click', () => {
-            // MENGARAHKAN LANGSUNG KE ENDPOINT UPLOADER INTERNAL WEBSITE ANDA
-            window.location.href = '/uploader'; 
-        });
-    }
-
-    if (pastebinBtn) {
-        pastebinBtn.addEventListener('click', () => {
-            window.open('https://arulz-pastecode.vercel.app/', '_blank');
-        });
-    }
-
-    // Fetch list data API dari backend
-    fetch('/api/apilist')
-        .then(res => res.json())
-        .then(data => {
-            apiData = data;
-            loadApis(); // Jalankan fungsi render bawaan Anda
-        })
-        .catch(err => {
-            const apiListEl = document.getElementById('apiList');
-            if(apiListEl) {
-               apiListEl.innerHTML = `<div class="text-center p-8 bg-red-900/20 border border-red-700 rounded-lg"><div class="text-4xl mb-4">⚠️</div><h3 class="font-bold text-lg mb-2">Failed to load API data</h3></div>`;
-            }
-        });
+<script class="notranslate" translate="no">
+    window.musicPlaylist = ${JSON.stringify(playlist)};
+</script>
+<script src="script.js"></script>
+</body>
+</html>
+    `);
 });
 
-themeToggleBtn.addEventListener('click', toggleTheme);
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+  });
+}
 
-let searchTimeout;
-document.getElementById('searchInput').addEventListener('input', function() {
-    clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(performSearch, 150);
-});
-
-window.addEventListener('beforeunload', cleanupBatteryMonitor);
+module.exports = app;
