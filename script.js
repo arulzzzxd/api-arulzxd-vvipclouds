@@ -476,7 +476,7 @@ function updateLivePreview(catIdx, epIdx, method, basePath, endpointType) {
     }
 }
 
-async function executeRequest(e, catIdx, epIdx, method, path, async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
+async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
     e.preventDefault();
     if (isRequestInProgress) {
         showToast(i18n[currentLang].toastRequestWait, true);
