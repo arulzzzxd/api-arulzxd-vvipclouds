@@ -440,7 +440,7 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
     
     responseDiv.classList.remove('hidden');
 
-    // Loading di dalam kotak RESPONSE menggunakan animasi 3 titik melompat (Tanpa spinner memutar)
+    // Animasi Teks Loading di dalam kotak RESPONSE (Menggunakan 3 titik melompat)
     responseContent.innerHTML = `
         <div class="flex items-center justify-center p-8 text-sm font-mono tracking-wider text-cyan-400 gap-1.5">
             <span>FETCHING RESPONSE</span>
@@ -452,10 +452,10 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
         </div>
     `;
 
-    // SIMPAN INNER HTML ASLI TOMBOL
+    // Simpan inner HTML asli tombol eksekusi
     const originalBtnHtml = executeBtn.innerHTML;
 
-    // Loading pada TOMBOL EKSEKUSI menggunakan animasi 3 titik melompat
+    // Animasi Teks Loading pada TOMBOL EKSEKUSI (Menggunakan 3 titik melompat)
     executeBtn.innerHTML = `
         <div class="flex items-center justify-center gap-1">
             <span class="tracking-wide">LOADING</span>
@@ -596,7 +596,7 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
             copyResponseBtn.onclick = () => copyText(rawResponseText, "Response");
             actionContainer.appendChild(copyResponseBtn);
 
-            // 2. Tombol Download Response (Untuk mendownload objek teks/JSON apa saja)
+            // 2. Tombol Download Response (Untuk mendownload teks/JSON apa saja)
             const downloadResponseBtn = document.createElement('button');
             downloadResponseBtn.type = "button";
             downloadResponseBtn.className = btnStyle;
@@ -618,7 +618,7 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
             };
             actionContainer.appendChild(downloadResponseBtn);
         } else {
-            // 3. Tombol Download Media (Mengunduh file biner apa saja secara dinamis langsung ke perangkat)
+            // 3. Tombol Download Media (Mengunduh file biner media gambar/video/audio dll)
             const downloadMediaBtn = document.createElement('button');
             downloadMediaBtn.type = "button";
             downloadMediaBtn.className = btnStyle;
@@ -670,7 +670,6 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
         executeBtn.innerHTML = originalBtnHtml;
     }
 }
-
 
 function clearResponse(catIdx, epIdx, endpointType) {
     const responseDiv = document.getElementById(`response-${catIdx}-${epIdx}`);
