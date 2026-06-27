@@ -13,32 +13,42 @@ async function getRandomPic(category) {
             parsedData = JSON.parse(data);
         }
 
-        // --- AMAN DARI OBJECT/ARRAY MISMATCH ---
         let urls = [];
         if (Array.isArray(parsedData)) {
             urls = parsedData;
         } else if (parsedData && typeof parsedData === 'object') {
-            // Jika data berupa objek, cari key yang berisi array (misal: parsedData.result atau parsedData[category])
             const dynamicKey = Object.keys(parsedData).find(key => Array.isArray(parsedData[key]));
             if (dynamicKey) {
                 urls = parsedData[dynamicKey];
             } else {
-                // Jika tidak ada key array, ambil semua nilai string/url dari objek tersebut
-                urls = Object.values(parsedData).filter(val => typeof val === 'string' && val.startsWith('http'));
+                urls = Object.values(parsedData);
             }
         }
 
         if (urls.length === 0) {
-            throw new Error(`Data array gambar tidak ditemukan atau kosong di file ${category}.json`);
+            throw new Error(`Kategori ${category}.json kosong atau tidak valid.`);
         }
 
-        // Memilih satu URL gambar acak dari list array yang sudah valid
-        const randomUrl = urls[Math.floor(Math.random() * urls.length)];
+        // Ambil item acak dari array
+        const randomItem = urls[Math.floor(Math.random() * urls.length)];
+        
+        // --- FIX KRITIKAL: Cek apakah item berupa objek { result: '...' } atau string biasa ---
+        let randomUrl = '';
+        if (typeof randomItem === 'string') {
+            randomUrl = randomItem;
+        } else if (randomItem && typeof randomItem === 'object') {
+            randomUrl = randomItem.result || randomItem.url || Object.values(randomItem).find(v => typeof v === 'string' && v.startsWith('http'));
+        }
 
-        // Mengambil file gambar asli
-        const response = await axios.get(randomUrl, { 
+        // Validasi final teks URL gambar
+        if (!randomUrl || !randomUrl.trim().startsWith('http')) {
+            throw new Error(`Gagal mengekstrak URL string yang valid dari item data.`);
+        }
+
+        // Download gambar asli
+        const response = await axios.get(randomUrl.trim(), { 
             responseType: 'arraybuffer',
-            timeout: 10000 // Timeout 10 detik agar tidak gantung jika link mati
+            timeout: 10000 
         });
         
         return {
@@ -46,8 +56,6 @@ async function getRandomPic(category) {
             contentType: response.headers['content-type'] || 'image/png'
         };
     } catch (error) {
-        // Meneruskan pesan error spesifik agar gampang di-debug di console dashboard terminal Anda
-        console.error("Error at getRandomPic:", error.message);
         throw error;
     }
 }
@@ -64,15 +72,15 @@ router.get('/', async (req, res) => {
         });
         res.end(imageResult.buffer);
     } catch (error) {
-        // Mengembalikan pesan detail error asli ke client untuk mempermudah pengecekan
         return res.status(500).json({ 
             status: false, 
+            message: "Gagal mengambil gambar",
             error: error.message 
         });
     }
 });
 
-// Konfigurasi metadata kustom untuk dibaca oleh index.js
+// Konfigurasi metadata kustom untuk dropdown select dokumentasi
 router.paramsConfig = {
     category: {
         type: "select",
