@@ -8,7 +8,7 @@ router.post("/", async (req, res) => {
     try {
         const apikey = req.query.apikey;
         
-        // 1. Validasi Apikey Lokal
+        // 1. Validasi Apikey di Server Lokal Anda
         if (!apikey) {
             return res.status(403).json({
                 status: false,
@@ -42,16 +42,23 @@ router.post("/", async (req, res) => {
             filename: filename,
             contentType: mimetype
         });
+        
+        // --- TRIPEL INPUT APIKEY AGAR PASTI TERBACA OLEH TARGET ---
+        // Memasukkan apikey ke dalam Body Form-Data target
+        form.append("apikey", apikey);
 
-        // 4. Kirim ke URL Uploader Target (Ditambahkan penerusan apikey & headers palsu browser)
+        // Memasukkan apikey ke dalam URL Query target
         const targetUrl = `https://api-arulzxd-vvipclouds.vercel.app/uploader?apikey=${apikey}`;
         
+        // 4. Kirim ke URL Uploader Target dengan Headers Tambahan
         const { data } = await axios.post(
             targetUrl,
             form,
             {
                 headers: {
                     ...form.getHeaders(),
+                    // Memasukkan apikey ke dalam Header (jika target membacanya via header)
+                    "apikey": apikey,
                     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
                 }
             }
@@ -65,16 +72,15 @@ router.post("/", async (req, res) => {
         });
 
     } catch (e) {
-        // Log detail di terminal panel biar Anda bisa lacak isi body error dari target server jika ada
-        if (e.response) {
-            console.error("[Target Server Error Data]:", e.response.data);
+        // Jika server target melempar error berupa objek JSON, kita tampilkan secara utuh
+        if (e.response && e.response.data) {
+            return res.status(e.response.status || 500).json(e.response.data);
         }
 
         return res.status(500).json({
             status: false,
             message: "Gagal meneruskan berkas ke server uploader",
-            error: e.message,
-            detail: e.response ? e.response.data : "No detail from target server"
+            error: e.message
         });
     }
 });
