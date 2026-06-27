@@ -434,13 +434,13 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
     executeBtn.disabled = true;
     executeBtn.classList.add('btn-loading');
     
-    // Sembunyikan spinner bawaan agar tidak merusak tata letak
+    // Sembunyikan spinner bawaan agar tidak bertumpuk
     spinner.style.setProperty('display', 'none', 'important');
     spinner.classList.remove('active');
     
     responseDiv.classList.remove('hidden');
 
-    // FIX: Loading di dalam kontainer RESPONSE sekarang menggunakan animasi 3 titik melompat (Serasi dengan tombol)
+    // Loading di dalam kotak RESPONSE menggunakan animasi 3 titik melompat (Tanpa spinner memutar)
     responseContent.innerHTML = `
         <div class="flex items-center justify-center p-8 text-sm font-mono tracking-wider text-cyan-400 gap-1.5">
             <span>FETCHING RESPONSE</span>
@@ -596,7 +596,7 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
             copyResponseBtn.onclick = () => copyText(rawResponseText, "Response");
             actionContainer.appendChild(copyResponseBtn);
 
-            // 2. Tombol Download Response (Untuk mendownload file JSON / Teks)
+            // 2. Tombol Download Response (Untuk mendownload objek teks/JSON apa saja)
             const downloadResponseBtn = document.createElement('button');
             downloadResponseBtn.type = "button";
             downloadResponseBtn.className = btnStyle;
@@ -618,7 +618,7 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
             };
             actionContainer.appendChild(downloadResponseBtn);
         } else {
-            // 3. Tombol Download Media (Bisa mendownload tipe biner apa saja secara dinamis)
+            // 3. Tombol Download Media (Mengunduh file biner apa saja secara dinamis langsung ke perangkat)
             const downloadMediaBtn = document.createElement('button');
             downloadMediaBtn.type = "button";
             downloadMediaBtn.className = btnStyle;
@@ -670,6 +670,7 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
         executeBtn.innerHTML = originalBtnHtml;
     }
 }
+
 
 function clearResponse(catIdx, epIdx, endpointType) {
     const responseDiv = document.getElementById(`response-${catIdx}-${epIdx}`);
