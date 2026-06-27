@@ -370,9 +370,7 @@ for (const category of endpointDirs) {
   for (const file of files) {
     const routeName = path.basename(file, '.js');
     const route = require(path.join(categoryPath, file));
-    
-    // Daftarkan endpoint agar merespon request GET maupun POST
-    router.all(`/${category}/${routeName}`, route);
+    router.use(`/${category}/${routeName}`, route);
   }
 }
 
