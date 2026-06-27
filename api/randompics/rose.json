@@ -3,10 +3,10 @@ const axios = require("axios");
 
 const router = express.Router();
 
-const API =
-  "https://raw.githubusercontent.com/arulzzzxd/database/main/randompics/rose.json";
+const API = "https://raw.githubusercontent.com/arulzzzxd/database/main/randompics/rose.json";
 
-router.get("/", async (req, res) => {
+let cachedData = null;
+async function loadData() {
   try {
     const { data } = await axios.get(API, {
       headers: {
@@ -14,18 +14,31 @@ router.get("/", async (req, res) => {
         Accept: "application/json"
       }
     });
+    if (Array.isArray(data)) {
+      cachedData = data;
+    }
+  } catch (err) {
+    console.error("Gagal memuat data awal rose:", err.message);
+  }
+}
+loadData();
 
-    if (!Array.isArray(data) || !data.length) {
+router.get("/", async (req, res) => {
+  try {
+    if (!cachedData) {
+      await loadData();
+    }
+
+    if (!cachedData || !cachedData.length) {
       return res.status(404).json({
         status: false,
         creator: "ArulzXD",
-        message: "Data tidak ditemukan"
+        message: "Data tidak ditemukan atau gagal dimuat"
       });
     }
 
-    const random = data[Math.floor(Math.random() * data.length)];
+    const random = cachedData[Math.floor(Math.random() * cachedData.length)];
 
-    // Mengirim hasil langsung sebagai gambar
     const image = await axios.get(random.url, {
       responseType: "stream",
       headers: {
