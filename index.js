@@ -390,6 +390,7 @@ for (const category of endpointDirs) {
 }
 
 // PERBAIKAN: Menambahkan properti type agar tersinkronisasi ke dokumentasi frontend
+// Cari fungsi ini di index.js Anda dan ubah di bagian penanganan params:
 function getEndpointsFromRouter(category, file) {
   const endpoints = [];
   const route = require(path.join(apiPath, category, file));
@@ -407,9 +408,16 @@ function getEndpointsFromRouter(category, file) {
         layer.route.stack.forEach(mw => {
           const fnString = mw.handle.toString();
 
-          // Deteksi query parameter
+          // Deteksi query parameter bawaan Anda
           [...fnString.matchAll(/req\.query\.([a-zA-Z0-9_]+)/g)].forEach(match => {
-            if (match[1] !== 'apikey') params[match[1]] = "";
+            if (match[1] !== 'apikey') {
+              // MODIFIKASI: Jika router memiliki paramsConfig kustom, pakai konfigurasinya
+              if (route.paramsConfig && route.paramsConfig[match[1]]) {
+                params[match[1]] = route.paramsConfig[match[1]];
+              } else {
+                params[match[1]] = "";
+              }
+            }
           });
 
           // Deteksi body parameter
@@ -417,7 +425,7 @@ function getEndpointsFromRouter(category, file) {
             if (match[1] !== 'apikey') params[match[1]] = "";
           });
 
-          // DETEKSI FILE UPLOAD (Mendukung upload multipart form data)
+          // DETEKSI FILE UPLOAD
           if (fnString.includes('req.file') || fnString.includes('req.files') || fnString.includes('file')) {
             if (methods.includes('POST') || methods.includes('PUT')) {
               params['file'] = "file";
@@ -426,7 +434,6 @@ function getEndpointsFromRouter(category, file) {
         });
       }
 
-      // Fallback deteksi jika nama filenya mengandung unsur upload
       if ((file.toLowerCase().includes('upload') || file.toLowerCase().includes('uploader')) && (methods.includes('POST') || methods.includes('PUT'))) {
         if (!params['file']) params['file'] = "file";
       }
@@ -444,6 +451,7 @@ function getEndpointsFromRouter(category, file) {
   });
   return endpoints;
 }
+
 
 router.get('/apilist', (req, res) => {
   const categories = [];
@@ -500,9 +508,6 @@ app.get('/', (req, res) => {
     <link id="faviconLink" rel="icon" type="image/x-icon" href="${favicon}">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
-    
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
     <link rel="stylesheet" href="styles.css" />
     
     <style>
@@ -859,7 +864,6 @@ app.get('/', (req, res) => {
 </html>
     `);
 });
-
 
 if (require.main === module) {
   app.listen(PORT, () => {

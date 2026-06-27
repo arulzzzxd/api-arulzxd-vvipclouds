@@ -843,43 +843,55 @@ function loadApis() {
                         <form id="form-${catIdx}-${epIdx}" onsubmit="executeRequest(event, ${catIdx}, ${epIdx}, '${method}', '${path}', '${epType}')">
                             <div class="space-y-4 mb-4">`;
 
-                if (item.params) {
-                    Object.keys(item.params).forEach(paramName => {
-                        const pType = item.params[paramName];
-                        const isRequired = true; 
-                        let paramDesc = pType || paramName;
+                // Cari potongan kode ini di dalam fungsi `loadApis()` pada script.js Anda:
+if (item.params) {
+    Object.keys(item.params).forEach(paramName => {
+        const pType = item.params[paramName];
+        const isRequired = true; 
+        let paramDesc = (pType && pType.type) ? pType.type : (pType || paramName);
 
-                        let inputValue = '';
-                        let inputPlaceholder = `Masukkan ${paramName}`;
+        let inputValue = '';
+        let inputPlaceholder = `Masukkan ${paramName}`;
 
-                        if (paramName.toLowerCase() === 'apikey') {
-                            if (epType === 'premium') {
-                                inputValue = '';
-                                inputPlaceholder = 'Masukkan apikey premium';
-                            } else {
-                                inputValue = 'arulzxd-keys';
-                                inputPlaceholder = 'Masukkan apikey';
-                            }
-                        }
+        if (paramName.toLowerCase() === 'apikey') {
+            if (epType === 'premium') {
+                inputValue = '';
+                inputPlaceholder = 'Masukkan apikey premium';
+            } else {
+                inputValue = 'arulzxd-keys';
+                inputPlaceholder = 'Masukkan apikey';
+            }
+        }
 
-                        html += `
-                        <div>
-                            <div class="flex items-center justify-between mb-1.5">
-                                <label class="block text-xs font-semibold text-slate-300 light-mode:text-slate-700 code-font">
-                                    ${paramName} ${isRequired ? '<span class="text-red-500">*</span>' : ''}
-                                </label>
-                                <span class="text-[10px] text-slate-500 light-mode:text-slate-400 italic font-normal">${paramDesc}</span>
-                            </div>`;
+        html += `
+        <div>
+            <div class="flex items-center justify-between mb-1.5">
+                <label class="block text-xs font-semibold text-slate-300 light-mode:text-slate-700 code-font">
+                    ${paramName} ${isRequired ? '<span class="text-red-500">*</span>' : ''}
+                </label>
+                <span class="text-[10px] text-slate-500 light-mode:text-slate-400 italic font-normal">${paramDesc}</span>
+            </div>`;
 
-                        if (pType === 'file' || paramName === 'file') {
-                            html += `<input type="file" name="${paramName}" onchange="updateLivePreview(${catIdx}, ${epIdx}, '${method}', '${path}', '${epType}')" class="w-full px-3 py-2 rounded-lg bg-black/40 light-mode:bg-white border border-white/10 light-mode:border-slate-300 text-white light-mode:text-slate-900 focus:outline-none focus:border-cyan-500 text-xs file:mr-3 file:py-1 file:px-2.5 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-cyan-500/10 file:text-cyan-400 hover:file:bg-cyan-500/20" ${isRequired ? 'required' : ''}>`;
-                        } else {
-                            html += `<input type="text" name="${paramName}" value="${inputValue}" oninput="updateLivePreview(${catIdx}, ${epIdx}, '${method}', '${path}', '${epType}')" class="w-full px-3 py-2 rounded-lg bg-black/40 light-mode:bg-white border border-white/10 light-mode:border-slate-300 text-white light-mode:text-slate-900 focus:outline-none focus:border-cyan-500 code-font text-sm" placeholder="${inputPlaceholder}" ${isRequired ? 'required' : ''}>`;
-                        }
+        // MODIFIKASI SELEKSI INPUT / SELECT DROPDOWN
+        if (pType === 'file' || paramName === 'file') {
+            html += `<input type="file" name="${paramName}" onchange="updateLivePreview(${catIdx}, ${epIdx}, '${method}', '${path}', '${epType}')" class="w-full px-3 py-2 rounded-lg bg-black/40 light-mode:bg-white border border-white/10 light-mode:border-slate-300 text-white light-mode:text-slate-900 focus:outline-none focus:border-cyan-500 text-xs file:mr-3 file:py-1 file:px-2.5 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-cyan-500/10 file:text-cyan-400 hover:file:bg-cyan-500/20" ${isRequired ? 'required' : ''}>`;
+        } 
+        else if (pType && pType.type === 'select' && Array.isArray(pType.options)) {
+            // JIKA PARAMETER ADALAH SELECT, BUAT ELEMEN DROPDOWN MENU
+            html += `<select name="${paramName}" onchange="updateLivePreview(${catIdx}, ${epIdx}, '${method}', '${path}', '${epType}')" class="w-full px-3 py-2 rounded-lg bg-black/40 light-mode:bg-white border border-white/10 light-mode:border-slate-300 text-cyan-400 light-mode:text-slate-900 focus:outline-none focus:border-cyan-500 code-font text-sm">`;
+            pType.options.forEach(opt => {
+                html += `<option value="${opt}" class="bg-slate-900 text-white">${opt}</option>`;
+            });
+            html += `</select>`;
+        } 
+        else {
+            html += `<input type="text" name="${paramName}" value="${inputValue}" oninput="updateLivePreview(${catIdx}, ${epIdx}, '${method}', '${path}', '${epType}')" class="w-full px-3 py-2 rounded-lg bg-black/40 light-mode:bg-white border border-white/10 light-mode:border-slate-300 text-white light-mode:text-slate-900 focus:outline-none focus:border-cyan-500 code-font text-sm" placeholder="${inputPlaceholder}" ${isRequired ? 'required' : ''}>`;
+        }
 
-                        html += `</div>`;
-                    });
-                }
+        html += `</div>`;
+    });
+}
+                
                 html += `
                             </div>
                             <div class="flex gap-3">
