@@ -623,7 +623,7 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
         else if (bytes >= 1024) sizeText = `${(bytes / 1024).toFixed(1)} KB`;
         else sizeText = `${bytes} B`;
 
-        // 1. Badge Atas diubah warnanya menjadi Cyan transparan (Hanya memuat HTTP & Durasi)
+        // 1. Render Badge HTTP & Durasi (Atas) beserta isi Gambar/Response JSON
         const metadataBadgeHtml = `
             <div class="flex flex-wrap items-center gap-2 px-4 py-2 mb-4 text-xs font-mono font-bold rounded-lg bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 shadow-sm w-fit">
                 <span>HTTP ${response.status}</span>
@@ -632,6 +632,7 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
             </div>
         `;
 
+        // Gabungkan Badge HTTP dan Gambar/Response teks ke penampung utama
         responseContent.innerHTML = metadataBadgeHtml + finalInnerContent;
 
         const isLightMode = body.classList.contains('light-mode');
@@ -639,11 +640,11 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
             ? 'px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-lg text-[11px] font-semibold transition-colors code-font border border-black/5 flex items-center gap-1.5 shadow-sm'
             : 'px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-[11px] font-semibold transition-colors code-font border border-white/5 flex items-center gap-1.5';
 
-        // Container utama di bagian bawah media/gambar preview
+        // Container utama untuk membungkus info berkas bawah dan tombol aksi
         const actionContainer = document.createElement('div');
         actionContainer.className = "flex flex-col gap-3 mb-3 border-b border-white/10 light-mode:border-slate-200 pb-3 mt-4";
 
-        // 2. Elemen yang dipindah dari lingkaran merah (Content-Type & File Size) dibuat menjadi badge Cyan transparan tersendiri
+        // 2. Kotak Badge Info File: Content-Type & File Size (Gaya warna Cyan transparan)
         const fileInfoBadge = document.createElement('div');
         fileInfoBadge.className = "flex items-center gap-2 px-3 py-1.5 text-xs font-mono font-bold rounded-lg bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 shadow-sm w-fit uppercase tracking-wider";
         fileInfoBadge.innerHTML = `
@@ -653,11 +654,11 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
         `;
         actionContainer.appendChild(fileInfoBadge);
 
-        // Container horizontal untuk menyejajarkan deretan tombol aksi di bagian paling bawah
+        // Container horizontal khusus untuk menderetkan tombol aksi secara rapi ke samping
         const buttonsFlexContainer = document.createElement('div');
         buttonsFlexContainer.className = "flex flex-wrap gap-2";
 
-        // Tombol Copy Response JSON diposisikan di bawah info berkas
+        // Tombol Copy Response JSON diposisikan mendatar di bawah kotak info berkas
         const copyResponseBtn = document.createElement('button');
         copyResponseBtn.type = "button";
         copyResponseBtn.className = btnStyle;
@@ -721,13 +722,8 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
 
         actionContainer.appendChild(buttonsFlexContainer);
 
-        // Cari elemen badge cyan atas yang dibuat pertama kali, lalu sisipkan kontainer aksi tepat di bawahnya
-        const badgeElement = responseContent.querySelector('.bg-cyan-500\\/10');
-        if (badgeElement) {
-            badgeElement.insertAdjacentElement('afterend', actionContainer);
-        } else {
-            responseContent.insertBefore(actionContainer, responseContent.firstChild);
-        }
+        // STRATEGI PERBAIKAN: Selalu tambahkan actionContainer di paling bawah (setelah gambar/response)
+        responseContent.appendChild(actionContainer);
 
         showToast(i18n[currentLang].toastRequestSuccess);
     } catch (error) {
