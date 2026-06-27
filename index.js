@@ -644,30 +644,58 @@ app.get('/', (req, res) => {
             </div>
         </div>
 
-        <nav class="flex flex-col gap-4 text-xs font-bold tracking-wider uppercase text-gray-300 light-mode:text-slate-700 flex-1 overflow-y-auto scrollbar-hide py-2">
+                <nav class="flex flex-col gap-4 text-xs font-bold tracking-wider uppercase text-gray-300 light-mode:text-slate-700 flex-1 overflow-y-auto scrollbar-hide py-2">
             <a href="#api" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-3 px-2 py-1.5 rounded-lg hover:bg-white/5">
-                <i class="fa-solid fa-house text-sm text-cyan-400 w-5 text-center"></i> HOME
+                <!-- HOME SVG -->
+                <svg class="w-5 h-5 text-cyan-400 text-center" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                </svg>
+                HOME
             </a>
             <a href="#apiList" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-3 px-2 py-1.5 rounded-lg hover:bg-white/5">
-                <i class="fa-solid fa-book text-sm text-cyan-400 w-5 text-center"></i> DOCUMENTATION
+                <!-- DOCUMENTATION SVG -->
+                <svg class="w-5 h-5 text-cyan-400 text-center" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
+                DOCUMENTATION
             </a>
             <button id="uploaderMenuBtn" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-3 px-2 py-1.5 rounded-lg hover:bg-white/5 text-left w-full focus:outline-none">
-                <i class="fa-solid fa-cloud-arrow-up text-sm text-cyan-400 w-5 text-center"></i> File Upload
+                <!-- FILE UPLOAD SVG -->
+                <svg class="w-5 h-5 text-cyan-400 text-center" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                </svg>
+                File Upload
             </button>
             <a href="https://arulz-pastecode.vercel.app/" target="_blank" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-3 px-2 py-1.5 rounded-lg hover:bg-white/5">
-                <i class="fa-solid fa-code text-sm text-cyan-400 w-5 text-center"></i> PASTECODE
+                <!-- PASTECODE SVG -->
+                <svg class="w-5 h-5 text-cyan-400 text-center" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                </svg>
+                PASTECODE
             </a>
             
             <hr class="border-white/10 my-1 light-mode:border-slate-200">
             
-            <a href="#" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-3 px-2 py-1.5 rounded-lg hover:bg-white/5 text-[11px] opacity-80">
-                <i class="fa-solid fa-bug text-sm text-cyan-400 w-5 text-center"></i> BUG REPORT
+            <a href="https://wa.me/6285122629940?text=%F0%9F%9A%A8%20%5BSYSTEM%20NOTICE%3A%20BUG%20DETECTED%5D%20%F0%9F%9A%A8%0A----------------------------------------%0AHalo%20Arulz%2C%20saya%20menemukan%20sebuah%20anomali%20%2F%20bug%20pada%20layanan%20REST%20API%20Anda.%20Berikut%20rinciannya%3A%0A%0A%E2%80%A2%20%F0%9F%9B%A0%EF%B8%8F%20Endpoint%20%20%3A%20%5BMasukkan%20nama%2Fpath%20endpoint%5D%0A%E2%80%A2%20%F0%9F%93%9D%20Masalah%20%20%20%3A%20%5BDeskripsi%20singkat%20bug%5D%0A%E2%80%A2%20%F0%9F%94%8D%20Kronologi%20%3A%20%5BBagaimana%20bug%20terjadi%5D%0A%0AMohon%20bantuannya%20untuk%20dilakukan%20pengecekan%20sistem%20%28system%20maintenance%29.%20Terima%20kasih%20%F0%9F%9A%80%0A----------------------------------------%0A%5BSent%20via%20REST%20API%20Dashboard%20User%5D" target="_blank" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-3 px-2 py-1.5 rounded-lg hover:bg-white/5 text-[11px] opacity-80">
+                <!-- BUG REPORT SVG -->
+                <svg class="w-5 h-5 text-cyan-400 text-center" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                BUG REPORT
             </a>
             <a href="https://wa.me/6285122629940" target="_blank" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-3 px-2 py-1.5 rounded-lg hover:bg-white/5 text-[11px] opacity-80">
-                <i class="fa-brands fa-whatsapp text-sm text-cyan-400 w-5 text-center"></i> OWNER (WHATSAPP)
+                <!-- WHATSAPP LOGO SVG (ORIGINAL DESIGN) -->
+                <svg class="w-5 h-5 text-cyan-400 text-center fill-current" viewBox="0 0 24 24">
+                    <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.713-1.457L0 24zm6.59-11.127c-.147-.247-.544-.395-1.14-.692-.596-.297-3.536-1.746-3.536-1.746s-.4-.2-.55.15c-.15.35-.55 1.15-.55 1.15s-.1.25.1.35c.2.1.8.35.8.35s1.48.56 2.51.87c.71.21 1.41.36 1.95.36.54 0 1.04-.05 1.43-.16.48-.14 1.48-.6 1.69-1.19.2-.59.2-1.09.14-1.19-.05-.1-.25-.15-.55-.32zM12.004 1.912c-5.597 0-10.137 4.547-10.141 10.151-.002 1.92.502 3.795 1.458 5.454l.156.271-.968 3.541 3.615-.951.264.157c1.593.948 3.41 1.448 5.26 1.449h.005c5.597 0 10.137-4.547 10.141-10.152.002-2.695-1.041-5.228-2.935-7.126-1.892-1.896-4.417-2.943-7.141-2.944z"/>
+                </svg>
+                OWNER (WHATSAPP)
             </a>
             <a href="https://t.me/Arulzxd" target="_blank" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-3 px-2 py-1.5 rounded-lg hover:bg-white/5 text-[11px] opacity-80">
-                <i class="fa-brands fa-telegram text-sm text-cyan-400 w-5 text-center"></i> OWNER (TELEGRAM)
+                <!-- TELEGRAM LOGO SVG (ORIGINAL DESIGN) -->
+                <svg class="w-5 h-5 text-cyan-400 text-center fill-current" viewBox="0 0 24 24">
+                    <path d="M11.944 0C5.344 0 0 5.344 0 11.944c0 6.6 5.344 11.944 11.944 11.944 6.6 0 11.944-5.344 11.944-11.944C23.888 5.344 18.544 0 11.944 0zm5.513 8.356l-1.894 8.925c-.141.631-.519.788-1.05.494l-2.888-2.13-1.394 1.344c-.156.156-.288.288-.588.288l.206-2.93 5.34-4.825c.231-.206-.05-.319-.356-.113l-6.6 4.156-2.844-.888c-.619-.194-.631-.619.131-.919l11.106-4.281c.513-.188.963.119.731.919z"/>
+                </svg>
+                OWNER (TELEGRAM)
             </a>
         </nav>
     </div>
