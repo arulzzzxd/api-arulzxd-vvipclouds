@@ -5,16 +5,10 @@ const router = express.Router();
 
 router.post("/", async (req, res) => {
     try {
-        const apikey = req.query.apikey;
+        // Jika req.query.apikey tidak diisi oleh user, otomatis isi dengan "arulzxd-keys"
+        const apikey = req.query.apikey || "arulzxd-keys";
 
-        // 1. Validasi Apikey di Server Lokal Anda
-        if (!apikey) {
-            return res.status(403).json({
-                status: false,
-                message: "Parameter 'apikey' diperlukan."
-            });
-        }
-
+        // Validasi Apikey tetap berjalan untuk mengamankan komunikasi ke target uploader
         if (apikey !== "arulzxd-keys") {
             return res.status(403).json({
                 status: false,
@@ -22,7 +16,7 @@ router.post("/", async (req, res) => {
             });
         }
 
-        // 2. Logika Deteksi Input File (hasFileInput)
+        // Logika Deteksi Input File (hasFileInput)
         const hasFileInput = req.files && Object.keys(req.files).length > 0 && req.files.file;
 
         if (!hasFileInput) {
@@ -34,27 +28,24 @@ router.post("/", async (req, res) => {
 
         const uploadedFile = req.files.file;
 
-        // 3. Konversi Buffer ke Blob & Bungkus ke FormData Global Node.js
-        // Ini membuat Axios otomatis menyusun Multipart Headers & Boundary dengan benar
+        // Konversi Buffer ke Blob & Bungkus ke FormData Global Node.js
         const blob = new Blob([uploadedFile.data], { type: uploadedFile.mimetype });
         
         const form = new FormData();
         form.append("file", blob, uploadedFile.name);
-        form.append("apikey", apikey); // Meneruskan apikey ke body target jika dibutuhkan
+        form.append("apikey", apikey); 
 
-        // 4. Eksekusi Scraping / Penerusan Target URL
+        // Jalankan scraping ke target uploader vvipclouds
         const targetUrl = `https://api-arulzxd-vvipclouds.vercel.app/uploader?apikey=${apikey}`;
 
         const { data } = await axios.post(targetUrl, form, {
             headers: {
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-                // CATATAN: Jangan set 'Content-Type' manual. Axios + FormData otomatis menanganinya.
             },
             maxContentLength: Infinity,
             maxBodyLength: Infinity
         });
 
-        // 5. Kembalikan Response Hasil Uploader Target ke Client
         return res.json({
             status: true,
             creator: "ArulzXD",
@@ -62,7 +53,6 @@ router.post("/", async (req, res) => {
         });
 
     } catch (e) {
-        // Tangkap error jika target endpoint melempar response error code (misal 404/500)
         if (e.response && e.response.data) {
             return res.status(e.response.status || 500).json(e.response.data);
         }
