@@ -433,14 +433,18 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
     isRequestInProgress = true;
     executeBtn.disabled = true;
     executeBtn.classList.add('btn-loading');
+    
+    // PERBAIKAN: Sembunyikan spinner bawaan agar tidak bertumpuk dengan animasi baru
+    spinner.style.display = 'none';
     spinner.classList.add('active');
+    
     responseDiv.classList.remove('hidden');
     responseContent.innerHTML = '<div class="spinner mx-auto"></div>';
 
-    // AMBIL HTML ASLI TOMBOL UNTUK DIKEMBALIKAN NANTI
+    // SIMPAN INNER HTML ASLI TOMBOL (Misal: "Execute ⚡")
     const originalBtnHtml = executeBtn.innerHTML;
 
-    // GANTI ISI TOMBOL DENGAN SPINNER KUSTOM DAN TULISAN LOADING BERANIMASI
+    // GANTI TEKS TOMBOL MENJADI TULISAN LOADING... + SPINNER MIKRO DI KIRI
     executeBtn.innerHTML = `
         <span class="animate-spin-custom mr-2"></span>
         <span class="btn-loading-text">Loading...</span>
@@ -449,7 +453,7 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
     const rawFormData = new FormData(form);
     const queryParams = new URLSearchParams();
 
-    // CEK APAKAH ADA INPUT FILE DI DALAM FORM YANG TERISI BERKAS
+    // CEK INPUT FILE
     let formHasFile = false;
     form.querySelectorAll('input[type="file"]').forEach(fileInput => {
         if (fileInput.files.length > 0) {
@@ -457,7 +461,7 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
         }
     });
 
-    // JIKA FORM MEMILIKI INPUT FILE, PAKSA REQUEST MENJADI METHOD 'POST'
+    // PAKSA POST JIKA MEMBAWA FILE
     let finalMethod = method.toUpperCase();
     if (formHasFile) {
         finalMethod = 'POST';
@@ -476,17 +480,11 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
             }
             fullPath += '?' + queryParams.toString();
         } else {
-            // STRATEGI PENANGANAN METHOD POST / PUT / PATCH
             if (formHasFile) {
-                /* JIKA ADA BERKAS (Gambar, PDF, Zip, Video, Teks, dll):
-                   Kirim objek FormData utuh. Biarkan browser secara otomatis
-                   menyusun Content-Type multipart/form-data beserta boundary stream-nya.
-                */
+                // Kirim Multipart Form Data untuk semua jenis file (pdf, zip, docx, gambar, video, dll)
                 fetchOptions.body = rawFormData;
             } else {
-                /* JIKA TIDAK ADA BERKAS (Hanya parameter teks biasa):
-                   Gunakan format standar JSON application/json bawaan sistem lama Anda.
-                */
+                // Teks JSON biasa jika tidak ada file
                 fetchOptions.headers = { 'Content-Type': 'application/json' };
                 const jsonBody = {};
                 for (const [key, value] of rawFormData.entries()) {
@@ -529,7 +527,6 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
             if (data.url && typeof data.url === 'string' && data.url.startsWith('http')) detectedMediaUrl = data.url;
             else if (data.result && data.result.url && typeof data.result.url === 'string') detectedMediaUrl = data.result.url;
 
-            // MENDUKUNG PREVIEW SEGALA MACAM EKSTENSI MEDIA DAN DOKUMEN YANG DIMINTA
             if (detectedMediaUrl && (detectedMediaUrl.match(/\.(jpeg|jpg|gif|png|webp|mp4|mp3|webm|mov|wav|ogg|pdf|docx|xlsx|zip|txt|js)/i))) {
                  finalInnerContent = createMediaPreview(detectedMediaUrl, null, detectedMediaUrl) + `<div class="mt-4 text-xs font-bold text-slate-500 uppercase">RAW JSON DATA</div><pre id="raw-text-${catIdx}-${epIdx}" class="code-font text-sm overflow-auto text-cyan-400 p-2 bg-black/50 rounded-lg mt-2">${rawResponseText}</pre>`;
                  isMedia = true;
@@ -605,16 +602,20 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
         responseContent.innerHTML = `<pre class="text-red-400 code-font text-sm p-2 bg-red-500/10 rounded-lg">Error: ${error.message}</pre>`;
         showToast(i18n[currentLang].toastRequestFailed, true);
     } finally {
-        // RESET STATE TOMBOL KEMBALI NORMAL
+        // KEMBALIKAN STATE TOMBOL KEMBALI NORMAL
         isRequestInProgress = false;
         executeBtn.disabled = false;
         executeBtn.classList.remove('btn-loading');
+        
+        // Tampilkan kembali spinner bawaan lama (untuk request berikutnya)
+        spinner.style.display = '';
         spinner.classList.remove('active');
         
-        // KEMBALIKAN TULISAN ASLI TOMBOL SEPERTI "EXECUTE" / "KIRIM" SEMULA
+        // Kembalikan isi teks tombol awal semula (misal: "Execute ⚡")
         executeBtn.innerHTML = originalBtnHtml;
     }
 }
+
 
 function clearResponse(catIdx, epIdx, endpointType) {
     const responseDiv = document.getElementById(`response-${catIdx}-${epIdx}`);
