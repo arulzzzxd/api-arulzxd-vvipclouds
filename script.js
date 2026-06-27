@@ -372,7 +372,13 @@ function updateLivePreview(catIdx, epIdx, method, basePath, endpointType) {
 
     const formData = new FormData(form);
     const params = new URLSearchParams();
+    
+    // Deteksi apakah form memiliki input file yang telah terisi berkas
+    let hasFile = false;
+    const fileElements = form.querySelectorAll('input[type="file"]');
+    fileElements.forEach(el => { if (el.files.length > 0) hasFile = true; });
 
+    // Masukkan parameter teks ke URL query jika metode GET/DELETE atau tidak memiliki file
     for (const [key, value] of formData.entries()) {
         if (value && typeof value === 'string') {
              params.append(key, value);
@@ -380,7 +386,8 @@ function updateLivePreview(catIdx, epIdx, method, basePath, endpointType) {
     }
 
     const queryStr = params.toString();
-    const finalUrl = queryStr ? `${BASE_URL}${basePath}?${queryStr}` : `${BASE_URL}${basePath}`;
+    // Jika ada file berkas, parameter query biasanya ditaruh di body Form-Data, bukan di URL query string
+    const finalUrl = (queryStr && !hasFile) ? `${BASE_URL}${basePath}?${queryStr}` : `${BASE_URL}${basePath}`;
 
     const urlContainer = document.getElementById(`live-url-${catIdx}-${epIdx}`);
     const curlContainer = document.getElementById(`live-curl-${catIdx}-${epIdx}`);
@@ -389,7 +396,22 @@ function updateLivePreview(catIdx, epIdx, method, basePath, endpointType) {
     if (curlContainer) {
         if (method === 'GET') {
             curlContainer.textContent = `curl -X GET "${finalUrl}"`;
-        } else {
+        } 
+        // JIKA MENGGUNAKAN FILE UPLOAD (MULTIPART/FORM-DATA)
+        else if (hasFile) {
+            const formFields = [];
+            for (const [key, value] of formData.entries()) {
+                if (value instanceof File) {
+                    // Visualisasi file di cURL memakai tanda @
+                    formFields.push(`-F "${key}=@${value.name || 'file'}"`);
+                } else if (value) {
+                    formFields.push(`-F "${key}=${value}"`);
+                }
+            }
+            curlContainer.textContent = `curl -X ${method} "${BASE_URL}${basePath}" ${formFields.join(' ')}`;
+        } 
+        // JIKA POST/PUT TEXT REGULER (JSON)
+        else {
             const bodyParams = [];
             for (const [key, value] of formData.entries()) {
                 if (value && typeof value === 'string') {
@@ -491,38 +513,44 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
     responseDiv.classList.remove('hidden');
     responseContent.innerHTML = '<div class="spinner mx-auto"></div>';
 
-    const formData = new FormData(form);
-    const queryParams = new URLSearchParams();
+    // ... kode sebelumnya di dalam executeRequest ...
 
-    let hasFileInput = false;
-    const fileElements = form.querySelectorAll('input[type="file"]');
-    fileElements.forEach(el => { if (el.files.length > 0) hasFileInput = true; });
+const formData = new FormData(form);
+const queryParams = new URLSearchParams();
 
-    let fetchOptions = { method: method };
-    let fullPath = `${BASE_URL}${path.split('?')[0]}`;
-    let isMedia = false;
+let hasFileInput = false;
+const fileElements = form.querySelectorAll('input[type="file"]');
+// Pastikan memeriksa apakah ada file yang memang sudah dipilih
+fileElements.forEach(el => { if (el.files.length > 0) hasFileInput = true; });
 
-    try {
-        if (hasFileInput && (method === 'POST' || method === 'PUT')) {
-            fetchOptions.body = formData;
-        } else {
-            for (const [key, value] of formData.entries()) {
-                if (value && typeof value === 'string') {
-                    queryParams.append(key, value);
-                }
-            }
-            if (method === 'GET' || method === 'DELETE') {
-                fullPath += '?' + queryParams.toString();
-            } else {
-                fetchOptions.headers = { 'Content-Type': 'application/json' };
-                const jsonBody = {};
-                for (const [key, value] of formData.entries()) {
-                    if (value) jsonBody[key] = value;
-                }
-                fetchOptions.body = JSON.stringify(jsonBody);
+let fetchOptions = { method: method };
+let fullPath = `${BASE_URL}${path.split('?')[0]}`;
+let isMedia = false;
+
+try {
+    if (hasFileInput && (method === 'POST' || method === 'PUT')) {
+        /* PENTING: Jangan mengatur headers 'Content-Type' manual ke 'multipart/form-data'.
+           Biarkan browser yang menentukannya secara otomatis beserta 'boundary'-nya 
+           agar express-fileupload dapat membaca file lewat req.files.
+        */
+        fetchOptions.body = formData; 
+    } else {
+        for (const [key, value] of formData.entries()) {
+            if (value && typeof value === 'string') {
+                queryParams.append(key, value);
             }
         }
-
+        if (method === 'GET' || method === 'DELETE') {
+            fullPath += '?' + queryParams.toString();
+        } else {
+            fetchOptions.headers = { 'Content-Type': 'application/json' };
+            const jsonBody = {};
+            for (const [key, value] of formData.entries()) {
+                if (value) jsonBody[key] = value;
+            }
+            fetchOptions.body = JSON.stringify(jsonBody);
+        }
+    }
         // 1. HITUNG HIT KECEPATAN RESPON (ms)
         const startTime = performance.now();
         const response = await fetch(fullPath, fetchOptions);
