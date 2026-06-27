@@ -1,6 +1,6 @@
-/*
-  API-ARULZXD - REST API & UPLOADER INTEGRATION
-*/
+/* =========================================================================
+   API-ARULZXD - REST API & UPLOADER INTEGRATION (UPDATED)
+   ========================================================================= */
 
 const express = require('express');
 const path = require('path');
@@ -26,7 +26,6 @@ For setting API name etc
 const title = "API-ARULZXD - REST";
 const favicon = "https://arulz-uploader.vercel.app/files/C5VYmq.jpg";
 const logo = "https://arulz-uploader.vercel.app/files/SnhJe3.png";
-// Mengubah headertitle menjadi tag img SVG
 const headertitle = `<img src="https://readme-typing-svg.demolab.com?font=Poppins&weight=700&size=28&pause=1000&color=00D4FF&center=true&vCenter=true&width=600&lines=Welcome+To+ArulzXD+API;Fast+%F0%9F%9A%80+Reliable+%E2%9A%A1;Free+REST+API+Services;Developer+Friendly+API" alt="Typing SVG" class="mx-auto" />`;
 const headerdescription = "Browse, inspect & fire requests against live endpoints._";
 const footer = "© Arulz-XD";
@@ -80,27 +79,16 @@ const playlist = [
   }
 ];
 
-/* =========================================================================
-   ROUTING HALAMAN UTAMA & UPLOADER
-   ========================================================================= */
-
-// Endpoint baru untuk mengarahkan ke halaman File Uploader
 app.get('/uploader', (req, res) => {
   res.sendFile(path.join(__dirname, 'uploader.html'));
 });
 
-/**
- * Helper Uploader: Mendapatkan protokol request secara dinamis
- */
 function getRequestProtocol(req) {
   const forwarded = req.headers['x-forwarded-proto'];
   if (forwarded) return forwarded.split(',')[0].trim();
   return req.secure ? 'https' : 'http';
 }
 
-/**
- * Helper Uploader: Membuat ID acak 6 karakter untuk nama file
- */
 function generateId(length = 6) {
   const alphabet = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
   const bytes = crypto.randomBytes(length);
@@ -111,13 +99,6 @@ function generateId(length = 6) {
   return id;
 }
 
-/* =========================================================================
-   ENDPOINT FILE UPLOADER (DARI INDEX.JS UPLOADER KEDUA)
-   ========================================================================= */
-
-/**
- * View/Proxy File dari GitHub Repository
- */
 app.get('/files/*', async (req, res) => {
   const requestedPath = req.params[0]; 
   if (!requestedPath) return res.status(400).send('Missing file path');
@@ -178,7 +159,6 @@ app.post('/uploadfile', async (req, res) => {
     const baseWebUrl = process.env.BASE_URL || `${protocol}://${req.get('host')}`;
     const rawUrl = `${baseWebUrl}/files/${fileName}`;
 
-    // === PERBAIKAN STRUKTUR HTML & ANIMASI CENTANG PRESISI TENGAH ===
     res.send(`
       <!DOCTYPE html>
       <html lang="id" class="dark">
@@ -225,24 +205,19 @@ app.post('/uploadfile', async (req, res) => {
                   border: 1px solid rgba(16, 185, 129, 0.2);
                   animation: scaleIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
               }
-              
-              /* Jalur gambar centang beranimasi */
               .checkmark-path {
                   stroke-dasharray: 100;
                   stroke-dashoffset: 100;
                   animation: drawCheck 0.6s ease-in-out 0.3s forwards;
               }
-
               @keyframes cardFadeIn {
                   from { opacity: 0; transform: translateY(12px); }
                   to { opacity: 1; transform: translateY(0); }
               }
-
               @keyframes scaleIn {
                   from { transform: scale(0); opacity: 0; }
                   to { transform: scale(1); opacity: 1; }
               }
-
               @keyframes drawCheck {
                   from { stroke-dashoffset: 100; }
                   to { stroke-dashoffset: 0; }
@@ -251,7 +226,6 @@ app.post('/uploadfile', async (req, res) => {
       </head>
       <body class="flex flex-col items-center justify-center min-h-screen p-4 antialiased">
           <div class="glass-card p-7 rounded-2xl shadow-2xl w-full max-w-md text-center">
-              
               <div class="mb-5 flex justify-center">
                   <div class="checkmark-circle w-16 h-16 rounded-full flex items-center justify-center text-emerald-400">
                       <svg class="w-8 h-8 flex items-center justify-center" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" style="display: block;">
@@ -259,14 +233,11 @@ app.post('/uploadfile', async (req, res) => {
                       </svg>
                   </div>
               </div>
-              
               <h1 class="text-xl font-extrabold mb-1.5 tracking-tight text-white">Unggahan Berhasil!</h1>
               <p class="mb-5 text-xs text-gray-400">Berkas Anda telah aktif di cloud server:</p>
-              
               <div class="url-box p-3.5 rounded-xl break-all mb-6">
                   <a id="rawUrl" href="${rawUrl}" target="_blank" class="text-cyan-400 hover:text-cyan-300 font-mono text-xs font-semibold transition-colors">${rawUrl}</a>
               </div>
-              
               <div class="flex space-x-3">
                   <button onclick="copyToClipboard()" class="flex-1 bg-zinc-800/80 hover:bg-zinc-700 text-gray-200 text-xs font-bold py-3 px-4 rounded-xl transition duration-200 border border-white/5">
                       Salin URL
@@ -276,11 +247,9 @@ app.post('/uploadfile', async (req, res) => {
                   </a>
               </div>
           </div>
-
           <div id="toast" class="fixed bottom-5 bg-emerald-600/90 backdrop-blur-md text-white text-xs font-semibold px-4 py-2.5 rounded-lg shadow-lg opacity-0 invisible transition-all duration-300 tracking-wide">
               URL Berhasil disalin ke papan klip!
           </div>
-
           <script>
               function copyToClipboard() {
                   const urlText = document.getElementById('rawUrl').href;
@@ -298,14 +267,11 @@ app.post('/uploadfile', async (req, res) => {
       </body>
       </html>
     `);
-
   } catch (error) {
     console.error(error);
     res.status(500).send('Error uploading file.');
   }
 });
-
-
 
 const router = express.Router();
 const apiPath = path.join(__dirname, 'api');
@@ -315,7 +281,6 @@ const validateApiKey = (req, res, next) => {
     return next();
   }
 
-  // PERBAIKAN: Cek apikey di query URL dulu, jika tidak ada cek di body request
   const userKey = req.query.apikey || req.body.apikey;
 
   if (!userKey) {
@@ -337,7 +302,6 @@ const validateApiKey = (req, res, next) => {
     });
   }
 
-  // Dinamis: Cek Status Fitur & Hak Akses Fitur Premium
   const pathParts = req.path.split('/');
   const currentCategory = pathParts[1]; 
   const currentRouteName = pathParts[2];   
@@ -348,7 +312,6 @@ const validateApiKey = (req, res, next) => {
       if (fs.existsSync(routeFilePath)) {
         const routeModule = require(routeFilePath);
 
-        // Cek Status Fitur
         if (routeModule.status === "error" || routeModule.status === "perbaikan") {
           return res.status(503).json({
             status: false,
@@ -357,7 +320,6 @@ const validateApiKey = (req, res, next) => {
           });
         }
 
-        // Cek Tipe Fitur Premium
         if (routeModule.type === "premium" && !isPremiumKey) {
           return res.status(403).json({
             status: false,
@@ -374,9 +336,32 @@ const validateApiKey = (req, res, next) => {
   next();
 };
 
-// Pasang middleware validasi ke router API
 router.use(validateApiKey);
 
+
+router.use((req, res, next) => {
+  // Gabungkan parameter query (GET) dan body (POST)
+  req.apiParams = { ...req.query, ...req.body };
+
+  // Jika terdapat file yang diunggah (mendukung gambar, pdf, zip, video, audio, dll)
+  if (req.files && Object.keys(req.files).length > 0) {
+    for (const key in req.files) {
+      const file = req.files[key];
+      
+      // Bungkus data file agar mudah dibaca di dalam logic internal modul file Anda
+      req.apiParams[key] = {
+        name: file.name,
+        mimetype: file.mimetype,
+        size: file.size,
+        buffer: file.data, // Menyimpan raw buffer file
+        ext: path.extname(file.name).toLowerCase()
+      };
+    }
+  }
+  next();
+});
+
+// Pendaftaran sub-router dynamic bawaan Anda (Tetap biarkan seperti ini)
 const endpointDirs = fs.readdirSync(apiPath).filter(f => fs.statSync(path.join(apiPath, f)).isDirectory());
 
 for (const category of endpointDirs) {
@@ -385,12 +370,12 @@ for (const category of endpointDirs) {
   for (const file of files) {
     const routeName = path.basename(file, '.js');
     const route = require(path.join(categoryPath, file));
-    router.use(`/${category}/${routeName}`, route);
+    
+    // Daftarkan endpoint agar merespon request GET maupun POST
+    router.all(`/${category}/${routeName}`, route);
   }
 }
 
-// PERBAIKAN: Menambahkan properti type agar tersinkronisasi ke dokumentasi frontend
-// Cari fungsi ini di index.js Anda dan ubah di bagian penanganan params:
 function getEndpointsFromRouter(category, file) {
   const endpoints = [];
   const route = require(path.join(apiPath, category, file));
@@ -400,18 +385,14 @@ function getEndpointsFromRouter(category, file) {
   subRouter.stack.forEach(layer => {
     if (layer.route) {
       const methods = Object.keys(layer.route.methods).map(m => m.toUpperCase());
-
-      // Otomatis daftarkan parameter apikey di paling awal
       let params = { apikey: "" }; 
 
       if (layer.route.stack && layer.route.stack.length) {
         layer.route.stack.forEach(mw => {
           const fnString = mw.handle.toString();
 
-          // Deteksi query parameter bawaan Anda
           [...fnString.matchAll(/req\.query\.([a-zA-Z0-9_]+)/g)].forEach(match => {
             if (match[1] !== 'apikey') {
-              // MODIFIKASI: Jika router memiliki paramsConfig kustom, pakai konfigurasinya
               if (route.paramsConfig && route.paramsConfig[match[1]]) {
                 params[match[1]] = route.paramsConfig[match[1]];
               } else {
@@ -420,22 +401,10 @@ function getEndpointsFromRouter(category, file) {
             }
           });
 
-          // Deteksi body parameter
           [...fnString.matchAll(/req\.body\.([a-zA-Z0-9_]+)/g)].forEach(match => {
             if (match[1] !== 'apikey') params[match[1]] = "";
           });
-
-          // DETEKSI FILE UPLOAD
-          if (fnString.includes('req.file') || fnString.includes('req.files') || fnString.includes('file')) {
-            if (methods.includes('POST') || methods.includes('PUT')) {
-              params['file'] = "file";
-            }
-          }
         });
-      }
-
-      if ((file.toLowerCase().includes('upload') || file.toLowerCase().includes('uploader')) && (methods.includes('POST') || methods.includes('PUT'))) {
-        if (!params['file']) params['file'] = "file";
       }
 
       endpoints.push({
@@ -451,7 +420,6 @@ function getEndpointsFromRouter(category, file) {
   });
   return endpoints;
 }
-
 
 router.get('/apilist', (req, res) => {
   const categories = [];

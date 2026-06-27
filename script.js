@@ -1,3 +1,7 @@
+/* =========================================================================
+   SCRIPT.JS REST API (UPDATED)
+   ========================================================================= */
+
 const BASE_URL = window.location.origin;
 let isRequestInProgress = false;
 let apiData = null;
@@ -10,6 +14,7 @@ let batteryMonitor = null;
 let batteryInterval = null;
 let boundUpdateBatteryInfo = null; 
 let activeCategory = 'all';
+
 
 const themeToggleBtn = document.getElementById('themeToggle');
 const body = document.body;
@@ -373,12 +378,6 @@ function updateLivePreview(catIdx, epIdx, method, basePath, endpointType) {
     const formData = new FormData(form);
     const params = new URLSearchParams();
     
-    // Deteksi apakah form memiliki input file yang telah terisi berkas
-    let hasFile = false;
-    const fileElements = form.querySelectorAll('input[type="file"]');
-    fileElements.forEach(el => { if (el.files.length > 0) hasFile = true; });
-
-    // Ambil nilai apikey dari form jika diisi oleh user
     let userApikey = formData.get('apikey') || 'arulzxd-keys';
 
     for (const [key, value] of formData.entries()) {
@@ -387,10 +386,8 @@ function updateLivePreview(catIdx, epIdx, method, basePath, endpointType) {
         }
     }
 
-    // Selalu tempelkan apikey di query string URL utama
     params.append('apikey', userApikey);
     const queryStr = params.toString();
-    
     const finalUrl = `${BASE_URL}${basePath}?${queryStr}`;
 
     const urlContainer = document.getElementById(`live-url-${catIdx}-${epIdx}`);
@@ -398,24 +395,9 @@ function updateLivePreview(catIdx, epIdx, method, basePath, endpointType) {
 
     if (urlContainer) urlContainer.textContent = finalUrl;
     if (curlContainer) {
-        if (method === 'GET') {
-            curlContainer.textContent = `curl -X GET "${finalUrl}"`;
-        } 
-        // JIKA FORM MENGANDUNG FILE (MULTIPART FORM DATA)
-        else if (hasFile) {
-            const formFields = [];
-            for (const [key, value] of formData.entries()) {
-                if (key === 'apikey') continue; // apikey dipisah ke URL query agar aman
-                if (value instanceof File) {
-                    formFields.push(`-F "${key}=@${value.name || 'file'}"`);
-                } else if (value) {
-                    formFields.push(`-F "${key}=${value}"`);
-                }
-            }
-            curlContainer.textContent = `curl -X ${method} "${finalUrl}" ${formFields.join(' ')}`;
-        } 
-        // JIKA POST JSON STANDAR
-        else {
+        if (method === 'GET' || method === 'DELETE') {
+            curlContainer.textContent = `curl -X ${method} "${finalUrl}"`;
+        } else {
             const bodyParams = [];
             for (const [key, value] of formData.entries()) {
                 if (key === 'apikey') continue;
@@ -429,70 +411,6 @@ function updateLivePreview(catIdx, epIdx, method, basePath, endpointType) {
     }
 }
 
-
-function toggleCategory(index) {
-    const content = document.getElementById(`cat-${index}`);
-    const icon = document.getElementById(`cat-icon-${index}`);
-    content.classList.toggle('hidden');
-    icon.style.transform = content.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(180deg)';
-}
-
-function closeSidebarMenu() {
-    const bioDropdown = document.getElementById('bioDropdown');
-    const menuOverlay = document.getElementById('menuOverlay');
-    if (bioDropdown) bioDropdown.style.transform = 'translateX(100%)';
-    if (menuOverlay) menuOverlay.classList.add('hidden');
-}
-
-function toggleEndpoint(catIdx, epIdx) {
-    const content = document.getElementById(`ep-${catIdx}-${epIdx}`);
-    const icon = document.getElementById(`ep-icon-${catIdx}-${epIdx}`);
-
-    content.classList.toggle('hidden');
-    if (icon) {
-        icon.textContent = content.classList.contains('hidden') ? '+' : '−';
-    }
-}
-
-function getContentType(url, contentType) {
-    if (contentType) {
-        if (contentType.includes('image/')) return 'image';
-        if (contentType.includes('video/')) return 'video';
-        if (contentType.includes('audio/')) return 'audio';
-        if (contentType.includes('application/pdf')) return 'pdf';
-    }
-    if (url.includes('.jpg') || url.includes('.png') || url.includes('.jpeg') || url.includes('.webp')) return 'image';
-    if (url.includes('.mp4')) return 'video';
-    if (url.includes('.mp3')) return 'audio';
-    return 'unknown';
-}
-
-function createMediaPreview(url, contentType, originalUrl = '') {
-    const type = getContentType(url, contentType);
-    let previewHtml = '';
-    const isLightMode = body.classList.contains('light-mode');
-    const btnClass = isLightMode 
-        ? 'px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-lg text-xs font-semibold flex items-center gap-1.5' 
-        : 'px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5';
-
-    switch(type) {
-        case 'image':
-            previewHtml = `<div class="media-preview cursor-zoom-in flex justify-center w-full bg-black/5 rounded-lg overflow-hidden"><img src="${url}" class="media-image w-full h-auto max-w-full rounded-lg shadow-lg border border-white/10 transition-transform duration-200 hover:brightness-90 object-contain" alt="Response Image"></div>`;
-            break;
-        case 'video':
-            previewHtml = `<div class="media-preview flex justify-center w-full bg-black rounded-lg overflow-hidden"><video controls class="rounded-lg w-full h-auto max-w-full bg-black border border-white/10 object-contain"><source src="${url}">Your browser does not support video.</video></div>`;
-            break;
-        case 'audio':
-            previewHtml = `<div class="media-preview flex justify-center w-full"><audio controls class="w-full"><source src="${url}">Your browser does not support audio.</audio></div>`;
-            break;
-        default:
-            previewHtml = `<div class="media-preview flex justify-center w-full"><iframe src="${url}" class="media-iframe w-full min-h-[400px] rounded-lg border border-white/10" frameborder="0"></iframe></div>`;
-    }
-
-    return `<div class="w-full flex flex-col items-center gap-3">${previewHtml}<div class="flex gap-2"><button type="button" onclick="copyText('${originalUrl || url}', 'Media URL')" class="${btnClass}">📋 Copy URL</button><a href="${url}" download class="${btnClass}">📥 Download</a></div></div>`;
-}
-
-// LOGIKA EKSEKUSI API TERBARU DENGAN COKOTAN METADATA DINAMIS (RESPON TIME, SIZE, CONTENT-TYPE)
 async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
     e.preventDefault();
     if (isRequestInProgress) {
@@ -519,45 +437,65 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
     responseDiv.classList.remove('hidden');
     responseContent.innerHTML = '<div class="spinner mx-auto"></div>';
 
-    // ... kode sebelumnya di dalam executeRequest ...
+    // AMBIL HTML ASLI TOMBOL UNTUK DIKEMBALIKAN NANTI
+    const originalBtnHtml = executeBtn.innerHTML;
 
-const formData = new FormData(form);
-const queryParams = new URLSearchParams();
+    // GANTI ISI TOMBOL DENGAN SPINNER KUSTOM DAN TULISAN LOADING BERANIMASI
+    executeBtn.innerHTML = `
+        <span class="animate-spin-custom mr-2"></span>
+        <span class="btn-loading-text">Loading...</span>
+    `;
 
-let hasFileInput = false;
-const fileElements = form.querySelectorAll('input[type="file"]');
-// Pastikan memeriksa apakah ada file yang memang sudah dipilih
-fileElements.forEach(el => { if (el.files.length > 0) hasFileInput = true; });
+    const rawFormData = new FormData(form);
+    const queryParams = new URLSearchParams();
 
-let fetchOptions = { method: method };
-let fullPath = `${BASE_URL}${path.split('?')[0]}`;
-let isMedia = false;
-
-try {
-    if (hasFileInput && (method === 'POST' || method === 'PUT')) {
-        /* PENTING: Jangan mengatur headers 'Content-Type' manual ke 'multipart/form-data'.
-           Biarkan browser yang menentukannya secara otomatis beserta 'boundary'-nya 
-           agar express-fileupload dapat membaca file lewat req.files.
-        */
-        fetchOptions.body = formData; 
-    } else {
-        for (const [key, value] of formData.entries()) {
-            if (value && typeof value === 'string') {
-                queryParams.append(key, value);
-            }
+    // CEK APAKAH ADA INPUT FILE DI DALAM FORM YANG TERISI BERKAS
+    let formHasFile = false;
+    form.querySelectorAll('input[type="file"]').forEach(fileInput => {
+        if (fileInput.files.length > 0) {
+            formHasFile = true;
         }
-        if (method === 'GET' || method === 'DELETE') {
+    });
+
+    // JIKA FORM MEMILIKI INPUT FILE, PAKSA REQUEST MENJADI METHOD 'POST'
+    let finalMethod = method.toUpperCase();
+    if (formHasFile) {
+        finalMethod = 'POST';
+    }
+
+    let fetchOptions = { method: finalMethod };
+    let fullPath = `${BASE_URL}${path.split('?')[0]}`;
+    let isMedia = false;
+
+    try {
+        if (finalMethod === 'GET' || finalMethod === 'DELETE') {
+            for (const [key, value] of rawFormData.entries()) {
+                if (value && typeof value === 'string') {
+                    queryParams.append(key, value);
+                }
+            }
             fullPath += '?' + queryParams.toString();
         } else {
-            fetchOptions.headers = { 'Content-Type': 'application/json' };
-            const jsonBody = {};
-            for (const [key, value] of formData.entries()) {
-                if (value) jsonBody[key] = value;
+            // STRATEGI PENANGANAN METHOD POST / PUT / PATCH
+            if (formHasFile) {
+                /* JIKA ADA BERKAS (Gambar, PDF, Zip, Video, Teks, dll):
+                   Kirim objek FormData utuh. Biarkan browser secara otomatis
+                   menyusun Content-Type multipart/form-data beserta boundary stream-nya.
+                */
+                fetchOptions.body = rawFormData;
+            } else {
+                /* JIKA TIDAK ADA BERKAS (Hanya parameter teks biasa):
+                   Gunakan format standar JSON application/json bawaan sistem lama Anda.
+                */
+                fetchOptions.headers = { 'Content-Type': 'application/json' };
+                const jsonBody = {};
+                for (const [key, value] of rawFormData.entries()) {
+                    if (value) jsonBody[key] = value;
+                }
+                fetchOptions.body = JSON.stringify(jsonBody);
             }
-            fetchOptions.body = JSON.stringify(jsonBody);
         }
-    }
-        // 1. HITUNG HIT KECEPATAN RESPON (ms)
+
         const startTime = performance.now();
         const response = await fetch(fullPath, fetchOptions);
         const endTime = performance.now();
@@ -572,31 +510,27 @@ try {
 
         if (!response.ok) throw new Error(`HTTP Error ${response.status}`);
 
-        // 2. AMBIL METADATA TERBARU DARI RESPONS HEADERS
         const contentType = response.headers.get("content-type") || "application/octet-stream";
         const cleanContentType = contentType.split(';')[0].trim();
         const contentLength = response.headers.get("content-length");
 
         let sizeText = "0 B";
         let bytes = contentLength ? parseInt(contentLength, 10) : 0;
-
         let rawResponseText = "";
         let finalInnerContent = "";
 
-        // 3. SELEKSI PROSES CONTENT-TYPE
         if (cleanContentType.includes("application/json")) {
             const data = await response.json();
             rawResponseText = JSON.stringify(data, null, 2);
 
-            if (!bytes) {
-                bytes = new Blob([rawResponseText]).size;
-            }
+            if (!bytes) bytes = new Blob([rawResponseText]).size;
 
             let detectedMediaUrl = null;
             if (data.url && typeof data.url === 'string' && data.url.startsWith('http')) detectedMediaUrl = data.url;
             else if (data.result && data.result.url && typeof data.result.url === 'string') detectedMediaUrl = data.result.url;
 
-            if (detectedMediaUrl && (detectedMediaUrl.match(/\.(jpeg|jpg|gif|png|webp|mp4|mp3)/i))) {
+            // MENDUKUNG PREVIEW SEGALA MACAM EKSTENSI MEDIA DAN DOKUMEN YANG DIMINTA
+            if (detectedMediaUrl && (detectedMediaUrl.match(/\.(jpeg|jpg|gif|png|webp|mp4|mp3|webm|mov|wav|ogg|pdf|docx|xlsx|zip|txt|js)/i))) {
                  finalInnerContent = createMediaPreview(detectedMediaUrl, null, detectedMediaUrl) + `<div class="mt-4 text-xs font-bold text-slate-500 uppercase">RAW JSON DATA</div><pre id="raw-text-${catIdx}-${epIdx}" class="code-font text-sm overflow-auto text-cyan-400 p-2 bg-black/50 rounded-lg mt-2">${rawResponseText}</pre>`;
                  isMedia = true;
             } else {
@@ -605,27 +539,19 @@ try {
         } else if (cleanContentType.startsWith("image/") || cleanContentType.startsWith("video/") || cleanContentType.startsWith("audio/") || cleanContentType.includes("application/pdf")) {
             isMedia = true;
             const blob = await response.blob();
-
-            if (!bytes) {
-                bytes = blob.size;
-            }
-
+            if (!bytes) bytes = blob.size;
             const blobUrl = URL.createObjectURL(blob);
             finalInnerContent = createMediaPreview(blobUrl, cleanContentType, fullPath);
         } else {
             rawResponseText = await response.text();
-            if (!bytes) {
-                bytes = new Blob([rawResponseText]).size;
-            }
+            if (!bytes) bytes = new Blob([rawResponseText]).size;
             finalInnerContent = `<pre id="raw-text-${catIdx}-${epIdx}" class="code-font text-sm overflow-auto p-2">${rawResponseText}</pre>`;
         }
 
-        // Ubah format satuan bytes menjadi teks terbaca manusia (KB / MB)
         if (bytes >= 1048576) sizeText = `${(bytes / 1048576).toFixed(1)} MB`;
         else if (bytes >= 1024) sizeText = `${(bytes / 1024).toFixed(1)} KB`;
         else sizeText = `${bytes} B`;
 
-        // 4. BUAT BADGE METADATA (VISUAL BAR HIJAU SESUAI GAMBAR)
         const metadataBadgeHtml = `
             <div class="flex flex-wrap items-center gap-2 px-4 py-2 mb-4 text-xs font-mono font-bold rounded-lg bg-emerald-400 text-slate-900 border border-emerald-500/30 shadow-sm w-fit">
                 <span>HTTP ${response.status}</span>
@@ -640,7 +566,6 @@ try {
 
         responseContent.innerHTML = metadataBadgeHtml + finalInnerContent;
 
-        // Pembuatan Action Button Copy URL / JSON
         const isLightMode = body.classList.contains('light-mode');
         const btnStyle = isLightMode 
             ? 'px-2.5 py-1 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded text-[11px] font-semibold transition-colors code-font border border-black/5'
@@ -654,7 +579,7 @@ try {
         copyUrlBtn.className = btnStyle;
         copyUrlBtn.innerHTML = "🔗 Copy URL Request";
         copyUrlBtn.onclick = () => {
-            const finalFullUrl = method === 'GET' ? fullPath : (queryParams.toString() ? `${fullPath}?${queryParams.toString()}` : fullPath);
+            const finalFullUrl = finalMethod === 'GET' ? fullPath : (queryParams.toString() ? `${fullPath}?${queryParams.toString()}` : fullPath);
             copyText(finalFullUrl, "URL Request");
         };
         actionContainer.appendChild(copyUrlBtn);
@@ -680,10 +605,14 @@ try {
         responseContent.innerHTML = `<pre class="text-red-400 code-font text-sm p-2 bg-red-500/10 rounded-lg">Error: ${error.message}</pre>`;
         showToast(i18n[currentLang].toastRequestFailed, true);
     } finally {
+        // RESET STATE TOMBOL KEMBALI NORMAL
         isRequestInProgress = false;
         executeBtn.disabled = false;
         executeBtn.classList.remove('btn-loading');
         spinner.classList.remove('active');
+        
+        // KEMBALIKAN TULISAN ASLI TOMBOL SEPERTI "EXECUTE" / "KIRIM" SEMULA
+        executeBtn.innerHTML = originalBtnHtml;
     }
 }
 
