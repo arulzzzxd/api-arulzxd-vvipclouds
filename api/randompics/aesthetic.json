@@ -5,9 +5,15 @@ const router = express.Router();
 
 const API = "https://raw.githubusercontent.com/arulzzzxd/database/main/randompics/aesthetic.json";
 
-// Mengambil data JSON satu kali saat router di-load
+// Variabel lokal untuk menyimpan cache data agar tidak fetch ulang setiap request
 let cachedData = null;
-async function loadData() {
+
+// Fungsi helper untuk mengambil data dengan fallback/safety
+async function getDatabase() {
+  if (cachedData && cachedData.length > 0) {
+    return cachedData;
+  }
+  
   try {
     const { data } = await axios.get(API, {
       headers: {
@@ -15,34 +21,35 @@ async function loadData() {
         Accept: "application/json"
       }
     });
-    if (Array.isArray(data)) {
-      cachedData = data;
+    
+    if (Array.isArray(data) && data.length > 0) {
+      cachedData = data; // Simpan ke cache jika sukses
+      return cachedData;
     }
-  } catch (err) {
-    console.error("Gagal memuat data awal aesthetic:", err.message);
+    return [];
+  } catch (error) {
+    console.error("Gagal memuat database dari GitHub:", error.message);
+    // Jika gagal tetapi sebelumnya sudah ada cache, pakai cache lama
+    return cachedData || []; 
   }
 }
-loadData();
 
 router.get("/", async (req, res) => {
   try {
-    // Jika data belum ter-load, coba ambil kembali secara instant
-    if (!cachedData) {
-      await loadData();
-    }
+    const data = await getDatabase();
 
-    if (!cachedData || !cachedData.length) {
+    if (!data.length) {
       return res.status(404).json({
         status: false,
         creator: "ArulzXD",
-        message: "Data tidak ditemukan atau gagal dimuat"
+        message: "Data database kosong atau tidak ditemukan"
       });
     }
 
-    // Mengambil item acak dari data yang sudah siap
-    const random = cachedData[Math.floor(Math.random() * cachedData.length)];
+    // Memilih gambar secara acak dari cache
+    const random = data[Math.floor(Math.random() * data.length)];
 
-    // Mengirim hasil langsung sebagai gambar (tanpa cache gambar)
+    // Mengirim hasil langsung sebagai gambar (Stream)
     const image = await axios.get(random.url, {
       responseType: "stream",
       headers: {
