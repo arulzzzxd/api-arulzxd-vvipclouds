@@ -590,6 +590,7 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
         let bytes = contentLength ? parseInt(contentLength, 10) : 0;
         let rawResponseText = "";
         let finalInnerContent = "";
+        let mediaBlobObject = null; // Menampung objek blob asli dari gambar response
 
         if (cleanContentType.includes("application/json")) {
             const data = await response.json();
@@ -609,9 +610,9 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
             }
         } else if (cleanContentType.startsWith("image/") || cleanContentType.startsWith("video/") || cleanContentType.startsWith("audio/") || cleanContentType.includes("application/pdf")) {
             isMedia = true;
-            const blob = await response.blob();
-            if (!bytes) bytes = blob.size;
-            const blobUrl = URL.createObjectURL(blob);
+            mediaBlobObject = await response.blob(); // Ambil blob respons biner langsung
+            if (!bytes) bytes = mediaBlobObject.size;
+            const blobUrl = URL.createObjectURL(mediaBlobObject);
             finalInnerContent = createMediaPreview(blobUrl, cleanContentType, fullPath);
         } else {
             rawResponseText = await response.text();
@@ -623,7 +624,7 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
         else if (bytes >= 1024) sizeText = `${(bytes / 1024).toFixed(1)} KB`;
         else sizeText = `${bytes} B`;
 
-        // 1. Render Badge HTTP & Durasi (Atas) beserta isi Gambar/Response JSON
+        // 1. Badge Atas diubah warnanya menjadi Cyan transparan (Hanya memuat HTTP & Durasi)
         const metadataBadgeHtml = `
             <div class="flex flex-wrap items-center gap-2 px-4 py-2 mb-4 text-xs font-mono font-bold rounded-lg bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 shadow-sm w-fit">
                 <span>HTTP ${response.status}</span>
@@ -700,9 +701,16 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
             `;
             downloadMediaBtn.onclick = async () => {
                 try {
-                    const mediaRes = await fetch(fullPath);
-                    const mediaBlob = await mediaRes.blob();
-                    const downloadUrl = URL.createObjectURL(mediaBlob);
+                    let finalBlob = mediaBlobObject;
+
+                    // FIX STRATEGI: Jika respons berupa JSON tapi di dalamnya ada tautan media (detected URL), 
+                    // ambil gambar aktual yang sedang dirender saat itu ke dalam blob agar unduhan valid.
+                    if (!finalBlob) {
+                        const mediaRes = await fetch(fullPath);
+                        finalBlob = await mediaRes.blob();
+                    }
+                    
+                    const downloadUrl = URL.createObjectURL(finalBlob);
                     const a = document.createElement('a');
                     a.href = downloadUrl;
                     
@@ -722,7 +730,7 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
 
         actionContainer.appendChild(buttonsFlexContainer);
 
-        // STRATEGI PERBAIKAN: Selalu tambahkan actionContainer di paling bawah (setelah gambar/response)
+        // Selalu tambahkan actionContainer di paling bawah (setfter gambar/response)
         responseContent.appendChild(actionContainer);
 
         showToast(i18n[currentLang].toastRequestSuccess);
@@ -740,6 +748,7 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
         executeBtn.innerHTML = originalBtnHtml;
     }
 }
+
 
 function clearResponse(catIdx, epIdx, endpointType) {
     const responseDiv = document.getElementById(`response-${catIdx}-${epIdx}`);
