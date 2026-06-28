@@ -29,7 +29,11 @@
         }
     </script>
     <style>
-        body {
+        html, body {
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100% !important;
+            overflow-x: hidden;
             background-color: #0b0c10;
         }
         .bg-gradient-blur {
@@ -37,13 +41,13 @@
         }
     </style>
 </head>
-<body class="text-slate-200 font-sans min-h-screen relative overflow-x-hidden antialiased bg-[#0b0c10] flex flex-col justify-between">
+<body class="text-slate-200 font-sans min-h-screen relative antialiased flex flex-col justify-between w-full m-0 p-0">
 
     <!-- Background Glow Effect -->
     <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[500px] bg-gradient-blur pointer-events-none z-0"></div>
 
-    <!-- NAVBAR ATAS -->
-    <nav class="w-full bg-[#0b0c10]/80 border-b border-white/10 backdrop-blur-md sticky top-0 z-50 px-4 py-4 flex justify-between items-center box-border">
+    <!-- NAVBAR ATAS (Rapat ke Ujung Layar Sisi Kanan-Kiri) -->
+    <nav class="w-full bg-[#0b0c10]/80 border-b border-white/10 backdrop-blur-md sticky top-0 z-50 px-4 py-4 flex justify-between items-center box-border left-0 right-0 m-0">
         <a href="/" class="flex items-center gap-2 text-white font-extrabold text-sm tracking-tight hover:text-cyan-400 transition-colors">
             <span class="bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 px-2 py-0.5 rounded text-[11px] font-mono">AD</span>
             Arulz-XD API
@@ -56,11 +60,11 @@
         </a>
     </nav>
 
-    <!-- MAIN CONTAINER (Sisi kanan-kiri dibuat px-0 murni di mobile agar menyentuh ujung layar) -->
-    <main class="w-full max-w-md mx-auto px-0 sm:px-4 pt-0 sm:pt-6 pb-12 relative z-10 box-border flex-grow flex flex-col justify-start">
+    <!-- MAIN CONTAINER ( px-0 murni di HP biar ga ada sela garis merah sama sekali ) -->
+    <main class="w-full max-w-md mx-auto px-0 pt-0 pb-12 relative z-10 box-border flex-grow flex flex-col justify-start">
         
-        <!-- Card menempel penuh di HP, berjarak manis di desktop -->
-        <div class="w-full bg-white/5 border-x-0 sm:border-x border-y sm:border border-white/10 rounded-none sm:rounded-3xl p-5 backdrop-blur-xl shadow-2xl relative overflow-hidden box-border flex-grow sm:flex-grow-0 sm:my-6">
+        <!-- Card Utama (Rapat murni ke tepi kanan-kiri layar HP) -->
+        <div class="w-full bg-white/5 border-x-0 border-y border-white/10 rounded-none p-5 backdrop-blur-xl shadow-2xl box-border flex-grow">
             
             <!-- Badge Status -->
             <div class="flex justify-center mb-4">
@@ -82,7 +86,7 @@
             <div class="bg-white/5 border border-white/10 rounded-2xl p-2.5 flex flex-col items-center justify-center relative group mb-5 w-full box-border">
                 <div class="absolute inset-0 bg-cyan-500/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
                 
-                <!-- Frame Gambar Putis QRIS -->
+                <!-- Frame Putih Gambar QRIS -->
                 <div class="bg-white p-2 rounded-xl shadow-xl w-full flex justify-center box-border">
                     <img id="qris-img" src="https://arulz-uploader.vercel.app/files/CVmlrD.jpg" alt="QRIS Arulz-XD" class="w-full max-w-[340px] h-auto object-contain rounded-lg block">
                 </div>
@@ -138,8 +142,8 @@
         </div>
     </main>
 
-    <!-- FOOTER HALAMAN -->
-    <footer class="w-full text-center py-4 text-[10px] text-slate-600 font-mono relative z-10 box-border border-t border-white/5 bg-[#0b0c10]">
+    <!-- FOOTER HALAMAN (Rapat Penuh Menempel ke Bawah Layar) -->
+    <footer class="w-full text-center py-4 text-[10px] text-slate-600 font-mono relative z-10 box-border border-t border-white/5 bg-[#0b0c10] m-0 left-0 right-0">
         &copy; 2026 Arulz-XD. All rights reserved.
     </footer>
 
@@ -165,7 +169,6 @@
         function showAlert(title, message, isSuccess = true) {
             document.getElementById('modal-title').innerText = title;
             document.getElementById('modal-message').innerText = message;
-            
             const iconBox = document.getElementById('modal-icon-container');
             const svgPath = document.getElementById('modal-svg');
             
@@ -176,7 +179,6 @@
                 iconBox.className = "w-10 h-10 rounded-full bg-red-500/10 border border-red-500/30 flex items-center justify-center text-red-400 mb-2";
                 svgPath.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />';
             }
-
             const modal = document.getElementById('custom-modal');
             modal.classList.remove('opacity-0', 'pointer-events-none');
             modal.querySelector('div').classList.remove('scale-95');
@@ -188,7 +190,7 @@
             modal.querySelector('div').classList.add('scale-95');
         }
 
-        // Perbaikan skrip unduhan mengarah ke endpoint Vercel murni /database/download
+        // Trik Download Handal Tanpa Ketergantungan Backend Serverless Function
         async function downloadQR() {
             const btn = document.getElementById('btn-download');
             const originalText = btn.innerHTML;
@@ -200,29 +202,31 @@
                 </svg> MENGUNDUH...`;
             btn.disabled = true;
 
+            const qrisImageUrl = "https://arulz-uploader.vercel.app/files/CVmlrD.jpg";
+
             try {
-                // Fetch biner gambar langsung dari endpoint /database/download
-                const response = await fetch('/database/download');
-                if (!response.ok) throw new Error('Network error');
+                // Fetch resource gambar as blob lewat client browser
+                const response = await fetch(qrisImageUrl);
+                if (!response.ok) throw new Error('Fetch failed');
                 
                 const blob = await response.blob();
                 const blobUrl = window.URL.createObjectURL(blob);
                 
-                // Trigger download via anchor element
                 const a = document.createElement('a');
                 a.href = blobUrl;
                 a.download = 'QRIS_Idzharul_Store.jpg';
                 document.body.appendChild(a);
                 a.click();
                 
-                // Bersihkan memory browser
                 document.body.removeChild(a);
                 window.URL.revokeObjectURL(blobUrl);
 
-                showAlert("Berhasil", "QRIS berhasil disimpan ke galeri kamu.");
+                showAlert("Berhasil 🎉", "QRIS berhasil disimpan ke galeri kamu.");
             } catch (error) {
                 console.error(error);
-                showAlert("Gagal", "Gagal mengunduh gambar otomatis. Silakan tekan lama gambar QRIS untuk menyimpannya.", false);
+                // Fallback paling aman di browser mobile: Buka gambar di tab baru & kasih panduan tap-hold save gambar
+                window.open(qrisImageUrl, '_blank');
+                showAlert("Pemberitahuan 📢", "Jika file tidak otomatis terunduh, silakan tekan lama pada gambar QRIS untuk menyimpannya.", true);
             } finally {
                 btn.innerHTML = originalText;
                 btn.disabled = false;
@@ -241,7 +245,7 @@
                     .catch((err) => console.log('Batal membagikan:', err));
             } else {
                 navigator.clipboard.writeText(window.location.href).then(() => {
-                    showAlert("Disalin", "Link donasi berhasil disalin ke clipboard! Silakan share secara manual.");
+                    showAlert("Disalin 🔗", "Link donasi berhasil disalin ke clipboard! Silakan share secara manual.");
                 });
             }
         }
