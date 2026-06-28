@@ -3,6 +3,40 @@ const axios = require("axios");
 
 const router = express.Router();
 
+// 1. Fungsi Helper untuk menerjemahkan Weather Code Open-Meteo ke Teks Bahasa Indonesia
+function getWeatherDescription(code) {
+    const weatherMap = {
+        0: "Cerah Sempurna",
+        1: "Cerah Berawan",
+        2: "Berawan Sebagian",
+        3: "Berawan Tebal / Mendung",
+        45: "Kabut",
+        48: "Kabut Rime Deposisi",
+        51: "Gerimis Ringan",
+        53: "Gerimis Sedang",
+        55: "Gerimis Padat/Lebat",
+        61: "Hujan Ringan",
+        63: "Hujan Sedang",
+        65: "Hujan Lebat",
+        71: "Hujan Salju Ringan",
+        73: "Hujan Salju Sedang",
+        75: "Hujan Salju Lebat",
+        80: "Hujan Pancaroba / Ringan Terputus-putus",
+        81: "Hujan Deras / Sedang",
+        82: "Hujan Badai Sangat Lebat",
+        95: "Badai Petir Ringan/Sedang",
+        96: "Badai Petir disertai Hujan Es Ringan",
+        99: "Badai Petir disertai Hujan Es Padat"
+    };
+    return weatherMap[code] || "Cuaca Tidak Diketahui";
+}
+
+// 2. Fungsi Helper untuk mengubah Celcius (°C) ke Fahrenheit (°F)
+function celsiusToFahrenheit(celsius) {
+    return parseFloat(((celsius * 9) / 5 + 32).toFixed(1));
+}
+
+// --- ENDPOINT ROUTE ---
 router.get("/", async (req, res) => {
     try {
         const kota = req.query.kota;
@@ -17,6 +51,7 @@ router.get("/", async (req, res) => {
             });
         }
 
+        // Fetch Data Geocoding Lokasi Kota
         const geo = await axios.get(
             "https://geocoding-api.open-meteo.com/v1/search",
             {
@@ -39,6 +74,7 @@ router.get("/", async (req, res) => {
 
         const city = geo.data.results[0];
 
+        // Fetch Data Prakiraan Cuaca Mentah
         const weather = await axios.get(
             "https://api.open-meteo.com/v1/forecast",
             {
@@ -51,6 +87,11 @@ router.get("/", async (req, res) => {
             }
         );
 
+        const rawCuaca = weather.data.current;
+        const tempC = rawCuaca.temperature_2m;
+        const feelsLikeC = rawCuaca.apparent_temperature;
+
+        // Formatisasi data akhir agar lebih jelas dan mudah dibaca
         res.json({
             status: true,
             creator: "ArulzXD",
@@ -61,7 +102,27 @@ router.get("/", async (req, res) => {
                 latitude: city.latitude,
                 longitude: city.longitude,
                 timezone: weather.data.timezone,
-                cuaca: weather.data.current
+                waktu_pantau: rawCuaca.time,
+                kondisi_cuaca: {
+                    teks: getWeatherDescription(rawCuaca.weather_code),
+                    kode: rawCuaca.weather_code,
+                    waktu: rawCuaca.is_day === 1 ? "Siang Hari" : "Malam Hari"
+                },
+                suhu: {
+                    celcius: `${tempC}°C`,
+                    fahrenheit: `${celsiusToFahrenheit(tempC)}°F`,
+                    sensasi_tubuh_celcius: `${feelsLikeC}°C`,
+                    sensasi_tubuh_fahrenheit: `${celsiusToFahrenheit(feelsLikeC)}°F`
+                },
+                kelembaban: `${rawCuaca.relative_humidity_2m}%`,
+                hujan: {
+                    curah_hujan: `${rawCuaca.precipitation} mm`,
+                    status_hujan: rawCuaca.precipitation > 0 ? "Sedang Turun Hujan" : "Tidak Hujan"
+                },
+                angin: {
+                    kecepatan: `${rawCuaca.wind_speed_10m} km/h`,
+                    arah_derajat: `${rawCuaca.wind_direction_10m}°`
+                }
             }
         });
 
@@ -74,26 +135,42 @@ router.get("/", async (req, res) => {
     }
 });
 
+// --- CONFIG DROPDOWN SELECT ---
 router.paramsConfig = {
     lang: {
         type: "select",
         options: [
-            "aa", "ab", "ae", "af", "ak", "am", "an", "ar", "as", "av", "ay", "az", 
-            "ba", "be", "bg", "bh", "bi", "bm", "bn", "bo", "br", "bs", "ca", "ce", 
-            "ch", "co", "cr", "cs", "cu", "cv", "cy", "da", "de", "dv", "dz", "ee", 
-            "el", "en", "eo", "es", "et", "eu", "fa", "ff", "fi", "fj", "fo", "fr", 
-            "fy", "ga", "gd", "gl", "gn", "gu", "gv", "ha", "he", "hi", "ho", "hr", 
-            "ht", "hu", "hy", "hz", "ia", "id", "ie", "ig", "ii", "ik", "io", "is", 
-            "it", "iu", "ja", "jv", "ka", "kg", "ki", "kj", "kk", "kl", "km", "kn", 
-            "ko", "kr", "ks", "ku", "kv", "kw", "ky", "la", "lb", "lg", "li", "ln", 
-            "lo", "lt", "lu", "lv", "mg", "mh", "mi", "mk", "ml", "mn", "mr", "ms", 
-            "mt", "my", "na", "nb", "nd", "ne", "ng", "nl", "nn", "no", "nr", "nv", 
-            "ny", "oc", "oj", "om", "or", "os", "pa", "pi", "pl", "ps", "pt", "qu", 
-            "rm", "rn", "ro", "ru", "rw", "sa", "sc", "sd", "se", "sg", "si", "sk", 
-            "sl", "sm", "sn", "so", "sq", "sr", "ss", "st", "su", "sv", "sw", "ta", 
-            "te", "tg", "th", "ti", "tk", "tl", "tn", "to", "tr", "ts", "tt", "tw", 
-            "ty", "ug", "uk", "ur", "uz", "ve", "vi", "vo", "wa", "wo", "xh", "yi", 
-            "yo", "za", "zh", "zu"
+            "aa | Afar", "ab | Abkhazian", "ae | Avestan", "af | Afrikaans", "ak | Akan", "am | Amharic", 
+            "an | Aragonese", "ar | Arabic", "as | Assamese", "av | Avaric", "ay | Aymara", "az | Azerbaijani", 
+            "ba | Bashkir", "be | Belarusian", "bg | Bulgarian", "bh | Bihari", "bi | Bislama", "bm | Bambara", 
+            "bn | Bengali", "bo | Tibetan", "br | Breton", "bs | Bosnian", "ca | Catalan", "ce | Chechen", 
+            "ch | Chamorro", "co | Corsican", "cr | Cree", "cs | Czech", "cu | Church Slavic", "cv | Chuvash", 
+            "cy | Welsh", "da | Danish", "de | German", "dv | Maldivian", "dz | Dzongkha", "ee | Ewe", 
+            "el | Greek", "en | English", "eo | Esperanto", "es | Spanish", "et | Estonian", "eu | Basque", 
+            "fa | Persian", "ff | Fulah", "fi | Finnish", "fj | Fijian", "fo | Faroese", "fr | French", 
+            "fy | Western Frisian", "ga | Irish", "gd | Gaelic", "gl | Galician", "gn | Guarani", "gu | Gujarati", 
+            "gv | Manx", "ha | Hausa", "he | Hebrew", "hi | Hindi", "ho | Hiri Motu", "hr | Croatian", 
+            "ht | Haitian", "hu | Hungarian", "hy | Armenian", "hz | Herero", "ia | Interlingua", "id | Indonesian", 
+            "ie | Interlingue", "ig | Igbo", "ii | Sichuan Yi", "ik | Inupiaq", "io | Ido", "is | Icelandic", 
+            "it | Italian", "iu | Inuktitut", "ja | Japanese", "jv | Javanese", "ka | Georgian", "kg | Kongo", 
+            "ki | Kikuyu", "kj | Kuanyama", "kk | Kazakh", "kl | Kalaallisut", "km | Central Khmer", "kn | Kannada", 
+            "ko | Korean", "kr | Kanuri", "ks | Kashmiri", "ku | Kurdish", "kv | Komi", "kw | Cornish", 
+            "ky | Kirghiz", "la | Latin", "lb | Luxembourgish", "lg | Ganda", "li | Limburgan", "ln | Lingala", 
+            "lo | Lao", "lt | Lithuanian", "lu | Luba-Katanga", "lv | Latvian", "mg | Malagasy", "mh | Marshallese", 
+            "mi | Maori", "mk | Macedonian", "ml | Malayalam", "mn | Mongolian", "mr | Marathi", "ms | Malay", 
+            "mt | Maltese", "my | Burmese", "na | Nauru", "nb | Norwegian Bokmal", "nd | North Ndebele", "ne | Nepali", 
+            "ng | Ndonga", "nl | Dutch", "nn | Norwegian Nynorsk", "no | Norwegian", "nr | South Ndebele", "nv | Navajo", 
+            "ny | Chichewa", "oc | Occitan", "oj | Ojibwa", "om | Oromo", "or | Oriya", "os | Ossetian", 
+            "pa | Panjabi", "pi | Pali", "pl | Polish", "ps | Pushto", "pt | Portuguese", "qu | Quechua", 
+            "rm | Romansh", "rn | Rundi", "ro | Romanian", "ru | Russian", "rw | Kinyarwanda", "sa | Sanskrit", 
+            "sc | Sardinian", "sd | Sindhi", "se | Northern Sami", "sg | Sango", "si | Sinhala", "sk | Slovak", 
+            "sl | Slovenian", "sm | Samoan", "sn | Shona", "so | Somali", "sq | Albanian", "sr | Serbian", 
+            "ss | Swati", "st | Sotho, Southern", "su | Sundanese", "sv | Swedish", "sw | Swahili", "ta | Tamil", 
+            "te | Telugu", "tg | Tajik", "th | Thai", "ti | Tigrinya", "tk | Turkmen", "tl | Tagalog", 
+            "tn | Tswana", "to | Tonga", "tr | Turkish", "ts | Tsonga", "tt | Tatar", "tw | Twi", 
+            "ty | Tahitian", "ug | Uighur", "uk | Ukrainian", "ur | Urdu", "uz | Uzbek", "ve | Venda", 
+            "vi | Vietnamese", "vo | Volapuk", "wa | Walloon", "wo | Wolof", "xh | Xhosa", "yi | Yiddish", 
+            "yo | Yoruba", "za | Zhuang", "zh | Chinese", "zu | Zulu"
         ]
     }
 };
