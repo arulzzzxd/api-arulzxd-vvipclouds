@@ -1144,6 +1144,40 @@ document.addEventListener('DOMContentLoaded', () => {
     initImageLightbox(); 
     setLanguage(savedLang);
     
+    const notifBtn = document.getElementById('notifMenuBtn');
+const notifPopup = document.getElementById('notifPopup');
+const closeNotifBtn = document.getElementById('closeNotifBtn');
+const notifOverlay = document.getElementById('notifOverlay');
+const notifBadge = document.getElementById('notifBadge');
+
+if (notifBtn && notifPopup) {
+    // Buka Notifikasi
+    notifBtn.addEventListener('click', () => {
+        notifPopup.classList.remove('hidden');
+        document.body.classList.add('overflow-hidden');
+        
+        // Sembunyikan angka 1 saat ditekan / dibaca
+        if (notifBadge) {
+            notifBadge.classList.add('hidden');
+        }
+    });
+
+    // Tutup Notifikasi via Tombol X
+    if (closeNotifBtn) {
+        closeNotifBtn.addEventListener('click', () => {
+            notifPopup.classList.add('hidden');
+            document.body.classList.remove('overflow-hidden');
+        });
+    }
+
+    // Tutup Notifikasi via Klik Area Gelap Luar
+    if (notifOverlay) {
+        notifOverlay.addEventListener('click', () => {
+            notifPopup.classList.add('hidden');
+            document.body.classList.remove('overflow-hidden');
+        });
+    }
+}
     const uploaderBtn = document.getElementById('uploaderMenuBtn'); 
     const pastebinBtn = document.getElementById('pastebinMenuBtn'); 
     const bioMenuBtn = document.getElementById('bioMenuBtn');
