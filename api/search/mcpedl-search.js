@@ -294,6 +294,51 @@ router.get("/", async (req, res) => {
   }
 });
 
+router.paramsConfig = {
+    query: {
+        type: "text",
+        required: true,
+        placeholder: "Masukkan kata kunci pencarian..."
+    },
+    page: {
+        type: "number",
+        default: 1,
+        placeholder: "Halaman (Contoh: 1)"
+    },
+    sort: {
+        type: "select",
+        default: "relevance",
+        options: [
+            "relevance",
+            "popular",
+            "latest",
+            "trending"
+        ]
+    },
+    updated_at: {
+        type: "select",
+        default: "2y",
+        options: [
+            "all",
+            "1d",
+            "1w",
+            "1m",
+            "3m",
+            "6m",
+            "1y",
+            "2y"
+        ]
+    },
+    detail_full: {
+        type: "select",
+        default: "false",
+        options: [
+            "false",
+            "true"
+        ]
+    }
+};
+
 router.status = "ready";
 router.type = "free";
 module.exports = router;
