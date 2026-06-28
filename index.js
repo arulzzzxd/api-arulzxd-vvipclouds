@@ -24,8 +24,8 @@ app.use(fileUpload());
 For setting API name etc
 */
 const title = "API-ARULZXD - REST";
-const favicon = "https://arulz-uploader.vercel.app/files/C5VYmq.jpg";
-const logo = "https://arulz-uploader.vercel.app/files/SnhJe3.png";
+const favicon = "https://api-arulzxd-vvipclouds.vercel.app/files/X1F0Cn.png";
+const logo = "https://api-arulzxd-vvipclouds.vercel.app/files/33s7XJ.png";
 const headertitle = `<img src="https://readme-typing-svg.demolab.com?font=Poppins&weight=700&size=28&pause=1000&color=00D4FF&center=true&vCenter=true&width=600&lines=Welcome+To+ArulzXD+API;Fast+%F0%9F%9A%80+Reliable+%E2%9A%A1;Free+REST+API+Services;Developer+Friendly+API" alt="Typing SVG" class="mx-auto" />`;
 const headerdescription = "Browse, inspect & fire requests against live endpoints._";
 const footer = "© Arulz-XD";
@@ -600,6 +600,53 @@ app.get('/', (req, res) => {
 </head>
 <body class="min-h-screen antialiased bg-[#030712] text-slate-100 relative">
 <div id="themeBg" class="fixed inset-0 -z-10 bg-dots-dark"></div>
+
+    <div id="welcomePopup" class="fixed inset-0 z-[99999] hidden">
+      <div class="fixed inset-0 bg-black/70 backdrop-blur-md"></div>
+      
+      <div class="fixed inset-0 flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-white/10 rounded-2xl shadow-2xl w-full max-w-sm sm:max-w-md relative p-6 font-['Space_Grotesk'] text-slate-100 transition-all duration-300">
+          
+          <button id="closePopupBtn" class="absolute top-4 right-4 text-slate-400 hover:text-red-400 transition-colors bg-white/5 hover:bg-white/10 rounded-full p-1.5 focus:outline-none border border-white/5">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+          
+          <div class="text-center mb-5">
+            <h1 class="text-xl sm:text-2xl font-extrabold text-white leading-tight tracking-wide">
+              Welcome to<br><span class="text-cyan-400">Arulz-XD API</span>
+            </h1>
+          </div>
+          
+          <div class="mb-5 rounded-xl overflow-hidden border border-white/10 bg-black/40">
+            <img src="https://api-arulzxd-vvipclouds.vercel.app/files/X1F0Cn.png" alt="Welcome Banner" class="w-full h-auto object-cover max-h-48" />
+          </div>
+          
+          <div class="text-center text-slate-300 text-xs sm:text-sm mb-6 px-2 leading-relaxed">
+            <p>Halloo, ini adalah salah satu projek ku, jangan di hujat yaa masih pemula :D</p>
+          </div>
+          
+          <div class="mb-6 flex justify-center">
+            <div class="bg-black/30 rounded-full py-2.5 px-6 border-2 border-dashed border-cyan-500/50 shadow-inner">
+              <span class="font-bold text-xs sm:text-sm text-slate-200 tracking-wide">
+                Free apikey : <span class="font-mono text-cyan-400 select-all">${VALID_API_KEY}</span>
+              </span>
+            </div>
+          </div>
+          
+          <div class="text-center text-slate-400 text-[11px] mb-5 flex items-center justify-center gap-1.5 font-medium tracking-wide">
+            <span>Support project ini biar makin semangat</span>
+            <span class="text-base animate-bounce">🚀</span>
+          </div>
+          
+          <a href="https://wa.me/6285122629940?text=Halo%20Arulz%2C%20saya%20ingin%20donate%20untuk%20layanan%20REST%20API%20Anda." target="_blank" class="w-full bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-500 hover:to-cyan-400 text-white font-bold py-3 px-6 rounded-xl shadow-lg shadow-cyan-950/50 transition-all active:scale-95 text-sm block text-center tracking-wider uppercase">
+            Donate Sekarang
+          </a>
+        </div>
+      </div>
+    </div>
+
     <div id="toast" class="toast z-50">
         <div class="flex items-center gap-3">
             <svg id="toastIcon" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -654,30 +701,26 @@ app.get('/', (req, res) => {
             </div>
         </div>
 
-                <nav class="flex flex-col gap-4 text-xs font-bold tracking-wider uppercase text-gray-300 light-mode:text-slate-700 flex-1 overflow-y-auto scrollbar-hide py-2">
+        <nav class="flex flex-col gap-4 text-xs font-bold tracking-wider uppercase text-gray-300 light-mode:text-slate-700 flex-1 overflow-y-auto scrollbar-hide py-2">
             <a href="#api" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-3 px-2 py-1.5 rounded-lg hover:bg-white/5">
-                <!-- HOME SVG -->
                 <svg class="w-5 h-5 text-cyan-400 text-center" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
                 </svg>
                 HOME
             </a>
             <a href="#apiList" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-3 px-2 py-1.5 rounded-lg hover:bg-white/5">
-                <!-- DOCUMENTATION SVG -->
                 <svg class="w-5 h-5 text-cyan-400 text-center" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                 </svg>
                 DOCUMENTATION
             </a>
             <button id="uploaderMenuBtn" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-3 px-2 py-1.5 rounded-lg hover:bg-white/5 text-left w-full focus:outline-none">
-                <!-- FILE UPLOAD SVG -->
                 <svg class="w-5 h-5 text-cyan-400 text-center" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                 </svg>
                 File Upload
             </button>
             <a href="https://arulz-pastecode.vercel.app/" target="_blank" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-3 px-2 py-1.5 rounded-lg hover:bg-white/5">
-                <!-- PASTECODE SVG -->
                 <svg class="w-5 h-5 text-cyan-400 text-center" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
                 </svg>
@@ -687,26 +730,20 @@ app.get('/', (req, res) => {
             <hr class="border-white/10 my-1 light-mode:border-slate-200">
             
             <a href="https://wa.me/6285122629940?text=%F0%9F%9A%A8%20%5BSYSTEM%20NOTICE%3A%20BUG%20DETECTED%5D%20%F0%9F%9A%A8%0A----------------------------------------%0AHalo%20Arulz%2C%20saya%20menemukan%20sebuah%20anomali%20%2F%20bug%20pada%20layanan%20REST%20API%20Anda.%20Berikut%20rinciannya%3A%0A%0A%E2%80%A2%20%F0%9F%9B%A0%EF%B8%8F%20Endpoint%20%20%3A%20%5BMasukkan%20nama%2Fpath%20endpoint%2C%20misal%3A%20%2Fapi%2Fdownloader%2Ftiktok%5D%0A%E2%80%A2%20%F0%9F%93%9D%20Masalah%20%20%20%3A%20%5BDeskripsi%20singkat%20bug%2C%20misal%3A%20Response%20error%20500%20%2F%20data%20tidak%20keluar%5D%0A%E2%80%A2%20%F0%9F%94%8D%20Kronologi%20%3A%20%5BKetik%20di%20sini%20bagaimana%20bug%20terjadi%20atau%20parameter%20apa%20yang%20dimasukkan%5D%0A%0AMohon%20bantuannya%20untuk%20dilakukan%20pengecekan%20sistem%20%28system%20maintenance%29.%20Terima%20kasih%20%F0%9F%9A%80%0A----------------------------------------%0A%5BSent%20via%20REST%20API%20Dashboard%20User%5D" target="_blank" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-3 px-2 py-1.5 rounded-lg hover:bg-white/5 text-[11px] opacity-80">
-                <!-- BUG REPORT SVG (Presisi Sesuai Gambar 213136.jpg) -->
                 <svg class="w-5 h-5 text-cyan-400 text-center" fill="currentColor" viewBox="0 0 24 24">
-                    <!-- Kepala setengah lingkaran polos -->
                     <path d="M12 2a4 4 0 0 0-4 4h8a4 4 0 0 0-4-4z" />
-                    <!-- Badan utama dengan celah garis tengah (line pembelah punggung) -->
                     <path fill-rule="evenodd" clip-rule="evenodd" d="M7.05 11c0-2.454 1.66-4.519 3.95-5.117v12.234A5.26 5.26 0 0 1 7.05 13V11zm5.95 7.117V5.883c2.29.598 3.95 2.663 3.95 5.117v2a5.26 5.26 0 0 1-3.95 5.117z" />
-                    <!-- 6 Kaki lurus simetris menyudut sesuai struktur gambar -->
                     <path d="M6 9.5a1 1 0 0 1 1-1h1v2H7a1 1 0 0 1-1-1zM4.707 15.707a1 1 0 0 1 0-1.414l1.5-1.5 1.414 1.414-1.5 1.5a1 1 0 0 1-1.414 0zM7.621 6.207l-1.5-1.5a1 1 0 1 0-1.414 1.414l1.5 1.5 1.414-1.414zM16 8.5h1a1 1 0 1 1 0 2h-1v-2zM16.379 6.207l1.5-1.5a1 1 0 1 1 1.414 1.414l-1.5 1.5-1.414-1.414zM17.793 15.707l-1.5-1.5 1.414-1.414 1.5 1.5a1 1 0 0 1 0 1.4141 1 1 0 0 1-1.414 0z" />
                 </svg>
                 BUG REPORT
             </a>
             <a href="https://wa.me/6285122629940?text=Halo+Arulz%2C+saya+ingin+bertanya+mengenai+REST+API+Anda." target="_blank" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-3 px-2 py-1.5 rounded-lg hover:bg-white/5 text-[11px] opacity-80">
-                <!-- WHATSAPP ORIGINAL SOLID LOGO SVG -->
                 <svg class="w-5 h-5 text-cyan-400 text-center fill-current" viewBox="0 0 24 24">
                     <path d="M12.004 2c-5.518 0-10 4.482-10 10 0 1.758.455 3.411 1.252 4.862l-1.252 4.568 4.673-1.226c1.403.766 2.992 1.196 4.68 1.196 5.517 0 10-4.482 10-10s-4.483-10-10-10zm5.82 14.195c-.244.688-1.22 1.252-1.682 1.32-.423.062-.977.112-2.923-.695-2.493-1.032-4.1-3.57-4.225-3.737-.123-.166-1.01-1.344-1.01-2.564 0-1.22.637-1.819.863-2.062.225-.244.49-.305.652-.305.162 0 .325.002.466.008.147.006.345-.056.54.412.2.482.686 1.674.747 1.798.06.124.102.268.02.433-.082.165-.124.268-.246.412-.124.143-.26.32-.37.43-.125.125-.254.26-.11.51.144.25.64 1.056 1.374 1.71.946.843 1.745 1.103 1.99 1.225.244.123.387.102.53-.062.143-.165.613-.713.776-.956.163-.244.325-.206.54-.124.215.083 1.363.643 1.597.76.235.118.39.176.448.275.058.1.058.58-.186 1.268z"/>
                 </svg>
                 OWNER (WHATSAPP)
             </a>
             <a href="https://t.me/arulzzxd" target="_blank" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-3 px-2 py-1.5 rounded-lg hover:bg-white/5 text-[11px] opacity-80">
-                <!-- TELEGRAM ORIGINAL LOGO SVG -->
                 <svg class="w-5 h-5 text-cyan-400 text-center fill-current" viewBox="0 0 24 24">
                     <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-1-.65-.35-1 .22-1.58.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.2-.08-.06-.19-.04-.27-.02-.11.02-1.93 1.23-5.46 3.62-.51.35-.98.53-1.39.51-.46-.01-1.33-.26-1.99-.48-.8-.26-1.43-.41-1.38-.86.03-.24.35-.48.97-.73 3.8-1.65 6.34-2.74 7.61-3.25 3.61-1.47 4.36-1.73 4.85-1.74.11 0 .35.03.5.16.13.12.17.27.18.38-.01.12.01.27 0 .42z"/>
                 </svg>
@@ -869,10 +906,29 @@ app.get('/', (req, res) => {
     window.musicPlaylist = ${JSON.stringify(playlist)};
 </script>
 <script src="script.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const popup = document.getElementById('welcomePopup');
+    const closeBtn = document.getElementById('closePopupBtn');
+    
+    // Tampilkan modal setiap kali halaman dimuat awal / direfresh
+    popup.classList.remove('hidden');
+    document.body.classList.add('overflow-hidden'); // Kunci scroll layar saat modal aktif
+    
+    // Fungsi untuk menutup modal
+    closeBtn.addEventListener('click', () => {
+        popup.classList.add('hidden');
+        document.body.classList.remove('overflow-hidden');
+    });
+});
+</script>
+
 </body>
 </html>
     `);
 });
+
 
 if (require.main === module) {
   app.listen(PORT, () => {

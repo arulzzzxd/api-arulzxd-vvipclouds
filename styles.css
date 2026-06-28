@@ -369,3 +369,22 @@
     .animate-blink {
       animation: blink 0.8s step-end infinite;
     }
+    
+    /* Mengunci scroll body dan memberikan transisi halus saat modal terbuka */
+    body.overflow-hidden {
+      overflow: hidden;
+    }
+
+    #welcomePopup {
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+    }
+
+    #welcomePopup > div > div {
+      animation: popupScaleIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+
+    @keyframes popupScaleIn {
+      from { transform: scale(0.85); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
