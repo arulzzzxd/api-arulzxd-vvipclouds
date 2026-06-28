@@ -362,7 +362,14 @@
       animation: spin 0.8s linear infinite;
       display: inline-block;
     }
+    @keyframes blink {
+      50% { opacity: 0; }
+    }
 
+    .animate-blink {
+      animation: blink 0.8s step-end infinite;
+    }
+    
     /* Mengunci scroll body dan memberikan transisi halus saat modal terbuka */
     body.overflow-hidden {
       overflow: hidden;
@@ -381,21 +388,12 @@
       from { transform: scale(0.85); opacity: 0; }
       to { transform: scale(1); opacity: 1; }
     }
-
-    /* Animasi Ayunan Lonceng Notifikasi */
+    
     @keyframes swing {
-        0%, 100% { transform: rotate(0deg); }
-        20% { transform: rotate(15deg); }
-        40% { transform: rotate(-10deg); }
-        60% { transform: rotate(5deg); }
-        80% { transform: rotate(-5deg); }
+      0%, 100% { transform: rotate(0deg); }
+      20% { transform: rotate(15deg); }
+      40% { transform: rotate(-10deg); }
+      60% { transform: rotate(5deg); }
+      80% { transform: rotate(-5deg); }
     }
 
-    #notifPopup {
-      backdrop-filter: blur(4px);
-      -webkit-backdrop-filter: blur(4px);
-    }
-
-    #notifPopup > div > div {
-      animation: popupScaleIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-    }

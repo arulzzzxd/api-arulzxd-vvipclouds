@@ -12,9 +12,6 @@ const https = require('https');
 const http = require('http');
 const crypto = require('crypto');
 
-// Import data notifikasi di bagian atas index.js
-const listNotifikasi = require('./notifikasi'); 
-
 const app = express();
 const PORT = process.env.PORT || 3000;
 app.use(express.static(path.join(__dirname)));
@@ -477,21 +474,18 @@ app.get('/styles.css', (req, res) => {
 });
 
 app.get('/', (req, res) => {
-    // Generate Notifikasi HTML Items
     let notifHtmlItems = '';
-    if (Array.isArray(listNotifikasi)) {
-        listNotifikasi.forEach((notif) => {
-            notifHtmlItems += `
-            <div class="p-3 bg-white/5 rounded-xl border border-white/5 hover:border-cyan-500/30 transition-all">
-                <div class="flex justify-between items-start mb-1">
-                    <h4 class="font-semibold text-sm text-cyan-400">${notif.judul}</h4>
-                    <span class="text-[10px] text-slate-500 font-mono">${notif.waktu}</span>
-                </div>
-                <p class="text-xs text-slate-300 leading-relaxed">${notif.deskripsi}</p>
+    listNotifikasi.forEach((notif) => {
+        notifHtmlItems += `
+        <div class="p-3 bg-white/5 rounded-xl border border-white/5 hover:border-cyan-500/30 transition-all">
+            <div class="flex justify-between items-start mb-1">
+                <h4 class="font-semibold text-sm text-cyan-400">${notif.judul}</h4>
+                <span class="text-[10px] text-slate-500 font-mono">${notif.waktu}</span>
             </div>
-            `;
-        });
-    }
+            <p class="text-xs text-slate-300 leading-relaxed">${notif.deskripsi}</p>
+        </div>
+        `;
+    });
 
     res.send(`<!DOCTYPE html>
 <html lang="id" class="notranslate" translate="no">
@@ -620,44 +614,6 @@ app.get('/', (req, res) => {
 <body class="min-h-screen antialiased bg-[#030712] text-slate-100 relative">
 <div id="themeBg" class="fixed inset-0 -z-10 bg-dots-dark"></div>
 
-    <div class="fixed top-6 right-6 z-40 flex items-center gap-3">
-        <button id="notifMenuBtn" class="relative flex items-center justify-center w-12 h-12 rounded-xl glass-panel text-slate-300 hover:text-white shadow-lg transition-all active:scale-95 focus:outline-none light-mode:text-slate-700 light-mode:hover:text-slate-900">
-            <svg class="w-6 h-6 animate-[swing_2s_ease-in-out_infinite]" fill="none" stroke="currentColor" stroke-width="2.3" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
-            </svg>
-            <span id="notifBadge" class="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-md border border-slate-900 animate-pulse">1</span>
-        </button>
-
-        <button id="bioMenuBtn" class="flex items-center justify-center w-12 h-12 rounded-xl glass-panel text-slate-300 hover:text-white shadow-lg transition-all active:scale-95 focus:outline-none light-mode:text-slate-700 light-mode:hover:text-slate-900">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-        </button>
-    </div>
-
-    <div id="notifPopup" class="fixed inset-0 z-[99999] hidden">
-        <div id="notifOverlay" class="fixed inset-0 bg-black/75 backdrop-blur-md"></div>
-        <div class="fixed inset-0 flex items-center justify-center p-4">
-            <div class="bg-slate-900 border border-white/10 rounded-2xl shadow-2xl w-full max-w-md p-6 font-['Space_Grotesk'] text-slate-100 relative max-h-[85vh] flex flex-col">
-                
-                <button id="closeNotifBtn" class="absolute top-4 right-4 text-slate-400 hover:text-red-400 transition-colors bg-white/5 hover:bg-white/10 rounded-full p-1.5 focus:outline-none">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
-                </button>
-                
-                <div class="mb-4">
-                    <h3 class="text-lg font-bold text-white flex items-center gap-2">🔔 Pusat Pemberitahuan</h3>
-                    <p class="text-xs text-slate-400">Informasi update fitur dan sistem berkala</p>
-                </div>
-                
-                <div class="space-y-3 overflow-y-auto pr-1 flex-1 custom-scrollbar">
-                    ${notifHtmlItems}
-                </div>
-            </div>
-        </div>
-    </div>
-
     <div id="welcomePopup" class="fixed inset-0 z-[99999] hidden">
       <div class="fixed inset-0 bg-black/70 backdrop-blur-md"></div>
       
@@ -704,13 +660,282 @@ app.get('/', (req, res) => {
       </div>
     </div>
 
+    <div id="notifPopup" class="fixed inset-0 z-[99999] hidden">
+        <div id="notifOverlay" class="fixed inset-0 bg-black/75 backdrop-blur-md"></div>
+        <div class="fixed inset-0 flex items-center justify-center p-4">
+            <div class="bg-slate-900 border border-white/10 rounded-2xl shadow-2xl w-full max-w-md p-6 font-['Space_Grotesk'] text-slate-100 relative max-h-[85vh] flex flex-col">
+                
+                <button id="closeNotifBtn" class="absolute top-4 right-4 text-slate-400 hover:text-red-400 transition-colors bg-white/5 hover:bg-white/10 rounded-full p-1.5 focus:outline-none">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+                
+                <div class="mb-4">
+                    <h3 class="text-lg font-bold text-white flex items-center gap-2">🔔 Pusat Pemberitahuan</h3>
+                    <p class="text-xs text-slate-400">Informasi update fitur dan sistem berkala</p>
+                </div>
+                
+                <div class="space-y-3 overflow-y-auto pr-1 flex-1 custom-scrollbar">
+                    ${notifHtmlItems}
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="toast" class="toast z-50">
         <div class="flex items-center gap-3">
             <svg id="toastIcon" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
             </svg>
-            <span id="toastMessage" class="text-sm font-semibold tracking-wide"></span>
-            <button id="closeToastBtn" class="absolute -top-12 right-0 text-white hover:text-cyan-400 transition-colors focus:outline-none flex items-center gap-1 bg-black/50 px-3 py-1.5 rounded-lg border border-white/10 text-xs font-mono">
+            <span id="toastMessage" class="font-medium">Action completed</span>
+        </div>
+    </div>
+
+    <div class="fixed top-6 right-6 z-40 flex items-center gap-3">
+        <button id="notifMenuBtn" class="relative flex items-center justify-center w-12 h-12 rounded-xl glass-panel text-slate-300 hover:text-white shadow-lg transition-all active:scale-95 focus:outline-none light-mode:text-slate-700 light-mode:hover:text-slate-900">
+            <svg class="w-6 h-6 animate-[swing_2s_ease-in-out_infinite]" fill="none" stroke="currentColor" stroke-width="2.3" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+            </svg>
+            <span id="notifBadge" class="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-md border border-slate-900 animate-pulse">1</span>
+        </button>
+
+        <button id="bioMenuBtn" class="flex items-center justify-center w-12 h-12 rounded-xl glass-panel text-slate-300 hover:text-white shadow-lg transition-all active:scale-95 focus:outline-none light-mode:text-slate-700 light-mode:hover:text-slate-900">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+        </button>
+    </div>
+
+    <div id="bioDropdown" class="fixed top-0 right-0 h-full w-72 bg-[#08111e]/95 backdrop-blur-lg border-l border-white/10 transform translate-x-full transition-transform duration-300 ease-in-out z-50 shadow-2xl flex flex-col p-6 font-['Space_Grotesk'] light-mode:bg-white/95 light-mode:border-slate-200">
+        <div class="flex items-center justify-between mb-4">
+            <div class="flex gap-0 border border-black p-0.5 bg-[#111]">
+                <button id="lang-id" class="lang-btn active" onclick="setLanguage('id')">ID</button>
+                <button id="lang-en" class="lang-btn" onclick="setLanguage('en')">EN</button>
+            </div>
+            
+            <div class="flex items-center gap-2">
+                <button id="themeToggle" class="flex items-center justify-center w-8 h-8 rounded-lg transition-all active:scale-95 focus:outline-none border border-white/20 bg-slate-900/50 text-white light-mode:bg-slate-100 light-mode:border-slate-300 light-mode:text-slate-900">
+                    <svg id="theme-toggle-dark-icon" class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+                    </svg>
+                    <svg id="theme-toggle-light-icon" class="w-4 h-4 hidden" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd" clip-rule="evenodd"></path>
+                    </svg>
+                </button>
+
+                <button id="closeMenuBtn" class="text-white hover:text-red-400 transition-colors p-1.5 border border-white/10 rounded bg-slate-900/40 light-mode:text-slate-700 light-mode:bg-slate-100 light-mode:border-slate-300 light-mode:hover:text-red-500">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <div class="mb-4 p-3 bg-cyan-950/40 border border-cyan-500/30 rounded-xl light-mode:bg-cyan-50 light-mode:border-cyan-200">
+            <span class="text-[10px] font-bold text-cyan-400 light-mode:text-cyan-700 uppercase tracking-widest block mb-1">🔑 Current API Key</span>
+            <div class="flex items-center justify-between bg-black/40 rounded px-2 py-1.5 font-mono text-xs text-slate-200 border border-white/5 light-mode:bg-white light-mode:text-slate-800 light-mode:border-slate-200">
+                <span class="select-all">${VALID_API_KEY}</span>
+                <button onclick="copyText('${VALID_API_KEY}', 'API Key Free')" class="p-1 text-slate-400 hover:text-cyan-400 transition-colors" title="Copy API Key">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <nav class="flex flex-col gap-4 text-xs font-bold tracking-wider uppercase text-gray-300 light-mode:text-slate-700 flex-1 overflow-y-auto scrollbar-hide py-2">
+            <a href="#api" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-3 px-2 py-1.5 rounded-lg hover:bg-white/5">
+                <svg class="w-5 h-5 text-cyan-400 text-center" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                </svg>
+                HOME
+            </a>
+            <a href="#apiList" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-3 px-2 py-1.5 rounded-lg hover:bg-white/5">
+                <svg class="w-5 h-5 text-cyan-400 text-center" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
+                DOCUMENTATION
+            </a>
+            <button id="uploaderMenuBtn" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-3 px-2 py-1.5 rounded-lg hover:bg-white/5 text-left w-full focus:outline-none">
+                <svg class="w-5 h-5 text-cyan-400 text-center" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                </svg>
+                File Upload
+            </button>
+            <a href="https://arulz-pastecode.vercel.app/" target="_blank" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-3 px-2 py-1.5 rounded-lg hover:bg-white/5">
+                <svg class="w-5 h-5 text-cyan-400 text-center" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                </svg>
+                PASTECODE
+            </a>
+            
+            <hr class="border-white/10 my-1 light-mode:border-slate-200">
+            
+            <a href="https://wa.me/6285122629940?text=%F0%9F%9A%A8%20%5BSYSTEM%20NOTICE%3A%20BUG%20DETECTED%5D%20%F0%9F%9A%A8%0A----------------------------------------%0AHalo%20Arulz%2C%20saya%20menemukan%20sebuah%20anomali%20%2F%20bug%20pada%20layanan%20REST%20API%20Anda.%20Berikut%20rinciannya%3A%0A%0A%E2%80%A2%20%F0%9F%9B%A0%EF%B8%8F%20Endpoint%20%20%3A%20%5BMasukkan%20nama%2Fpath%20endpoint%2C%20misal%3A%20%2Fapi%2Fdownloader%2Ftiktok%5D%0A%E2%80%A2%20%F0%9F%93%9D%20Masalah%20%20%20%3A%20%5BDeskripsi%20singkat%20bug%2C%20misal%3A%20Response%20error%20500%20%2F%20data%20tidak%20keluar%5D%0A%E2%80%A2%20%F0%9F%94%8D%20Kronologi%20%3A%20%5BKetik%20di%20sini%20bagaimana%20bug%20terjadi%20atau%20parameter%20apa%20yang%20dimasukkan%5D%0A%0AMohon%20bantuannya%20untuk%20dilakukan%20pengecekan%20sistem%20%28system%20maintenance%29.%20Terima%20kasih%20%F0%9F%9A%80%0A----------------------------------------%0A%5BSent%20via%20REST%20API%20Dashboard%20User%5D" target="_blank" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-3 px-2 py-1.5 rounded-lg hover:bg-white/5 text-[11px] opacity-80">
+                <svg class="w-5 h-5 text-cyan-400 text-center" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2a4 4 0 0 0-4 4h8a4 4 0 0 0-4-4z" />
+                    <path fill-rule="evenodd" clip-rule="evenodd" d="M7.05 11c0-2.454 1.66-4.519 3.95-5.117v12.234A5.26 5.26 0 0 1 7.05 13V11zm5.95 7.117V5.883c2.29.598 3.95 2.663 3.95 5.117v2a5.26 5.26 0 0 1-3.95 5.117z" />
+                    <path d="M6 9.5a1 1 0 0 1 1-1h1v2H7a1 1 0 0 1-1-1zM4.707 15.707a1 1 0 0 1 0-1.414l1.5-1.5 1.414 1.414-1.5 1.5a1 1 0 0 1-1.414 0zM7.621 6.207l-1.5-1.5a1 1 0 1 0-1.414 1.414l1.5 1.5 1.414-1.414zM16 8.5h1a1 1 0 1 1 0 2h-1v-2zM16.379 6.207l1.5-1.5a1 1 0 1 1 1.414 1.414l-1.5 1.5-1.414-1.414zM17.793 15.707l-1.5-1.5 1.414-1.414 1.5 1.5a1 1 0 0 1 0 1.4141 1 1 0 0 1-1.414 0z" />
+                </svg>
+                BUG REPORT
+            </a>
+            <a href="https://wa.me/6285122629940?text=Halo+Arulz%2C+saya+ingin+bertanya+mengenai+REST+API+Anda." target="_blank" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-3 px-2 py-1.5 rounded-lg hover:bg-white/5 text-[11px] opacity-80">
+                <svg class="w-5 h-5 text-cyan-400 text-center fill-current" viewBox="0 0 24 24">
+                    <path d="M12.004 2c-5.518 0-10 4.482-10 10 0 1.758.455 3.411 1.252 4.862l-1.252 4.568 4.673-1.226c1.403.766 2.992 1.196 4.68 1.196 5.517 0 10-4.482 10-10s-4.483-10-10-10zm5.82 14.195c-.244.688-1.22 1.252-1.682 1.32-.423.062-.977.112-2.923-.695-2.493-1.032-4.1-3.57-4.225-3.737-.123-.166-1.01-1.344-1.01-2.564 0-1.22.637-1.819.863-2.062.225-.244.49-.305.652-.305.162 0 .325.002.466.008.147.006.345-.056.54.412.2.482.686 1.674.747 1.798.06.124.102.268.02.433-.082.165-.124.268-.246.412-.124.143-.26.32-.37.43-.125.125-.254.26-.11.51.144.25.64 1.056 1.374 1.71.946.843 1.745 1.103 1.99 1.225.244.123.387.102.53-.062.143-.165.613-.713.776-.956.163-.244.325-.206.54-.124.215.083 1.363.643 1.597.76.235.118.39.176.448.275.058.1.058.58-.186 1.268z"/>
+                </svg>
+                OWNER (WHATSAPP)
+            </a>
+            <a href="https://t.me/arulzzxd" target="_blank" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-3 px-2 py-1.5 rounded-lg hover:bg-white/5 text-[11px] opacity-80">
+                <svg class="w-5 h-5 text-cyan-400 text-center fill-current" viewBox="0 0 24 24">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-1-.65-.35-1 .22-1.58.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.2-.08-.06-.19-.04-.27-.02-.11.02-1.93 1.23-5.46 3.62-.51.35-.98.53-1.39.51-.46-.01-1.33-.26-1.99-.48-.8-.26-1.43-.41-1.38-.86.03-.24.35-.48.97-.73 3.8-1.65 6.34-2.74 7.61-3.25 3.61-1.47 4.36-1.73 4.85-1.74.11 0 .35.03.5.16.13.12.17.27.18.38-.01.12.01.27 0 .42z"/>
+                </svg>
+                OWNER (TELEGRAM)
+            </a>
+        </nav>
+    </div>
+
+    <div id="menuOverlay" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden z-30 transition-opacity duration-300"></div>
+
+    <div class="max-w-5xl mx-auto px-4 py-8 relative z-10">
+        <header id="api" class="mb-12 text-center">
+            <div class="flex items-center justify-center gap-3 mb-2">
+                <span class="bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest animate-pulse light-mode:bg-cyan-100 light-mode:text-cyan-700">● ONLINE</span>
+            </div>
+            <div id="mainTitle" class="flex justify-center mb-4 min-h-[50px] items-center">${headertitle}</div>
+            <p id="mainDescription" class="text-md md:text-lg font-medium tracking-wide text-slate-300 max-w-xl mx-auto">${headerdescription}</p>
+            
+            <div class="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl mx-auto">
+                <div class="glass-panel flex flex-col items-center justify-center p-4 rounded-xl shadow-lg">
+                    <div class="text-center mb-3 font-['Space_Grotesk']">
+                        <div id="liveClock" class="text-2xl font-black tracking-wider text-cyan-400 light-mode:text-cyan-600 font-mono">
+                            00:00:00
+                        </div>
+                        <div id="liveDate" class="text-[10px] font-bold opacity-70 tracking-wide mt-0.5 uppercase">
+                            Memuat tanggal...
+                        </div>
+                    </div>
+                    <hr class="w-full border-white/5 light-mode:border-slate-200 mb-3">
+                    
+                    <span id="stat-battery-title" class="text-xs font-bold uppercase tracking-wider text-slate-400">Baterai Anda</span>
+                    <div class="flex items-center gap-3 mt-2">
+                        <div id="batteryContainer" class="battery-container border border-white/20 light-mode:border-slate-400">
+                            <div id="batteryLevel" class="battery-level bg-green-400" style="width: 0%"></div>
+                            <div class="battery-tip"></div>
+                        </div>
+                        <div class="text-left">
+                            <span id="batteryPercentage" class="text-lg font-bold block leading-none light-mode:text-slate-900">0%</span>
+                            <span id="batteryStatus" class="text-[10px] uppercase text-slate-400 light-mode:text-slate-500 font-medium">Mendeteksi...</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="glass-panel flex flex-col items-center justify-center p-4 rounded-xl shadow-lg">
+                    <span id="stat-endpoints-title" class="text-xs font-bold uppercase tracking-wider text-slate-400">Total Endpoint</span>
+                    <span id="totalEndpoints" class="text-3xl font-black text-cyan-400 mt-1 light-mode:text-cyan-600">0</span>
+                </div>
+                
+                <div class="glass-panel flex flex-col items-center justify-center p-4 rounded-xl shadow-lg">
+                    <span id="stat-categories-title" class="text-xs font-bold uppercase tracking-wider text-slate-400">Total Kategori</span>
+                    <span id="totalCategories" class="text-3xl font-black text-cyan-400 mt-1 light-mode:text-cyan-600">0</span>
+                </div>
+            </div>
+
+            <div class="glass-panel max-w-3xl mx-auto mt-4 p-3 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-3 border border-white/20">
+                <div class="flex items-center gap-2 text-sm text-cyan-400 light-mode:text-cyan-700 code-font">
+                    <span>🌐</span> <span class="underline break-all font-semibold">https://api-arulzxd-vvipclouds.vercel.app/</span>
+                </div>
+                <a href="https://wa.me/6285122629940?text=Halo%20Arulz,%20saya%20ingin%20request%20fitur%20baru%20di%20REST%20API%20:" 
+                   target="_blank" 
+                   class="w-full sm:w-auto px-6 py-2 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs uppercase rounded-lg shadow transition-all active:scale-95 light-mode:bg-cyan-600 light-mode:hover:bg-cyan-500 light-mode:text-white text-center flex items-center justify-center">
+                    + Request New Feature
+                </a>
+            </div>
+
+            <div class="flex justify-center gap-4 mt-4 max-w-3xl mx-auto">
+                <a href="https://whatsapp.com/channel/0029VbAwdIyJJhzRMpjUcS3P" 
+                   target="_blank" 
+                   class="flex-1 glass-panel py-2 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-white/10 light-mode:hover:bg-slate-100 transition-colors light-mode:text-slate-700 text-center block">
+                   💬 Channel
+                </a>
+                <a href="https://chat.whatsapp.com/LBeGqVsmDBb6j29ysuusd9" 
+                   target="_blank" 
+                   class="flex-1 glass-panel py-2 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-white/10 light-mode:hover:bg-slate-100 transition-colors light-mode:text-slate-700 text-center block">
+                   👥 Group
+                </a>
+            </div>
+
+            <div class="music-player-card glass-panel mt-8 max-w-2xl mx-auto rounded-2xl p-4 shadow-2xl relative overflow-hidden border border-white/10">
+                <audio id="audioElement"></audio>
+                <div class="flex items-center justify-between gap-4">
+                    <div class="flex items-center gap-4 flex-1 min-w-0">
+                        <div class="relative w-16 h-16 rounded-xl overflow-hidden bg-black flex-shrink-0 border border-white/10">
+                            <img id="musicCoverImg" src="" alt="Cover" class="w-full h-full object-cover transition-transform duration-500">
+                        </div>
+                        <div class="flex-1 min-w-0 text-left">
+                            <h3 id="musicTitle" class="music-text-title text-white font-bold text-sm tracking-wider uppercase truncate m-0">Loading...</h3>
+                            <p id="musicArtist" class="music-text-artist text-slate-400 text-xs font-semibold tracking-wide truncate mt-0.5">-</p>
+                            <div class="flex items-center gap-2 mt-2">
+                                <span id="currentTime" class="text-[10px] text-slate-400 light-mode:text-slate-500 code-font w-7 text-left">0:00</span>
+                                <div id="progressContainer" class="music-progress-bar-bg flex-1 h-1 bg-white/10 rounded-full relative cursor-pointer group">
+                                    <div id="progressBar" class="h-full bg-cyan-400 rounded-full w-0 transition-all duration-300"></div>
+                                </div>
+                                <span id="totalDuration" class="text-[10px] text-slate-400 light-mode:text-slate-500 code-font w-7 text-right">0:00</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-1.5 flex-shrink-0">
+                        <button id="prevBtn" class="music-btn-nav w-9 h-9 flex items-center justify-center glass-panel rounded-xl text-slate-300 hover:text-white transition-all active:scale-95">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+                        </button>
+                        <button id="playBtn" class="music-btn-nav w-10 h-10 flex items-center justify-center glass-panel rounded-xl text-slate-300 hover:text-white transition-all active:scale-95">
+                            <svg id="playIcon" class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                        </button>
+                        <button id="nextBtn" class="music-btn-nav w-9 h-9 flex items-center justify-center glass-panel rounded-xl text-slate-300 hover:text-white transition-all active:scale-95">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M16 6h2v12h-2zm-10.5 12l8.5-6-8.5-6z"/></svg>
+                        </button>
+                        <button id="playlistToggleBtn" class="music-btn-nav w-9 h-9 flex items-center justify-center glass-panel rounded-xl text-slate-300 hover:text-white transition-all active:scale-95">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                        </button>
+                    </div>
+                </div>
+                <div id="playlistPanel" class="music-playlist-border hidden mt-4 pt-4 border-t border-white/10 max-h-40 overflow-y-auto space-y-1 light-mode:border-slate-200"></div>
+            </div>
+            
+        </header>
+
+        <div class="mb-8">
+            <div class="relative">
+                <input 
+                    type="text" 
+                    id="searchInput" 
+                    placeholder="Cari endpoint berdasarkan nama, path, atau kategori..."
+                    class="search-input w-full px-4 py-3 text-sm rounded-xl focus:outline-none focus:border-cyan-500 transition-all code-font glass-panel border border-white/10 text-white placeholder-slate-400 light-mode:text-slate-900 light-mode:placeholder-slate-500 light-mode:focus:border-cyan-600"
+                >
+                <svg class="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+            </div>
+            <div id="categoryFilters" class="flex flex-wrap gap-2 mt-4 justify-start md:justify-center overflow-x-auto pb-2 scrollbar-hide"></div>
+        </div>
+
+        <div id="noResults" class="text-center py-12 hidden">
+            <div class="text-4xl mb-2">⚠️</div>
+            <h3 id="no-results-title" class="text-sm font-bold mb-1 text-white">Endpoint tidak ditemukan</h3>
+            <p id="no-results-desc" class="text-xs text-slate-400 light-mode:text-slate-500">Coba gunakan kata kunci lain</p>
+        </div>
+
+        <div id="apiList" class="space-y-4"></div>
+
+        <footer id="siteFooter" class="mt-12 pt-6 border-t border-white/10 text-center text-xs text-slate-500">
+            ${footer}
+        </footer>
+    </div>
+
+    <div id="imageLightbox" class="fixed inset-0 bg-black/90 z-[100] hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300 backdrop-blur-sm cursor-zoom-out">
+        <div class="relative max-w-4xl max-h-[90vh] flex items-center justify-center">
+            <img id="lightboxImage" src="" alt="Preview" class="max-w-full max-h-[85vh] rounded-lg shadow-2xl object-contain scale-95 transition-transform duration-300" />
+            <button id="closeLightbox" class="absolute -top-12 right-0 text-white hover:text-cyan-400 transition-colors focus:outline-none flex items-center gap-1 bg-black/50 px-3 py-1.5 rounded-lg border border-white/10 text-xs font-mono">
                 ✕ Close
             </button>
         </div>
@@ -740,42 +965,19 @@ document.addEventListener('DOMContentLoaded', () => {
         popup.classList.add('hidden');
         document.body.classList.remove('overflow-hidden');
     });
-
-    // Logika buka-tutup Pusat Pemberitahuan (Notifikasi)
-    const notifMenuBtn = document.getElementById('notifMenuBtn');
-    const notifPopup = document.getElementById('notifPopup');
-    const closeNotifBtn = document.getElementById('closeNotifBtn');
-    const notifOverlay = document.getElementById('notifOverlay');
-    const notifBadge = document.getElementById('notifBadge');
-
-    if (notifMenuBtn && notifPopup) {
-        notifMenuBtn.addEventListener('click', () => {
-            notifPopup.classList.remove('hidden');
-            document.body.classList.add('overflow-hidden');
-            if (notifBadge) notifBadge.classList.add('hidden'); // Sembunyikan badge jika sudah dibuka
-        });
-    }
-
-    const closeNotifFunc = () => {
-        notifPopup.classList.add('hidden');
-        if (!popup || popup.classList.contains('hidden')) {
-            document.body.classList.remove('overflow-hidden');
-        }
-    };
-
-    if (closeNotifBtn) closeNotifBtn.addEventListener('click', closeNotifFunc);
-    if (notifOverlay) notifOverlay.addEventListener('click', closeNotifFunc);
 });
 </script>
+
 </body>
-</html>`);
+</html>
+    `);
 });
 
-const server = http.createServer(app);
 
-server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
-
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+  });
+}
 
 module.exports = app;
