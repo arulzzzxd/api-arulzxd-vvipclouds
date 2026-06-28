@@ -11,6 +11,7 @@
     <meta property="og:url" content="https://arul-pastecode.vercel.app/support">
     <meta property="og:type" content="website">
 
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
     
@@ -38,8 +39,10 @@
 </head>
 <body class="text-slate-200 font-sans min-h-screen relative overflow-x-hidden antialiased bg-[#0b0c10] flex flex-col justify-between">
 
+    <!-- Background Glow Effect -->
     <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[500px] bg-gradient-blur pointer-events-none z-0"></div>
 
+    <!-- NAVBAR ATAS -->
     <nav class="w-full bg-[#0b0c10]/80 border-b border-white/10 backdrop-blur-md sticky top-0 z-50 px-4 py-4 flex justify-between items-center box-border">
         <a href="/" class="flex items-center gap-2 text-white font-extrabold text-sm tracking-tight hover:text-cyan-400 transition-colors">
             <span class="bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 px-2 py-0.5 rounded text-[11px] font-mono">AD</span>
@@ -53,10 +56,13 @@
         </a>
     </nav>
 
-    <main class="w-full max-w-md mx-auto relative z-10 box-border flex-grow flex flex-col justify-start">
+    <!-- MAIN CONTAINER (Sisi kanan-kiri dibuat px-0 murni di mobile agar menyentuh ujung layar) -->
+    <main class="w-full max-w-md mx-auto px-0 sm:px-4 pt-0 sm:pt-6 pb-12 relative z-10 box-border flex-grow flex flex-col justify-start">
         
-        <div class="w-full bg-white/5 border-x-0 sm:border-x border-y border-white/10 rounded-none sm:rounded-3xl p-5 backdrop-blur-xl shadow-2xl relative overflow-hidden box-border flex-grow sm:flex-grow-0 sm:my-6">
+        <!-- Card menempel penuh di HP, berjarak manis di desktop -->
+        <div class="w-full bg-white/5 border-x-0 sm:border-x border-y sm:border border-white/10 rounded-none sm:rounded-3xl p-5 backdrop-blur-xl shadow-2xl relative overflow-hidden box-border flex-grow sm:flex-grow-0 sm:my-6">
             
+            <!-- Badge Status -->
             <div class="flex justify-center mb-4">
                 <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-xs font-mono rounded-full uppercase tracking-widest font-semibold animate-pulse">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -66,19 +72,23 @@
                 </span>
             </div>
 
+            <!-- Header Teks -->
             <h1 class="text-lg font-extrabold text-center text-white mb-2 tracking-tight uppercase">Suka sama project ini?</h1>
             <p class="text-xs text-slate-400 text-center font-medium leading-relaxed mb-5 px-1">
                 API & Pastebin ini gw bikin di sela-sela waktu luang. Kalau ngerasa kebantu, support seikhlasnya bantu banget buat biaya perpanjangan hosting server + nambahin fitur & snippet baru.
             </p>
 
-            <div class="bg-white/5 border border-white/10 rounded-2xl p-2 flex flex-col items-center justify-center relative group mb-5 w-full box-border">
+            <!-- QRIS Display Box -->
+            <div class="bg-white/5 border border-white/10 rounded-2xl p-2.5 flex flex-col items-center justify-center relative group mb-5 w-full box-border">
                 <div class="absolute inset-0 bg-cyan-500/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
                 
+                <!-- Frame Gambar Putis QRIS -->
                 <div class="bg-white p-2 rounded-xl shadow-xl w-full flex justify-center box-border">
                     <img id="qris-img" src="https://arulz-uploader.vercel.app/files/CVmlrD.jpg" alt="QRIS Arulz-XD" class="w-full max-w-[340px] h-auto object-contain rounded-lg block">
                 </div>
             </div>
 
+            <!-- E-Wallet Payment Info Box -->
             <div class="border border-white/10 bg-white/5 rounded-xl p-3.5 mb-5 w-full box-border">
                 <span class="inline-flex items-center justify-center gap-1.5 text-[10px] font-mono font-bold tracking-wider text-slate-400 w-full mb-3">
                     <svg class="w-3.5 h-3.5 text-cyan-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -100,6 +110,7 @@
                 </div>
             </div>
 
+            <!-- Action Buttons Grid -->
             <div class="grid grid-cols-1 gap-2.5 w-full">
                 <button id="btn-download" onclick="downloadQR()" class="w-full py-2.5 px-4 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white text-xs font-bold rounded-xl transition-all shadow-lg shadow-cyan-500/20 active:scale-[0.98] flex items-center justify-center gap-1.5">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
@@ -116,6 +127,7 @@
                 </button>
             </div>
 
+            <!-- Footer Quote -->
             <div class="inline-flex items-center justify-center gap-1.5 text-[11px] text-slate-500 text-center italic mt-5 border-t border-white/5 pt-4 w-full">
                 <svg class="w-3.5 h-3.5 text-cyan-500/70 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
@@ -126,10 +138,12 @@
         </div>
     </main>
 
+    <!-- FOOTER HALAMAN -->
     <footer class="w-full text-center py-4 text-[10px] text-slate-600 font-mono relative z-10 box-border border-t border-white/5 bg-[#0b0c10]">
         &copy; 2026 Arulz-XD. All rights reserved.
     </footer>
 
+    <!-- Custom Neo-Glow Alert Modal Box -->
     <div id="custom-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300">
         <div class="bg-slate-900 border border-white/10 rounded-2xl max-w-xs w-full p-5 shadow-2xl transform scale-95 transition-transform duration-300 text-center">
             <div class="flex flex-col items-center mb-3">
@@ -174,7 +188,8 @@
             modal.querySelector('div').classList.add('scale-95');
         }
 
-        function downloadQR() {
+        // Perbaikan skrip unduhan mengarah ke endpoint Vercel murni /database/download
+        async function downloadQR() {
             const btn = document.getElementById('btn-download');
             const originalText = btn.innerHTML;
             
@@ -185,13 +200,33 @@
                 </svg> MENGUNDUH...`;
             btn.disabled = true;
 
-            window.location.href = "/database/download";
+            try {
+                // Fetch biner gambar langsung dari endpoint /database/download
+                const response = await fetch('/database/download');
+                if (!response.ok) throw new Error('Network error');
+                
+                const blob = await response.blob();
+                const blobUrl = window.URL.createObjectURL(blob);
+                
+                // Trigger download via anchor element
+                const a = document.createElement('a');
+                a.href = blobUrl;
+                a.download = 'QRIS_Idzharul_Store.jpg';
+                document.body.appendChild(a);
+                a.click();
+                
+                // Bersihkan memory browser
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(blobUrl);
 
-            setTimeout(() => {
+                showAlert("Berhasil", "QRIS berhasil disimpan ke galeri kamu.");
+            } catch (error) {
+                console.error(error);
+                showAlert("Gagal", "Gagal mengunduh gambar otomatis. Silakan tekan lama gambar QRIS untuk menyimpannya.", false);
+            } finally {
                 btn.innerHTML = originalText;
                 btn.disabled = false;
-                showAlert("Berhasil", "Proses unduhan QRIS sedang berjalan.");
-            }, 1500);
+            }
         }
 
         function shareLink() {
