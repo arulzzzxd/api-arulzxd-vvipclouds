@@ -24,7 +24,6 @@ async function downloadFile(url) {
     return Buffer.from(res.data);
 }
 
-// Otomatis tanpa parameter time tambahan
 function getTimeStr() {
     return moment().tz("Asia/Jakarta").format("HH.mm");
 }
@@ -46,7 +45,9 @@ async function loadAppleEmojiMap() {
 }
 
 async function getEmojiImage(emoji) {
+    if (!emoji) return null;
     if (emojiImageCache.has(emoji)) return emojiImageCache.get(emoji);
+    
     const map = await loadAppleEmojiMap();
     const base = emojiToUnicode(emoji);
     const variants = [
@@ -57,6 +58,7 @@ async function getEmojiImage(emoji) {
         base.replace(/-fe0f/gi, '').toUpperCase(),
         base.replace(/-fe0f/gi, '').toUpperCase() + '-FE0F',
     ];
+    
     let b64 = null;
     for (const v of variants) {
         if (map[v]) {
@@ -65,16 +67,28 @@ async function getEmojiImage(emoji) {
         }
     }
     if (!b64) return null;
-    const buf = Buffer.from(b64, 'base64');
-    const img = await loadImage(buf);
-    emojiImageCache.set(emoji, img);
-    return img;
+    
+    try {
+        const buf = Buffer.from(b64, 'base64');
+        const img = await loadImage(buf);
+        emojiImageCache.set(emoji, img);
+        return img;
+    } catch (e) {
+        return null;
+    }
 }
 
 async function drawAppleEmoji(ctx, emoji, x, y, size) {
+    if (!emoji) return;
     const img = await getEmojiImage(emoji);
     if (!img) {
+        // Fallback aman menggunakan font sistem jika gambar emoji gagal dimuat/null
+        ctx.save();
+        ctx.font = `${size}px InterRegular`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
         ctx.fillText(emoji, x, y);
+        ctx.restore();
         return;
     }
     ctx.drawImage(img, x - size / 2, y - size / 2, size, size);
@@ -83,7 +97,7 @@ async function drawAppleEmoji(ctx, emoji, x, y, size) {
 const EMOJI_REGEX = /(\p{Emoji_Modifier_Base}\p{Emoji_Modifier}|\p{Emoji_Presentation}\uFE0F?|\p{Emoji}\uFE0F|[\u{1F1E0}-\u{1F1FF}]{2}|\p{Extended_Pictographic}\uFE0F?)/gu;
 
 function measureTextCustom(ctx, text, fontSize) {
-    ctx.font = `${fontSize}px InterRegular`; // Memastikan font terpasang saat kalkulasi lebar custom text
+    ctx.font = `${fontSize}px InterRegular`;
     const parts = text.split(EMOJI_REGEX);
     let totalWidth = 0;
     for (const part of parts) {
@@ -160,7 +174,12 @@ async function renderRinChat({ text = '', imgUrl, emojis } = {}) {
     const timeStr = getTimeStr(); 
     const txt = text;
     const caption = imgUrl ? txt : "";
-    let emojiList = (emojis && emojis.length) ? emojis : ["😈", "🥶", "😹", "🤍", "☠️", "👺"];
+    
+    // Validasi ketat untuk memastikan emojiList selalu berupa array yang valid
+    let emojiList = ["😈", "🥶", "😹", "🤍", "☠️", "👺"];
+    if (Array.isArray(emojis) && emojis.length > 0) {
+        emojiList = emojis.filter(e => e.trim() !== "");
+    }
 
     const RIN_BG_URL = 'https://raw.githubusercontent.com/ryyntwx/allimagerin/refs/heads/main/iqc-hytam.png';
     const RIN_DIR = join(process.cwd(), 'assets', 'rinchat');
@@ -385,7 +404,9 @@ async function renderRinChat({ text = '', imgUrl, emojis } = {}) {
     const emojiCY = emCardY + (emCardH / 2) + 2;
 
     for (let i = 0; i < Math.min(emojiList.length, 6); i++) {
-        await drawAppleEmoji(ctx, emojiList[i], startX + (i * spacingX), emojiCY, emojiSize);
+        if (emojiList[i]) {
+            await drawAppleEmoji(ctx, emojiList[i], startX + (i * spacingX), emojiCY, emojiSize);
+        }
     }
 
     ctx.fillStyle = "#8e8e93";
@@ -412,14 +433,16 @@ router.get('/', async (req, res) => {
             });
         }
 
+        let parsedEmojis = [];
         if (emojis) {
-            emojis = emojis.split(',').map(e => e.trim());
+            // Memisahkan emoji dengan koma, sekaligus membuang spasi kosong di sekitar emoji
+            parsedEmojis = emojis.split(',').map(e => e.trim()).filter(Boolean);
         }
 
         const imageBuffer = await renderRinChat({
             text,
             imgUrl,
-            emojis
+            emojis: parsedEmojis
         });
 
         res.setHeader('Content-Type', 'image/png');
