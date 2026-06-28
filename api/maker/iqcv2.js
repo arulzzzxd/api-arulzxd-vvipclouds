@@ -4,7 +4,7 @@ const { createCanvas, loadImage, GlobalFonts } = require("@napi-rs/canvas");
 const { writeFile, mkdir, readFile } = require("fs/promises");
 const { existsSync } = require("fs");
 const { join, dirname } = require("path");
-const moment = require("moment-timezone"); // Menggunakan moment-timezone bawaan
+const moment = require("moment-timezone");
 
 const router = express.Router();
 
@@ -24,7 +24,7 @@ async function downloadFile(url) {
     return Buffer.from(res.data);
 }
 
-// Fungsi mendapatkan waktu otomatis menggunakan moment-timezone
+// Fungsi mendapatkan waktu otomatis Asia/Jakarta
 function getTimeStr() {
     return moment().tz("Asia/Jakarta").format("HH.mm");
 }
@@ -156,7 +156,7 @@ function wrapText(ctx, text, maxWidth, fontSize) {
 
 // --- CORE CANVAS GENERATOR ---
 async function renderRinChat({ text = '', imgUrl, emojis } = {}) {
-    const timeStr = getTimeStr(); // Otomatis generate dari moment ke Asia/Jakarta
+    const timeStr = getTimeStr(); 
     const txt = text;
     const caption = imgUrl ? txt : "";
     let emojiList = (emojis && emojis.length) ? emojis : ["😈", "🥶", "😹", "🤍", "☠️", "👺"];
@@ -185,6 +185,7 @@ async function renderRinChat({ text = '', imgUrl, emojis } = {}) {
         return isJson ? res.data : Buffer.from(res.data);
     }
 
+    // Pastikan font terdaftar SEBELUM melakukan manipulasi/pengukuran text canvas
     for (const f of RIN_FONTS) {
         const dest = join(RIN_FONTS_DIR, f.file);
         if (!existsSync(dest)) await writeFile(dest, await rinDownload(f.url));
@@ -222,6 +223,7 @@ async function renderRinChat({ text = '', imgUrl, emojis } = {}) {
     const fixedX = 35;
     const fixedBaseY = 946;
 
+    // Set font dulu sebelum mengukur width timeStr agar akurat dan tidak crash
     ctx.font = `22px InterRegular`;
     const timeWidth = ctx.measureText(timeStr).width;
 
@@ -401,7 +403,7 @@ router.get('/', async (req, res) => {
     try {
         const text = req.query.text || '';
         const imgUrl = req.query.imgUrl || null;
-        let emojis = req.query.emojis; // req.query.time dihilangkan sepenuhnya
+        let emojis = req.query.emojis; 
 
         if (!text && !imgUrl) {
             return res.status(400).json({
@@ -415,6 +417,7 @@ router.get('/', async (req, res) => {
             emojis = emojis.split(',').map(e => e.trim());
         }
 
+        // Jalankan generator tanpa memproses req.query.time sama sekali
         const imageBuffer = await renderRinChat({
             text,
             imgUrl,
