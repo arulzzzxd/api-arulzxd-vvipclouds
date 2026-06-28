@@ -37,14 +37,14 @@
         }
     </style>
 </head>
-<body class="text-slate-200 font-sans min-h-screen relative overflow-x-hidden antialiased flex flex-col justify-between">
+<body class="text-slate-200 font-sans min-h-screen relative overflow-x-hidden antialiased flex flex-col items-center">
 
     <!-- Background Glow Effect -->
-    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[600px] bg-gradient-blur pointer-events-none z-0"></div>
+    <div class="absolute top-1/4 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-gradient-blur pointer-events-none z-0"></div>
 
-    <!-- NAVBAR ATAS -->
-    <nav class="w-full bg-[#0b0c10]/80 border-b border-white/10 backdrop-blur-md sticky top-0 z-50 px-4 md:px-6 py-4 flex justify-between items-center">
-        <a href="/" class="flex items-center gap-2 text-white font-extrabold text-sm md:text-base tracking-tight hover:text-cyan-400 transition-colors">
+    <!-- NAVBAR ATAS (Sticky & Pas dengan Layout) -->
+    <nav class="w-full bg-[#0b0c10]/80 border-b border-white/10 backdrop-blur-md sticky top-0 z-50 px-4 py-4 flex justify-between items-center max-w-7xl">
+        <a href="/" class="flex items-center gap-2 text-white font-extrabold text-sm tracking-tight hover:text-cyan-400 transition-colors">
             <span class="bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 px-2 py-0.5 rounded text-xs font-mono">AD</span>
             Arulz-XD API
         </a>
@@ -56,63 +56,69 @@
         </a>
     </nav>
 
-    <!-- MAIN CONTAINER -->
-    <div class="w-full max-w-xl mx-auto px-4 py-6 relative z-10 flex-grow flex items-center justify-center">
+    <!-- MAIN CONTAINER (Merapat Ke Atas & Sesuai Resolusi Layar) -->
+    <div class="w-full max-w-xl px-4 mt-6 mb-8 relative z-10">
         
-        <div class="w-full bg-white/5 border border-white/10 rounded-3xl p-5 md:p-8 backdrop-blur-xl shadow-2xl relative overflow-hidden">
+        <div class="w-full bg-white/5 border border-white/10 rounded-3xl p-5 sm:p-6 backdrop-blur-xl shadow-2xl relative overflow-hidden">
             
-            <!-- Badge Status -->
+            <!-- Badge Status (Ganti Emoji dengan SVG Cangkir Kopi) -->
             <div class="flex justify-center mb-4">
-                <span class="px-3 py-1 bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-xs font-mono rounded-full uppercase tracking-widest font-semibold animate-pulse">
-                    ☕ Support Server
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-xs font-mono rounded-full uppercase tracking-widest font-semibold animate-pulse">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.72 13.78L17.5 12c.42-1 .13-2.3-.77-3c-.9-.7-2.2-.6-3 .3l-1.5 1.5M12 18a6 6 0 110-12 6 6 0 010 12z"/>
+                    </svg>
+                    Support Server
                 </span>
             </div>
 
             <!-- Header Teks -->
-            <h1 class="text-xl md:text-2xl font-extrabold text-center text-white mb-2 tracking-tight uppercase">Suka sama project ini?</h1>
-            <p class="text-xs md:text-sm text-slate-400 text-center font-medium leading-relaxed mb-6 px-1">
+            <h1 class="text-xl font-extrabold text-center text-white mb-2 tracking-tight uppercase">Suka sama project ini?</h1>
+            <p class="text-xs text-slate-400 text-center font-medium leading-relaxed mb-5 px-1">
                 API & Pastebin ini gw bikin di sela-sela waktu luang. Kalau ngerasa kebantu, support seikhlasnya bantu banget buat biaya perpanjangan hosting server + nambahin fitur & snippet baru.
             </p>
 
-            <!-- QRIS Display Box (Diperbesar & Padding Dioptimalkan) -->
-            <div class="bg-white/5 border border-white/10 rounded-2xl p-2.5 sm:p-4 flex flex-col items-center justify-center relative group mb-5">
+            <!-- QRIS Display Box (Ukuran Penuh / Tidak Terpotong) -->
+            <div class="bg-white/5 border border-white/10 rounded-2xl p-2 flex flex-col items-center justify-center relative group mb-5">
                 <div class="absolute inset-0 bg-cyan-500/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
                 
-                <!-- Frame Gambar QRIS Maksimal -->
-                <div class="bg-white p-2 rounded-xl shadow-xl border border-white/20 w-full flex justify-center">
-                    <img id="qris-img" src="https://arulz-uploader.vercel.app/files/CVmlrD.jpg" alt="QRIS Arulz-XD" class="w-full max-w-[340px] h-auto object-contain rounded-lg">
+                <!-- Container Putih Menyesuaikan Aspek Rasio Asli QRIS -->
+                <div class="bg-white p-2 rounded-xl shadow-xl w-full flex justify-center">
+                    <img id="qris-img" src="https://arulz-uploader.vercel.app/files/CVmlrD.jpg" alt="QRIS Arulz-XD" class="w-full max-w-sm h-auto object-contain rounded-lg">
                 </div>
             </div>
 
-            <!-- E-Wallet Payment Info Box -->
-            <div class="border border-white/10 bg-white/5 rounded-xl p-4 mb-6">
-                <span class="text-[10px] md:text-xs font-mono font-bold tracking-wider text-slate-400 block text-center mb-3">
-                    📱 SCAN PAKAI APPS PAYMENT APA AJA
+            <!-- E-Wallet Payment Info Box (Ganti Emoji dengan SVG Smartphone) -->
+            <div class="border border-white/10 bg-white/5 rounded-xl p-4 mb-5">
+                <span class="inline-flex items-center justify-center gap-1.5 text-[10px] sm:text-xs font-mono font-bold tracking-wider text-slate-400 w-full mb-3">
+                    <svg class="w-3.5 h-3.5 text-cyan-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 002-2H6a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                    </svg>
+                    SCAN PAKAI APPS PAYMENT APA AJA
                 </span>
                 <div class="flex flex-wrap justify-center gap-1.5">
-                    <span class="bg-white/5 border border-white/10 px-2.5 py-0.5 rounded-md text-[11px] font-semibold text-slate-300">DANA</span>
-                    <span class="bg-white/5 border border-white/10 px-2.5 py-0.5 rounded-md text-[11px] font-semibold text-slate-300">OVO</span>
-                    <span class="bg-white/5 border border-white/10 px-2.5 py-0.5 rounded-md text-[11px] font-semibold text-slate-300">GoPay</span>
-                    <span class="bg-white/5 border border-white/10 px-2.5 py-0.5 rounded-md text-[11px] font-semibold text-slate-300">ShopeePay</span>
-                    <span class="bg-white/5 border border-white/10 px-2.5 py-0.5 rounded-md text-[11px] font-semibold text-slate-300">LinkAja</span>
-                    <span class="bg-white/5 border border-white/10 px-2.5 py-0.5 rounded-md text-[11px] font-semibold text-slate-300">BCA</span>
-                    <span class="bg-white/5 border border-white/10 px-2.5 py-0.5 rounded-md text-[11px] font-semibold text-slate-300">Mandiri</span>
-                    <span class="bg-white/5 border border-white/10 px-2.5 py-0.5 rounded-md text-[11px] font-semibold text-slate-300">BRI</span>
-                    <span class="bg-white/5 border border-white/10 px-2.5 py-0.5 rounded-md text-[11px] font-semibold text-slate-300">BNI</span>
-                    <span class="bg-white/5 border border-white/10 px-2.5 py-0.5 rounded-md text-[11px] font-semibold text-slate-300">Jenius</span>
+                    <span class="bg-white/5 border border-white/10 px-2 py-0.5 rounded-md text-[10px] font-semibold text-slate-300">DANA</span>
+                    <span class="bg-white/5 border border-white/10 px-2 py-0.5 rounded-md text-[10px] font-semibold text-slate-300">OVO</span>
+                    <span class="bg-white/5 border border-white/10 px-2 py-0.5 rounded-md text-[10px] font-semibold text-slate-300">GoPay</span>
+                    <span class="bg-white/5 border border-white/10 px-2 py-0.5 rounded-md text-[10px] font-semibold text-slate-300">ShopeePay</span>
+                    <span class="bg-white/5 border border-white/10 px-2 py-0.5 rounded-md text-[10px] font-semibold text-slate-300">LinkAja</span>
+                    <span class="bg-white/5 border border-white/10 px-2 py-0.5 rounded-md text-[10px] font-semibold text-slate-300">BCA</span>
+                    <span class="bg-white/5 border border-white/10 px-2 py-0.5 rounded-md text-[10px] font-semibold text-slate-300">Mandiri</span>
+                    <span class="bg-white/5 border border-white/10 px-2 py-0.5 rounded-md text-[10px] font-semibold text-slate-300">BRI</span>
+                    <span class="bg-white/5 border border-white/10 px-2 py-0.5 rounded-md text-[10px] font-semibold text-slate-300">BNI</span>
+                    <span class="bg-white/5 border border-white/10 px-2 py-0.5 rounded-md text-[10px] font-semibold text-slate-300">Jenius</span>
                 </div>
             </div>
 
             <!-- Action Buttons Grid -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <button id="btn-download" onclick="downloadQR()" class="w-full py-3 px-4 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white text-xs md:text-sm font-bold rounded-xl transition-all shadow-lg shadow-cyan-500/20 active:scale-[0.98] flex items-center justify-center gap-1.5">
+                <button id="btn-download" onclick="downloadQR()" class="w-full py-2.5 px-4 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white text-xs font-bold rounded-xl transition-all shadow-lg shadow-cyan-500/20 active:scale-[0.98] flex items-center justify-center gap-1.5">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                     </svg>
                     SIMPAN QR KE GALERI
                 </button>
 
-                <button onclick="shareLink()" class="w-full py-3 px-4 bg-white/5 hover:bg-white/10 border border-white/10 text-slate-200 text-xs md:text-sm font-bold rounded-xl transition-all active:scale-[0.98] flex items-center justify-center gap-1.5">
+                <button onclick="shareLink()" class="w-full py-2.5 px-4 bg-white/5 hover:bg-white/10 border border-white/10 text-slate-200 text-xs font-bold rounded-xl transition-all active:scale-[0.98] flex items-center justify-center gap-1.5">
                     <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M8.684 10.742l4.57 2.286m0 0A3 3 0 1117.142 16H6.858a3 3 0 110-6h10.284a3 3 0 11-4.57 2.286z" />
                     </svg>
@@ -120,24 +126,31 @@
                 </button>
             </div>
 
-            <!-- Footer Quote -->
-            <p class="text-[11px] text-slate-500 text-center italic mt-6 border-t border-white/5 pt-4">
-                ✨ Makasih banget, kontribusi lo bikin gw semangat ngembangin lebih banyak snippet & feature.
+            <!-- Footer Quote (Ganti Emoji dengan SVG Sparkles) -->
+            <p class="inline-flex items-center justify-center gap-1.5 text-[11px] text-slate-500 text-center italic mt-5 border-t border-white/5 pt-4 w-full">
+                <svg class="w-3.5 h-3.5 text-cyan-500/70" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+                </svg>
+                Makasih banget, kontribusi lo bikin gw semangat ngembangin lebih banyak snippet & feature.
             </p>
             
         </div>
     </div>
 
-    <!-- FOOTER BIASA -->
-    <footer class="w-full text-center py-4 text-xs text-slate-600 font-mono relative z-10">
+    <!-- FOOTER HALAMAN -->
+    <footer class="w-full text-center py-4 text-[10px] text-slate-600 font-mono mt-auto relative z-10">
         &copy; 2026 Arulz-XD. All rights reserved.
     </footer>
 
-    <!-- Custom Neo-Glow Alert Modal Box -->
+    <!-- Custom Neo-Glow Alert Modal Box (Ganti Emoji dengan Ikon Centang SVG) -->
     <div id="custom-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300">
         <div class="bg-slate-900 border border-white/10 rounded-2xl max-w-xs w-full p-5 shadow-2xl transform scale-95 transition-transform duration-300 text-center">
             <div class="flex flex-col items-center mb-3">
-                <div class="w-10 h-10 rounded-full bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 font-bold text-lg mb-2" id="modal-icon">✓</div>
+                <div id="modal-icon-container" class="w-10 h-10 rounded-full bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 mb-2">
+                    <svg id="modal-svg" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                </div>
                 <h3 class="text-sm font-extrabold text-white uppercase tracking-wider" id="modal-title">Pemberitahuan</h3>
             </div>
             <p class="text-xs text-slate-400 font-medium leading-relaxed mb-4" id="modal-message">Isi pesan di sini...</p>
@@ -151,14 +164,16 @@
         function showAlert(title, message, isSuccess = true) {
             document.getElementById('modal-title').innerText = title;
             document.getElementById('modal-message').innerText = message;
-            const iconEl = document.getElementById('modal-icon');
+            
+            const iconBox = document.getElementById('modal-icon-container');
+            const svgPath = document.getElementById('modal-svg');
             
             if(isSuccess) {
-                iconEl.innerText = "✓";
-                iconEl.className = "w-10 h-10 rounded-full bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 font-bold text-lg mb-2";
+                iconBox.className = "w-10 h-10 rounded-full bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 mb-2";
+                svgPath.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />';
             } else {
-                iconEl.innerText = "!";
-                iconEl.className = "w-10 h-10 rounded-full bg-red-500/10 border border-red-500/30 flex items-center justify-center text-red-400 font-bold text-lg mb-2";
+                iconBox.className = "w-10 h-10 rounded-full bg-red-500/10 border border-red-500/30 flex items-center justify-center text-red-400 mb-2";
+                svgPath.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />';
             }
 
             const modal = document.getElementById('custom-modal');
@@ -188,7 +203,7 @@
             setTimeout(() => {
                 btn.innerHTML = originalText;
                 btn.disabled = false;
-                showAlert("Berhasil 🎉", "Proses unduhan QRIS sedang berjalan.");
+                showAlert("Berhasil", "Proses unduhan QRIS sedang berjalan.");
             }, 1500);
         }
 
@@ -204,7 +219,7 @@
                     .catch((err) => console.log('Batal membagikan:', err));
             } else {
                 navigator.clipboard.writeText(window.location.href).then(() => {
-                    showAlert("Disalin 🔗", "Link donasi berhasil disalin ke clipboard! Silakan share secara manual.");
+                    showAlert("Disalin", "Link donasi berhasil disalin ke clipboard! Silakan share secara manual.");
                 });
             }
         }
