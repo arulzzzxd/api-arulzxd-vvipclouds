@@ -24,7 +24,7 @@ async function downloadFile(url) {
     return Buffer.from(res.data);
 }
 
-// Fungsi mendapatkan waktu otomatis Asia/Jakarta
+// Otomatis tanpa parameter time tambahan
 function getTimeStr() {
     return moment().tz("Asia/Jakarta").format("HH.mm");
 }
@@ -83,6 +83,7 @@ async function drawAppleEmoji(ctx, emoji, x, y, size) {
 const EMOJI_REGEX = /(\p{Emoji_Modifier_Base}\p{Emoji_Modifier}|\p{Emoji_Presentation}\uFE0F?|\p{Emoji}\uFE0F|[\u{1F1E0}-\u{1F1FF}]{2}|\p{Extended_Pictographic}\uFE0F?)/gu;
 
 function measureTextCustom(ctx, text, fontSize) {
+    ctx.font = `${fontSize}px InterRegular`; // Memastikan font terpasang saat kalkulasi lebar custom text
     const parts = text.split(EMOJI_REGEX);
     let totalWidth = 0;
     for (const part of parts) {
@@ -185,7 +186,6 @@ async function renderRinChat({ text = '', imgUrl, emojis } = {}) {
         return isJson ? res.data : Buffer.from(res.data);
     }
 
-    // Pastikan font terdaftar SEBELUM melakukan manipulasi/pengukuran text canvas
     for (const f of RIN_FONTS) {
         const dest = join(RIN_FONTS_DIR, f.file);
         if (!existsSync(dest)) await writeFile(dest, await rinDownload(f.url));
@@ -223,7 +223,6 @@ async function renderRinChat({ text = '', imgUrl, emojis } = {}) {
     const fixedX = 35;
     const fixedBaseY = 946;
 
-    // Set font dulu sebelum mengukur width timeStr agar akurat dan tidak crash
     ctx.font = `22px InterRegular`;
     const timeWidth = ctx.measureText(timeStr).width;
 
@@ -417,7 +416,6 @@ router.get('/', async (req, res) => {
             emojis = emojis.split(',').map(e => e.trim());
         }
 
-        // Jalankan generator tanpa memproses req.query.time sama sekali
         const imageBuffer = await renderRinChat({
             text,
             imgUrl,
