@@ -23,144 +23,42 @@
             margin: 0; 
             padding: 0; 
             font-weight: bold; 
-            padding-top: 75px; 
+            padding-top: 85px; 
         }
 
-        .navbar { 
-            background: #0b0c10; 
-            color: white; 
-            padding: 15px 20px; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            border-bottom: 4px solid #000; 
+        /* Kontainer Tombol Utama di Pojok Kiri Atas */
+        .top-left-nav {
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
+            top: 16px;
+            left: 16px;
             z-index: 1000;
-            box-sizing: border-box;
-        }
-        .logo { font-size: 18px; font-weight: 900; text-decoration: none; color: white; display: flex; align-items: center; }
-        .logo span { background: var(--yellow); color: #000; padding: 4px 8px; margin-right: 10px; border: 3px solid #000; font-size: 14px; font-weight: 900; }
-
-        .nav-right { display: flex; align-items: center; gap: 12px; }
-        .nav-btn-docs { 
-            background: var(--yellow); 
-            color: #000; 
-            padding: 8px 14px; 
-            text-decoration: none; 
-            border: 3px solid #000; 
-            font-size: 12px; 
-            font-weight: 900; 
-            text-transform: uppercase; 
-            box-shadow: 2px 2px 0px #000;
             display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-        .nav-btn-docs:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0px #000; }
-
-        .hamburger-btn {
-            background: #22252a;
-            border: 3px solid #000;
-            color: white;
-            padding: 8px 12px;
-            cursor: pointer;
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-            justify-content: center;
-            align-items: center;
-        }
-        .hamburger-btn .bar { width: 18px; height: 3px; background-color: white; transition: 0.3s; }
-
-        .sidebar {
-            position: fixed;
-            top: 0;
-            right: -300px; 
-            width: 290px;
-            height: 100%;
-            background: #0b0c10;
-            box-sizing: border-box;
-            padding: 25px 24px;
-            transition: right 0.4s cubic-bezier(0.1, 0.9, 0.2, 1);
-            z-index: 9999;
-            border-left: 4px solid #000;
-            display: flex;
-            flex-direction: column;
-        }
-        .sidebar.open { right: 0; }
-
-        .sidebar-top-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
+            gap: 10px;
         }
 
-        .lang-switcher {
-            display: flex;
-            border: 2px solid #555;
-            background: #22252a;
-            padding: 2px;
-        }
-        .lang-opt-btn {
-            background: transparent;
-            border: none;
-            color: #888;
-            padding: 5px 10px;
-            font-size: 11px;
-            font-family: inherit;
+        .btn-nav-top {
+            background: #ffffff;
+            color: #000000;
+            border: 3px solid #000000;
+            padding: 10px 16px;
+            font-size: 12px;
             font-weight: 900;
-            cursor: pointer;
             text-transform: uppercase;
-        }
-        .lang-opt-btn.active {
-            background: var(--yellow);
-            color: #000;
-            border: 2px solid #000;
-        }
-
-        .sidebar-close-btn {
-            background: #22252a;
-            border: 2px solid #555;
-            color: white;
-            padding: 6px 10px;
-            font-weight: 900;
-            cursor: pointer;
-            font-family: inherit;
-        }
-        .sidebar-menu-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            gap: 24px;
-        }
-        .sidebar-menu-list li a {
-            color: #bcbcbc;
             text-decoration: none;
-            font-size: 14px;
-            font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            display: block;
-            transition: color 0.2s;
+            cursor: pointer;
+            box-shadow: 4px 4px 0px #000000;
+            font-family: inherit;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: transform 0.05s, box-shadow 0.05s;
         }
-        .sidebar-menu-list li a:hover, .sidebar-menu-list li a.active { color: #ffffff !important; font-weight: 900; }
-        .sidebar-divider { height: 2px; background: #22252a; margin: 15px 0; }
-
-        .sidebar-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 9998;
-            display: none;
+        .btn-nav-top:active {
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0px #000000;
+        }
+        .btn-nav-top.accent {
+            background: var(--yellow);
         }
 
         .container { max-width: 1000px; margin: 30px auto; padding: 0 20px; box-sizing: border-box; min-height: 400px; }
@@ -451,7 +349,7 @@
         .footer { background: #0b0c10; color: #777; padding: 30px 20px; text-align: center; border-top: 4px solid #000; font-size: 12px; margin-top: 60px; font-weight: bold; }
 
         body.raw-mode-active { background: #fff !important; background-image: none !important; color: #000 !important; font-family: monospace !important; padding: 15px !important; font-weight: normal !important; padding-top: 15px !important; }
-        body.raw-mode-active .navbar, body.raw-mode-active .sidebar, body.raw-mode-active .sidebar-overlay, body.raw-mode-active .footer, body.raw-mode-active .modal { display: none !important; }
+        body.raw-mode-active .top-left-nav, body.raw-mode-active .footer, body.raw-mode-active .modal { display: none !important; }
         body.raw-mode-active .container { max-width: 100% !important; margin: 0 !important; padding: 0 !important; }
 
         .heavy-code-warning {
@@ -470,41 +368,20 @@
 </head>
 <body>
 
-<div class="navbar">
-    <a href="/" class="logo"><span>AD</span> Arulz-XD API</a>
-    <div class="nav-right">
-        <a href="https://simple-api-lagi.vercel.app/" target="_blank" class="nav-btn-docs" id="nav-docs-text">📖 DOCS</a>
-        <button class="hamburger-btn" onclick="toggleSidebar()">
-            <div class="bar"></div>
-            <div class="bar"></div>
-            <div class="bar"></div>
-        </button>
-    </div>
-</div>
+<div class="top-left-nav">
+    <a href="/" class="btn-nav-top">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" style="width:14px; height:14px;">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+        Kembali
+    </a>
 
-<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
-
-<div class="sidebar" id="sidebarMenu">
-    <div class="sidebar-top-row">
-        <div class="lang-switcher">
-            <button class="lang-opt-btn active" id="lang-btn-id" onclick="changeLanguage('id')">ID</button>
-            <button class="lang-opt-btn" id="lang-btn-en" onclick="changeLanguage('en')">EN</button>
-        </div>
-        <button class="sidebar-close-btn" onclick="toggleSidebar()">✕</button>
-    </div>
-
-    <ul class="sidebar-menu-list">
-        <li><a href="/" id="m-home">HOME</a></li>
-        <li><a href="/" target="_blank" id="m-docs">DOKUMENTASI</a></li>
-        <li><a href="/" target="_blank" id="m-upload">FILE UPLOADER</a></li>
-        <li><a href="/pastecode" id="m-pastebin" onclick="setScrollMarker()">PASTEBIN</a></li>
-
-        <div class="sidebar-divider"></div>
-
-        <li><a href="https://wa.me/6285122629940" target="_blank" id="m-bug">BUG REPORT</a></li>
-        <li><a href="/privacy" id="m-privacy">PRIVACY POLICY</a></li>
-        <li><a href="/support" id="m-support">SUPPORT / DONASI</a></li>
-    </ul>
+    <button id="translateBtn" class="btn-nav-top accent" onclick="toggleLanguageSystem()">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" style="width:14px; height:14px;">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 5c-.417-.497-.815-1.034-1.185-1.604M14.5 16h6M17.5 13v6M4.5 18l4.5-4 4.5 4" />
+        </svg>
+        <span id="translate-btn-text">EN</span>
+    </button>
 </div>
 
 <div class="container" id="page-content">
@@ -544,8 +421,6 @@
 
     const translations = {
         id: {
-            navDocs: "📖 DOCS", mHome: "HOME", mDocs: "DOKUMENTASI", mUpload: "FILE UPLOADER", mPastebin: "PASTEBIN",
-            mBug: "BUG REPORT", mPrivacy: "PRIVACY POLICY", mTerms: "SUPPORT / DONASI",
             heroTitle: "<span>Snippet</span> & Kode", heroDesc: "Kumpulan kode, script, dan snippet dari tim Arulz-XD. Gratis, langsung pakai.",
             stat1: "Total Paste", stat2: "Bahasa", stat4: "Total Baris",
             searchPlaceholder: "Cari paste berdasarkan judul, bahasa, atau deskripsi...", filterAll: "Semua", sepText: "Semua Paste", noData: "Data tidak ditemukan.",
@@ -555,8 +430,6 @@
             btnPrev: "← Sebelumnya", btnNext: "Berikutnya →"
         },
         en: {
-            navDocs: "📖 DOCS", mHome: "HOME", mDocs: "DOCUMENTATION", mUpload: "FILE UPLOADER", mPastebin: "PASTEBIN",
-            mBug: "BUG REPORT", mPrivacy: "PRIVACY POLICY", mTerms: "SUPPORT / DONATION",
             heroTitle: "<span>Snippet</span> & Code", heroDesc: "Collection of codes, scripts, and snippets from the over-XD team. Free, ready to use.",
             stat1: "Total Pastes", stat2: "Languages", stat4: "Total Lines",
             searchPlaceholder: "Search paste by title, language, or description...", filterAll: "All", sepText: "All Pastes", noData: "Data not found.",
@@ -577,25 +450,6 @@
     const viewId = urlParams.get('id');
     const isRawMode = urlParams.get('raw') === 'true'; 
     let currentFilter = 'ALL';
-
-    function handleActiveMenuHighlight() {
-        const currentUrl = window.location.pathname;
-
-        document.querySelectorAll('.sidebar-menu-list li a').forEach(el => {
-            el.classList.remove('active');
-        });
-
-        if (currentUrl.includes('/pastecode') || currentUrl === '/' || currentUrl.includes('pastecode.html')) {
-            const pasteMenu = document.getElementById('m-pastebin');
-            if(pasteMenu) pasteMenu.classList.add('active');
-        } else if (currentUrl.includes('/support')) {
-            const supportMenu = document.getElementById('m-support');
-            if(supportMenu) supportMenu.classList.add('active');
-        } else if (currentUrl.includes('/privacy')) {
-            const privacyMenu = document.getElementById('m-privacy');
-            if(privacyMenu) privacyMenu.classList.add('active');
-        }
-    }
 
     function customAlert(message) {
         document.getElementById('alertModalMessage').innerText = message;
@@ -652,41 +506,29 @@
         }
     }
 
+    // Fungsi Pengganti Bahasa Lewat Tombol Baru
+    function toggleLanguageSystem() {
+        const nextLang = currentLang === 'id' ? 'en' : 'id';
+        changeLanguage(nextLang);
+    }
+
     function changeLanguage(lang) {
         currentLang = lang;
         localStorage.setItem('arulzxd_lang', lang);
-        document.querySelectorAll('.lang-opt-btn').forEach(b => b.classList.remove('active'));
-        const targetBtn = document.getElementById(`lang-btn-${lang}`);
-        if(targetBtn) targetBtn.classList.add('active');
+        
+        // Perbarui teks tombol translate pojok kiri atas (menampilkan bahasa opsi berikutnya)
+        const btnText = document.getElementById('translate-btn-text');
+        if(btnText) {
+            btnText.innerText = lang === 'id' ? 'EN' : 'ID';
+        }
+
         applyStaticTranslations();
         renderPage();
     }
 
     function applyStaticTranslations() {
         const t = translations[currentLang];
-        if(document.getElementById('nav-docs-text')) document.getElementById('nav-docs-text').innerText = t.navDocs;
-        if(document.getElementById('m-home')) document.getElementById('m-home').innerText = t.mHome;
-        if(document.getElementById('m-docs')) document.getElementById('m-docs').innerText = t.mDocs;
-        if(document.getElementById('m-upload')) document.getElementById('m-upload').innerText = t.mUpload;
-        if(document.getElementById('m-pastebin')) document.getElementById('m-pastebin').innerText = t.mPastebin;
-        if(document.getElementById('m-bug')) document.getElementById('m-bug').innerText = t.mBug;
-        if(document.getElementById('m-privacy')) document.getElementById('m-privacy').innerText = t.mPrivacy;
-        if(document.getElementById('m-support')) document.getElementById('m-support').innerText = t.mTerms;
         if(document.getElementById('lbl-footer-text')) document.getElementById('lbl-footer-text').innerText = t.lblFooterText;
-
-        handleActiveMenuHighlight();
-    }
-
-    function toggleSidebar() {
-        const sidebar = document.getElementById('sidebarMenu');
-        const overlay = document.getElementById('sidebarOverlay');
-        if(sidebar.classList.contains('open')) {
-            sidebar.classList.remove('open');
-            overlay.style.display = 'none';
-        } else {
-            sidebar.classList.add('open');
-            overlay.style.display = 'block';
-        }
     }
 
     function openRawModal() {
@@ -982,7 +824,6 @@
             const current = pastes[idx];
             const shareUrl = window.location.origin + "/pastecode?id=" + currentViewId;
             
-            // Cek apakah browser mendukung Web Share API (Sistem Share HP)
             if (navigator.share) {
                 navigator.share({
                     title: current.title,
@@ -992,7 +833,6 @@
                 .then(() => console.log('Berhasil membagikan!'))
                 .catch((error) => console.log('Batal membagikan:', error));
             } else {
-                // Fallback jika dibuka di PC / Browser yang tidak mendukung Share API
                 navigator.clipboard.writeText(shareUrl).then(() => {
                     customAlert(translations[currentLang].alertShare);
                 });
@@ -1040,6 +880,11 @@
     }
 
     window.onload = function() {
+        // Terapkan penamaan awal tombol translate berdasarkan locale yang tersimpan
+        const btnText = document.getElementById('translate-btn-text');
+        if(btnText) {
+            btnText.innerText = currentLang === 'id' ? 'EN' : 'ID';
+        }
         applyStaticTranslations();
         loadPastesFromServer(); 
     };
