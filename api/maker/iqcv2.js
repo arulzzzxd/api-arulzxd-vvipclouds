@@ -3,7 +3,7 @@ const axios = require("axios");
 const { createCanvas, loadImage, GlobalFonts } = require("@napi-rs/canvas");
 const { writeFile, mkdir, readFile } = require("fs/promises");
 const { existsSync } = require("fs");
-const { join, dirname } = require("path");
+const { join } = require("path");
 const moment = require("moment-timezone");
 
 const router = express.Router();
@@ -82,7 +82,6 @@ async function drawAppleEmoji(ctx, emoji, x, y, size) {
     if (!emoji) return;
     const img = await getEmojiImage(emoji);
     if (!img) {
-        // Fallback aman menggunakan font sistem jika gambar emoji gagal dimuat/null
         ctx.save();
         ctx.font = `${size}px InterRegular`;
         ctx.textAlign = "center";
@@ -169,13 +168,68 @@ function wrapText(ctx, text, maxWidth, fontSize) {
     return lines;
 }
 
+// --- MENU ICONS DRAW FUNCTIONS (FROM IQC) ---
+const drawStar = (ctx, x, y) => {
+    ctx.strokeStyle='#ffffff'; ctx.lineWidth=2.5; ctx.lineJoin='miter';
+    ctx.beginPath();
+    for (let i=0;i<5;i++) {
+        const o=(i*2*Math.PI)/5-Math.PI/2, inn=((i*2+1)*Math.PI)/5-Math.PI/2;
+        const ox=x+Math.cos(o)*16, oy=y+Math.sin(o)*16, ix=x+Math.cos(inn)*7, iy=y+Math.sin(inn)*7;
+        i===0?ctx.moveTo(ox,oy):ctx.lineTo(ox,oy); ctx.lineTo(ix,iy);
+    }
+    ctx.closePath(); ctx.stroke();
+};
+const drawReply = (ctx, x, y) => {
+    ctx.strokeStyle='#ffffff'; ctx.lineWidth=2.8; ctx.lineCap='round'; ctx.lineJoin='round';
+    const ox=x-3; ctx.beginPath();
+    ctx.moveTo(ox,y-6); ctx.lineTo(ox,y-13); ctx.lineTo(ox-13,y); ctx.lineTo(ox,y+13); ctx.lineTo(ox,y+6);
+    ctx.bezierCurveTo(ox+9,y+6,ox+16,y+9,ox+20,y+16); ctx.bezierCurveTo(ox+18,y+7,ox+14,y-2,ox,y-6); ctx.stroke();
+};
+const drawForward = (ctx, x, y) => {
+    ctx.strokeStyle='#ffffff'; ctx.lineWidth=2.8; ctx.lineCap='round'; ctx.lineJoin='round';
+    const ox=x+3; ctx.beginPath();
+    ctx.moveTo(ox,y-6); ctx.lineTo(ox,y-13); ctx.lineTo(ox+13,y); ctx.lineTo(ox,y+13); ctx.lineTo(ox,y+6);
+    ctx.bezierCurveTo(ox-9,y+6,ox-16,y+9,ox-20,y+16); ctx.bezierCurveTo(ox-18,y+7,ox-14,y-2,ox,y-6); ctx.stroke();
+};
+const drawCopy = (ctx, x, y) => {
+    ctx.save(); ctx.strokeStyle='#ffffff'; ctx.lineWidth=10; ctx.lineCap='round'; ctx.lineJoin='round';
+    const sc=0.23, cx2=-127, cy2=-105; ctx.translate(x,y); ctx.scale(sc,sc);
+    ctx.beginPath(); ctx.moveTo(cx2+164,cy2+156); ctx.bezierCurveTo(cx2+164,cy2+164,cx2+158,cy2+170,cx2+150,cy2+170);
+    ctx.lineTo(cx2+74,cy2+170); ctx.bezierCurveTo(cx2+66,cy2+170,cx2+60,cy2+164,cx2+60,cy2+156); ctx.lineTo(cx2+60,cy2+80);
+    ctx.bezierCurveTo(cx2+60,cy2+72,cx2+66,cy2+66,cx2+74,cy2+66); ctx.stroke(); ctx.beginPath();
+    ctx.moveTo(cx2+90,cy2+54); ctx.bezierCurveTo(cx2+90,cy2+46,cx2+96,cy2+40,cx2+104,cy2+40); ctx.lineTo(cx2+180,cy2+40);
+    ctx.bezierCurveTo(cx2+188,cy2+40,cx2+194,cy2+46,cx2+194,cy2+54); ctx.lineTo(cx2+194,cy2+130);
+    ctx.bezierCurveTo(cx2+194,cy2+138,cx2+188,cy2+144,cx2+180,cy2+144); ctx.lineTo(cx2+104,cy2+144);
+    ctx.bezierCurveTo(cx2+96,cy2+144,cx2+90,cy2+138,cx2+90,cy2+130); ctx.closePath(); ctx.stroke(); ctx.restore();
+};
+const drawComment = (ctx, x, y) => {
+    ctx.strokeStyle='#ffffff'; ctx.lineWidth=2.5; ctx.lineCap='round'; ctx.lineJoin='round';
+    const w=30,h=22,r=4; ctx.beginPath(); ctx.moveTo(x-w/2+r,y-h/2); ctx.lineTo(x+w/2-r,y-h/2);
+    ctx.quadraticCurveTo(x+w/2,y-h/2,x+w/2,y-h/2+r); ctx.lineTo(x+w/2,y+h/2-r);
+    ctx.quadraticCurveTo(x+w/2,y+h/2,x+w/2-r,y+h/2); ctx.lineTo(x-w/2+8,y+h/2); ctx.lineTo(x-w/2+3,y+h/2+6);
+    ctx.lineTo(x-w/2+4,y+h/2); ctx.lineTo(x-w/2+r,y+h/2); ctx.quadraticCurveTo(x-w/2,y+h/2,x-w/2,y+h/2-r);
+    ctx.lineTo(x-w/2,y-h/2+r); ctx.quadraticCurveTo(x-w/2,y-h/2,x-w/2+r,y-h/2); ctx.closePath(); ctx.stroke();
+    ctx.fillStyle='#ffffff'; [-6,0,6].forEach(d => { ctx.beginPath(); ctx.arc(x+d,y,2,0,Math.PI*2); ctx.fill(); });
+};
+const drawReport = (ctx, x, y) => {
+    ctx.strokeStyle='#ffffff'; ctx.lineWidth=3.5; ctx.lineCap='round'; ctx.lineJoin='round';
+    ctx.beginPath(); ctx.moveTo(x,y-15); ctx.lineTo(x-15,y+12); ctx.lineTo(x+15,y+12); ctx.closePath(); ctx.stroke();
+    ctx.fillStyle='#ffffff'; ctx.fillRect(x-1,y-5,2,11); ctx.beginPath(); ctx.arc(x,y+8,1.5,0,Math.PI*2); ctx.fill();
+};
+const drawTrash = (ctx, x, y) => {
+    ctx.strokeStyle='#ff3b30'; ctx.lineWidth=3.5; ctx.lineCap='round'; ctx.lineJoin='round';
+    ctx.beginPath(); ctx.moveTo(x-15,y-13); ctx.lineTo(x+15,y-13); ctx.stroke(); ctx.strokeRect(x-8,y-18,16,5);
+    ctx.beginPath(); ctx.moveTo(x-12,y-11); ctx.lineTo(x-9,y+13); ctx.lineTo(x+9,y+13); ctx.lineTo(x+12,y-11);
+    ctx.closePath(); ctx.stroke(); ctx.lineWidth=2; ctx.beginPath();
+    ctx.moveTo(x,y-7); ctx.lineTo(x,y+11); ctx.moveTo(x-7,y-5); ctx.lineTo(x-5,y+11); ctx.moveTo(x+7,y-5); ctx.lineTo(x+5,y+11); ctx.stroke();
+};
+
 // --- CORE CANVAS GENERATOR ---
 async function renderRinChat({ text = '', imgUrl, emojis } = {}) {
     const timeStr = getTimeStr(); 
     const txt = text;
     const caption = imgUrl ? txt : "";
     
-    // Validasi ketat untuk memastikan emojiList selalu berupa array yang valid
     let emojiList = ["😈", "🥶", "😹", "🤍", "☠️", "👺"];
     if (Array.isArray(emojis) && emojis.length > 0) {
         emojiList = emojis.filter(e => e.trim() !== "");
@@ -196,13 +250,13 @@ async function renderRinChat({ text = '', imgUrl, emojis } = {}) {
 
     await mkdir(RIN_FONTS_DIR, { recursive: true });
 
-    async function rinDownload(url, isJson = false) {
+    async function rinDownload(url) {
         const res = await axios.get(url, {
-            responseType: isJson ? 'json' : 'arraybuffer',
+            responseType: 'arraybuffer',
             headers: { 'User-Agent': 'Mozilla/5.0' },
             maxRedirects: 5
         });
-        return isJson ? res.data : Buffer.from(res.data);
+        return Buffer.from(res.data);
     }
 
     for (const f of RIN_FONTS) {
@@ -222,6 +276,7 @@ async function renderRinChat({ text = '', imgUrl, emojis } = {}) {
     const bgImg = await loadImage(RIN_BG_LOCAL);
     ctx.drawImage(bgImg, 0, 0, BG_W, BG_H);
 
+    // Waktu Atas Layar Utama
     const PERMANENT_TIME_X = 463;
     const PERMANENT_TIME_Y = 8;
     const PERMANENT_TIME_SIZE = 27;
@@ -240,7 +295,12 @@ async function renderRinChat({ text = '', imgUrl, emojis } = {}) {
     const paddingY = 20;
     const rad = 28;
     const fixedX = 35;
-    const fixedBaseY = 946;
+    
+    // Titik tumpu penempatan Menu Iqc berada di bawah
+    const menuX = 35;
+    const menuW = 680; 
+    const menuH = 560;
+    const menuY = BG_H - menuH - 70; // 1041
 
     ctx.font = `22px InterRegular`;
     const timeWidth = ctx.measureText(timeStr).width;
@@ -263,7 +323,7 @@ async function renderRinChat({ text = '', imgUrl, emojis } = {}) {
 
         const spaceTimeY = 12;
         finalBubbleHeight = (chatLines.length * lineHeight) + paddingY + spaceTimeY + 22;
-        finalY = fixedBaseY - finalBubbleHeight;
+        finalY = menuY - finalBubbleHeight - 35; // Bubble berjarak di atas Menu
 
         ctx.fillStyle = "#1c1c1e";
         ctx.beginPath();
@@ -321,7 +381,7 @@ async function renderRinChat({ text = '', imgUrl, emojis } = {}) {
         const captionH = captionLines.length > 0 ? paddingY + (captionLines.length * lineHeight) : 0;
         const timeRowH = 28;
         finalBubbleHeight = imgDrawH + captionH + timeRowH + (captionLines.length > 0 ? 4 : 0);
-        finalY = fixedBaseY - finalBubbleHeight;
+        finalY = menuY - finalBubbleHeight - 35;
 
         ctx.fillStyle = "#1c1c1e";
         ctx.beginPath();
@@ -388,6 +448,7 @@ async function renderRinChat({ text = '', imgUrl, emojis } = {}) {
         ctx.fillText(timeStr, fixedX + bubbleW - 22, finalY + finalBubbleHeight - timeRowH);
     }
 
+    // --- DRAW REACTION CARD (Diatas Bubble Chat) ---
     const emojiSize = Math.round(54 * 1.03);
     const emCardH = emojiSize + Math.round(44 * 1.03);
     const emCardW = Math.round(530 * 1.03);
@@ -415,6 +476,44 @@ async function renderRinChat({ text = '', imgUrl, emojis } = {}) {
     ctx.textBaseline = "middle";
     ctx.fillText("+", startX + (6 * spacingX) - 8, emCardY + (emCardH / 2) - 2);
 
+
+    // --- DRAW ACTION MENU CONTAINER (Gaya IQC Asli) ---
+    const mR = 24;
+    ctx.fillStyle = '#1c1c1e'; // Mengikuti tema gelap iqcv2
+    ctx.beginPath();
+    ctx.moveTo(menuX + mR, menuY); ctx.lineTo(menuX + menuW - mR, menuY);
+    ctx.quadraticCurveTo(menuX + menuW, menuY, menuX + menuW, menuY + mR);
+    ctx.lineTo(menuX + menuW, menuY + menuH - mR);
+    ctx.quadraticCurveTo(menuX + menuW, menuY + menuH, menuX + menuW - mR, menuY + menuH);
+    ctx.lineTo(menuX + mR, menuY + menuH);
+    ctx.quadraticCurveTo(menuX, menuY + menuH, menuX, menuY + menuH - mR);
+    ctx.lineTo(menuX, menuY + mR);
+    ctx.quadraticCurveTo(menuX, menuY, menuX + mR, menuY);
+    ctx.closePath(); ctx.fill();
+
+    const items = [
+        { text:'Beri Bintang', icon:drawStar },
+        { text:'Balas',        icon:drawReply },
+        { text:'Teruskan',     icon:drawForward },
+        { text:'Salin',        icon:drawCopy },
+        { text:'Ucapkan',      icon:drawComment },
+        { text:'Laporkan',     icon:drawReport },
+        { text:'Hapus',        icon:drawTrash, color:'#ff3b30' },
+    ];
+
+    ctx.textAlign = 'left';
+    items.forEach((item, i) => {
+        const iy = menuY + i * 80;
+        ctx.fillStyle = item.color || '#ffffff';
+        ctx.font = '30px InterRegular';
+        ctx.fillText(item.text, menuX + 40, iy + 50);
+        item.icon(ctx, menuX + menuW - 40, iy + 40);
+        if (i < items.length - 1) {
+            ctx.strokeStyle='#2c2c2e'; ctx.lineWidth=1.5;
+            ctx.beginPath(); ctx.moveTo(menuX+35,iy+80); ctx.lineTo(menuX+menuW-35,iy+80); ctx.stroke();
+        }
+    });
+
     return await canvas.encode('png');
 }
 
@@ -435,7 +534,6 @@ router.get('/', async (req, res) => {
 
         let parsedEmojis = [];
         if (emojis) {
-            // Memisahkan emoji dengan koma, sekaligus membuang spasi kosong di sekitar emoji
             parsedEmojis = emojis.split(',').map(e => e.trim()).filter(Boolean);
         }
 
