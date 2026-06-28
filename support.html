@@ -53,9 +53,9 @@
         </a>
     </nav>
 
-    <main class="w-full max-w-md mx-auto relative z-10 box-border flex-grow flex flex-col justify-start px-0 sm:px-4">
+    <main class="w-full sm:max-w-md mx-auto relative z-10 box-border flex-grow flex flex-col justify-start px-0 sm:px-4">
         
-        <div class="w-full bg-white/5 border-y sm:border border-white/10 rounded-none sm:rounded-3xl p-5 backdrop-blur-xl shadow-2xl relative overflow-hidden box-border flex-grow sm:flex-grow-0 sm:my-6">
+        <div class="w-full bg-white/5 border-x-0 sm:border border-y border-white/10 rounded-none sm:rounded-3xl p-5 backdrop-blur-xl shadow-2xl relative overflow-hidden box-border flex-grow sm:flex-grow-0 sm:my-6">
             
             <div class="flex justify-center mb-4">
                 <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-xs font-mono rounded-full uppercase tracking-widest font-semibold animate-pulse">
@@ -175,26 +175,25 @@
         }
 
         function downloadQR() {
-    const btn = document.getElementById('btn-download');
-    const originalText = btn.innerHTML;
-    
-    btn.innerHTML = `
-        <svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-        </svg> MENGUNDUH...`;
-    btn.disabled = true;
+            const btn = document.getElementById('btn-download');
+            const originalText = btn.innerHTML;
+            
+            btn.innerHTML = `
+                <svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg> MENGUNDUH...`;
+            btn.disabled = true;
 
-    // Mengarah langsung ke endpoint struktur folder baru kamu
-    window.location.href = "/database/download";
+            // Rute ini tetap memanggil /database/download karena sudah di-handle oleh vercel.json
+            window.location.href = "/database/download";
 
-    setTimeout(() => {
-        btn.innerHTML = originalText;
-        btn.disabled = false;
-        showAlert("Berhasil", "Proses unduhan QRIS sedang berjalan.");
-    }, 1500);
-}
-
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                showAlert("Berhasil", "Proses unduhan QRIS sedang berjalan.");
+            }, 1500);
+        }
 
         function shareLink() {
             const shareData = {

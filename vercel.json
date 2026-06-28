@@ -22,8 +22,7 @@
     { "source": "/pastecode", "destination": "/pastecode.html" },
     { "source": "/support", "destination": "/support.html" },
     { "source": "/privacy", "destination": "/privacy.html" },
-    { "source": "/(.*)", "destination": "/index.js" },
-    { "source": "/database/download", "destination": "/database/download.js" }
+    { "source": "/(.*)", "destination": "/index.js" }
   ],
   "headers": [
     {
