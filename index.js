@@ -1,5 +1,5 @@
 /* =========================================================================
-   API-ARULZXD - REST API & UPLOADER INTEGRATION (UPDATED)
+   API-ARULZXD - REST API & UPLOADER INTEGRATION (UPDATED - FULL SVG)
    ========================================================================= */
 
 const express = require('express');
@@ -652,7 +652,9 @@ app.get('/', (req, res) => {
           
           <div class="text-center text-slate-400 text-[11px] mb-5 flex items-center justify-center gap-1.5 font-medium tracking-wide">
             <span>Support project ini biar makin semangat</span>
-            <span class="text-base animate-bounce">🚀</span>
+            <svg class="w-4 h-4 text-cyan-400 animate-bounce" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15.59 14.37a6 6 0 01-5.84 7.38v-4.8m5.84-2.58a14.98 14.98 0 006.16-12.12A14.98 14.98 0 009.63 3.31a14.98 14.98 0 00-6.16 12.12A14.98 14.98 0 0015.59 14.37z" />
+            </svg>
           </div>
           
           <a href="https://wa.me/6285122629940?text=Halo%20Arulz%2C%20saya%20ingin%20donate%20untuk%20layanan%20REST%20API%20Anda." target="_blank" class="w-full bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-500 hover:to-cyan-400 text-white font-bold py-3 px-6 rounded-xl shadow-lg shadow-cyan-950/50 transition-all active:scale-95 text-sm block text-center tracking-wider uppercase">
@@ -674,7 +676,12 @@ app.get('/', (req, res) => {
                 </button>
                 
                 <div class="mb-4">
-                    <h3 class="text-lg font-bold text-white flex items-center gap-2">🔔 Pusat Pemberitahuan</h3>
+                    <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                        <svg class="w-5 h-5 text-cyan-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+                        </svg>
+                        Pusat Pemberitahuan
+                    </h3>
                     <p class="text-xs text-slate-400">Informasi update fitur dan sistem berkala</p>
                 </div>
                 
@@ -735,7 +742,12 @@ app.get('/', (req, res) => {
         </div>
 
         <div class="mb-4 p-3 bg-cyan-950/40 border border-cyan-500/30 rounded-xl light-mode:bg-cyan-50 light-mode:border-cyan-200">
-            <span class="text-[10px] font-bold text-cyan-400 light-mode:text-cyan-700 uppercase tracking-widest block mb-1">🔑 Current API Key</span>
+            <span class="text-[10px] font-bold text-cyan-400 light-mode:text-cyan-700 uppercase tracking-widest flex items-center gap-1.5 mb-1">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                </svg>
+                Current API Key
+            </span>
             <div class="flex items-center justify-between bg-black/40 rounded px-2 py-1.5 font-mono text-xs text-slate-200 border border-white/5 light-mode:bg-white light-mode:text-slate-800 light-mode:border-slate-200">
                 <span class="select-all">${VALID_API_KEY}</span>
                 <button onclick="copyText('${VALID_API_KEY}', 'API Key Free')" class="p-1 text-slate-400 hover:text-cyan-400 transition-colors" title="Copy API Key">
@@ -775,10 +787,8 @@ app.get('/', (req, res) => {
             <hr class="border-white/10 my-1 light-mode:border-slate-200">
             
             <a href="https://wa.me/6285122629940?text=%F0%9F%9A%A8%20%5BSYSTEM%20NOTICE%3A%20BUG%20DETECTED%5D%20%F0%9F%9A%A8%0A----------------------------------------%0AHalo%20Arulz%2C%20saya%20menemukan%20sebuah%20anomali%20%2F%20bug%20pada%20layanan%20REST%20API%20Anda.%20Berikut%20rinciannya%3A%0A%0A%E2%80%A2%20%F0%9F%9B%A0%EF%B8%8F%20Endpoint%20%20%3A%20%5BMasukkan%20nama%2Fpath%20endpoint%2C%20misal%3A%20%2Fapi%2Fdownloader%2Ftiktok%5D%0A%E2%80%A2%20%F0%9F%93%9D%20Masalah%20%20%20%3A%20%5BDeskripsi%20singkat%20bug%2C%20misal%3A%20Response%20error%20500%20%2F%20data%20tidak%20keluar%5D%0A%E2%80%A2%20%F0%9F%94%8D%20Kronologi%20%3A%20%5BKetik%20di%20sini%20bagaimana%20bug%20terjadi%20atau%20parameter%20apa%20yang%20dimasukkan%5D%0A%0AMohon%20bantuannya%20untuk%20dilakukan%20pengecekan%20sistem%20%28system%20maintenance%29.%20Terima%20kasih%20%F0%9F%9A%80%0A----------------------------------------%0A%5BSent%20via%20REST%20API%20Dashboard%20User%5D" target="_blank" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-3 px-2 py-1.5 rounded-lg hover:bg-white/5 text-[11px] opacity-80">
-                <svg class="w-5 h-5 text-cyan-400 text-center" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2a4 4 0 0 0-4 4h8a4 4 0 0 0-4-4z" />
-                    <path fill-rule="evenodd" clip-rule="evenodd" d="M7.05 11c0-2.454 1.66-4.519 3.95-5.117v12.234A5.26 5.26 0 0 1 7.05 13V11zm5.95 7.117V5.883c2.29.598 3.95 2.663 3.95 5.117v2a5.26 5.26 0 0 1-3.95 5.117z" />
-                    <path d="M6 9.5a1 1 0 0 1 1-1h1v2H7a1 1 0 0 1-1-1zM4.707 15.707a1 1 0 0 1 0-1.414l1.5-1.5 1.414 1.414-1.5 1.5a1 1 0 0 1-1.414 0zM7.621 6.207l-1.5-1.5a1 1 0 1 0-1.414 1.414l1.5 1.5 1.414-1.414zM16 8.5h1a1 1 0 1 1 0 2h-1v-2zM16.379 6.207l1.5-1.5a1 1 0 1 1 1.414 1.414l-1.5 1.5-1.414-1.414zM17.793 15.707l-1.5-1.5 1.414-1.414 1.5 1.5a1 1 0 0 1 0 1.4141 1 1 0 0 1-1.414 0z" />
+                <svg class="w-5 h-5 text-cyan-400 text-center" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
                 BUG REPORT
             </a>
@@ -802,7 +812,9 @@ app.get('/', (req, res) => {
     <div class="max-w-5xl mx-auto px-4 py-8 relative z-10">
         <header id="api" class="mb-12 text-center">
             <div class="flex items-center justify-center gap-3 mb-2">
-                <span class="bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest animate-pulse light-mode:bg-cyan-100 light-mode:text-cyan-700">● ONLINE</span>
+                <span class="bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest flex items-center gap-1.5 animate-pulse light-mode:bg-cyan-100 light-mode:text-cyan-700">
+                    <span class="w-2 h-2 rounded-full bg-cyan-400"></span> ONLINE
+                </span>
             </div>
             <div id="mainTitle" class="flex justify-center mb-4 min-h-[50px] items-center">${headertitle}</div>
             <p id="mainDescription" class="text-md md:text-lg font-medium tracking-wide text-slate-300 max-w-xl mx-auto">${headerdescription}</p>
@@ -845,25 +857,37 @@ app.get('/', (req, res) => {
 
             <div class="glass-panel max-w-3xl mx-auto mt-4 p-3 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-3 border border-white/20">
                 <div class="flex items-center gap-2 text-sm text-cyan-400 light-mode:text-cyan-700 code-font">
-                    <span>🌐</span> <span class="underline break-all font-semibold">https://api-arulzxd-vvipclouds.vercel.app/</span>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+                    </svg>
+                    <span class="underline break-all font-semibold">https://api-arulzxd-vvipclouds.vercel.app/</span>
                 </div>
                 <a href="https://wa.me/6285122629940?text=Halo%20Arulz,%20saya%20ingin%20request%20fitur%20baru%20di%20REST%20API%20:" 
                    target="_blank" 
-                   class="w-full sm:w-auto px-6 py-2 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs uppercase rounded-lg shadow transition-all active:scale-95 light-mode:bg-cyan-600 light-mode:hover:bg-cyan-500 light-mode:text-white text-center flex items-center justify-center">
-                    + Request New Feature
+                   class="w-full sm:w-auto px-6 py-2 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs uppercase rounded-lg shadow transition-all active:scale-95 light-mode:bg-cyan-600 light-mode:hover:bg-cyan-500 light-mode:text-white text-center flex items-center justify-center gap-1.5">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                    </svg>
+                    Request New Feature
                 </a>
             </div>
 
             <div class="flex justify-center gap-4 mt-4 max-w-3xl mx-auto">
                 <a href="https://whatsapp.com/channel/0029VbAwdIyJJhzRMpjUcS3P" 
                    target="_blank" 
-                   class="flex-1 glass-panel py-2 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-white/10 light-mode:hover:bg-slate-100 transition-colors light-mode:text-slate-700 text-center block">
-                   💬 Channel
+                   class="flex-1 glass-panel py-2 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-white/10 light-mode:hover:bg-slate-100 transition-colors light-mode:text-slate-700 text-center flex items-center justify-center gap-1.5">
+                   <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                       <path stroke-linecap="round" stroke-linejoin="round" d="M8.684 10.742l.08-.08a2.25 2.25 0 013.182 0l.397.397m-1.397-1.398a2.25 2.25 0 00-3.182 0l-3.472 3.472a2.25 2.25 0 000 3.181l.08.08a2.25 2.25 0 003.181 0l3.472-3.472a2.25 2.25 0 000-3.181c-.074-.074-.154-.14-.237-.196zm7.708-.943a2.25 2.25 0 00-3.182 0l-.397.397m1.397-1.397a2.25 2.25 0 013.182 0l3.472 3.473a2.25 2.25 0 010 3.182l-.08.08a2.25 2.25 0 01-3.181 0l-3.472-3.472a2.25 2.25 0 010-3.181c.074-.074.154-.14.237-.196z" />
+                   </svg>
+                   Channel
                 </a>
                 <a href="https://chat.whatsapp.com/LBeGqVsmDBb6j29ysuusd9" 
                    target="_blank" 
-                   class="flex-1 glass-panel py-2 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-white/10 light-mode:hover:bg-slate-100 transition-colors light-mode:text-slate-700 text-center block">
-                   👥 Group
+                   class="flex-1 glass-panel py-2 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-white/10 light-mode:hover:bg-slate-100 transition-colors light-mode:text-slate-700 text-center block flex items-center justify-center gap-1.5">
+                   <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                       <path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.998 5.998 0 00-12 0m12 0a5.998 5.998 0 00-12 0m12 0a5.998 5.998 0 00-12 0M12 12a4.5 4.5 0 100-9 4.5 4.5 0 000 9zm0 0l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.998 5.998 0 00-12 0m12 0a5.998 5.998 0 00-12 0" />
+                   </svg>
+                   Group
                 </a>
             </div>
 
@@ -922,7 +946,11 @@ app.get('/', (req, res) => {
         </div>
 
         <div id="noResults" class="text-center py-12 hidden">
-            <div class="text-4xl mb-2">⚠️</div>
+            <div class="flex justify-center mb-3">
+                <svg class="w-12 h-12 text-amber-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+            </div>
             <h3 id="no-results-title" class="text-sm font-bold mb-1 text-white">Endpoint tidak ditemukan</h3>
             <p id="no-results-desc" class="text-xs text-slate-400 light-mode:text-slate-500">Coba gunakan kata kunci lain</p>
         </div>
