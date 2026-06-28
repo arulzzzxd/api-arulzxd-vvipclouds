@@ -8,7 +8,7 @@
       "config": {
         "includeFiles": [
           "fonts/**",
-          "index.html",
+          "pastecode.html",
           "support.html",
           "privacy.html",
           "styles.css",
@@ -19,10 +19,9 @@
     }
   ],
   "rewrites": [
-    { "source": "/pastecode", "destination": "/index.html" },
+    { "source": "/pastecode", "destination": "/pastecode.html" },
     { "source": "/support", "destination": "/support.html" },
     { "source": "/privacy", "destination": "/privacy.html" },
-    { "source": "/home", "destination": "/index.html" },
     { "source": "/(.*)", "destination": "/index.js" }
   ],
   "headers": [

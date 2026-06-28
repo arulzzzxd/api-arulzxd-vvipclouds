@@ -89,7 +89,7 @@ app.get('/uploader', (req, res) => {
 
 // Menyajikan halaman utama Pastecode di domain yang sama
 app.get('/pastecode', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
+  res.sendFile(path.join(__dirname, 'pastecode.html'));
 });
 
 function getRequestProtocol(req) {
