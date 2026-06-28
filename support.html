@@ -1,331 +1,165 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Arulz-XD API - Support & Donasi</title>
-
-    <meta property="og:title" content="Support & Donasi — Arulz-XD API">
-    <meta property="og:description" content="Suka sama project ini? Yuk support seikhlasnya buat biaya perpanjangan hosting server + nambahin fitur & snippet baru.">
-    <meta property="og:image" content="https://arulz-uploader.vercel.app/files/CVmlrD.jpg">
-    <meta property="og:url" content="https://arul-pastecode.vercel.app/support">
-    <meta property="og:type" content="website">
-
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Poppins', 'sans-serif'],
+                        mono: ['Fira Code', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        :root { 
-            --bg-main: #f5f4ef; 
-            --border-dark: #000000; 
-            --yellow: #ffde00; 
-            --orange: #ff6b00; 
+        body {
+            background-color: #0b0c10;
         }
-        
-        body { 
-            font-family: 'Courier New', Courier, monospace; 
-            background-color: var(--bg-main);
-            background-image: radial-gradient(rgba(0, 0, 0, 0.15) 1.5px, transparent 1.5px);
-            background-size: 24px 24px;
-            color: #000; 
-            margin: 0; 
-            padding: 0; 
-            font-weight: bold; 
-        }
-
-        .navbar { 
-            background: #0b0c10; 
-            color: white; 
-            padding: 15px 20px; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            border-bottom: 4px solid #000; 
-            position: relative;
-            z-index: 100;
-        }
-        .logo { font-size: 18px; font-weight: 900; text-decoration: none; color: white; display: flex; align-items: center; }
-        .logo span { background: var(--yellow); color: #000; padding: 4px 8px; margin-right: 10px; border: 3px solid #000; font-size: 14px; font-weight: 900; }
-        .btn-back-nav { background: var(--yellow); color: #000; padding: 8px 14px; text-decoration: none; border: 3px solid #000; font-size: 12px; font-weight: 900; box-shadow: 2px 2px 0px #000; }
-
-        .container { max-width: 650px; margin: 40px auto; padding: 0 20px; box-sizing: border-box; }
-
-        .donation-card {
-            background: #fff;
-            border: 4px solid #000;
-            box-shadow: 8px 8px 0px #000;
-            padding: 35px 25px;
-            text-align: center;
-        }
-
-        .donation-card h1 {
-            font-size: 30px;
-            margin: 0 0 15px 0;
-            font-weight: 900;
-            text-transform: uppercase;
-        }
-
-        .donation-card p.desc {
-            font-size: 14px;
-            color: #333;
-            line-height: 1.6;
-            margin: 0 0 30px 0;
-        }
-
-        .qr-wrapper {
-            background: #fff;
-            border: 4px solid #000;
-            box-shadow: 6px 6px 0px #000;
-            padding: 20px;
-            display: inline-block;
-            margin-bottom: 25px;
-            max-width: 100%;
-            box-sizing: border-box;
-        }
-
-        .qr-wrapper img {
-            max-width: 280px;
-            width: 100%;
-            height: auto;
-            display: block;
-            border: 2px solid #000;
-        }
-
-        .payment-info-box {
-            border: 3px solid #000;
-            background: #f5f4ef;
-            padding: 15px;
-            margin-bottom: 25px;
-        }
-
-        .payment-info-box span.title {
-            font-size: 11px;
-            display: block;
-            margin-bottom: 10px;
-            letter-spacing: 1px;
-            color: #555;
-        }
-
-        .badges-container {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 8px;
-        }
-
-        .badge {
-            background: #fff;
-            border: 2px solid #000;
-            padding: 4px 12px;
-            font-size: 12px;
-            border-radius: 20px;
-            font-weight: 900;
-        }
-
-        .btn-action {
-            width: 100%;
-            background: #fff;
-            color: #000;
-            border: 4px solid #000;
-            box-shadow: 4px 4px 0px #000;
-            padding: 14px;
-            font-size: 14px;
-            font-weight: 900;
-            font-family: inherit;
-            text-transform: uppercase;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            margin-bottom: 15px;
-            text-decoration: none;
-            box-sizing: border-box;
-            transition: transform 0.05s, box-shadow 0.05s;
-        }
-
-        .btn-action:active {
-            transform: translate(2px, 2px);
-            box-shadow: 2px 2px 0px #000;
-        }
-
-        .btn-action.orange-accent {
-            background: var(--orange);
-            color: #fff;
-        }
-
-        .footer-note {
-            font-size: 12px;
-            color: #666;
-            margin-top: 25px;
-            font-style: italic;
-        }
-
-        /* --- STYLING CUSTOM ALERT MODAL BOX RETRO --- */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.6);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.2s ease-in-out;
-            z-index: 9999;
-            padding: 20px;
-            box-sizing: border-box;
-        }
-
-        .modal-overlay.active {
-            opacity: 1;
-            pointer-events: auto;
-        }
-
-        .modal-box {
-            background: #fff;
-            border: 4px solid #000;
-            box-shadow: 8px 8px 0px #000;
-            max-width: 400px;
-            width: 100%;
-            padding: 25px;
-            text-align: center;
-            transform: scale(0.9);
-            transition: transform 0.2s ease-in-out;
-        }
-
-        .modal-overlay.active .modal-box {
-            transform: scale(1);
-        }
-
-        .modal-box h3 {
-            margin: 0 0 10px 0;
-            font-size: 20px;
-            text-transform: uppercase;
-            color: #000;
-        }
-
-        .modal-box p {
-            font-size: 13px;
-            color: #333;
-            line-height: 1.5;
-            margin: 0 0 20px 0;
-        }
-
-        .btn-modal-close {
-            background: var(--yellow);
-            color: #000;
-            border: 3px solid #000;
-            box-shadow: 3px 3px 0px #000;
-            padding: 10px 24px;
-            font-family: inherit;
-            font-size: 13px;
-            font-weight: 900;
-            text-transform: uppercase;
-            cursor: pointer;
-        }
-
-        .btn-modal-close:active {
-            transform: translate(1px, 1px);
-            box-shadow: 2px 2px 0px #000;
+        .bg-gradient-blur {
+            background: radial-gradient(circle at 50% 50%, rgba(6, 182, 212, 0.15) 0%, transparent 50%);
         }
     </style>
 </head>
-<body>
+<body class="text-slate-200 font-sans min-h-screen relative overflow-x-hidden antialiased flex flex-col items-center justify-center p-4">
 
-<div class="navbar">
-    <a href="/" class="logo"><span>AD</span> Arulz-XD API</a>
-    <a href="/" class="btn-back-nav">← KEMBALI</a>
-</div>
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[600px] bg-gradient-blur pointer-events-none z-0"></div>
 
-<div class="container">
-    <div class="donation-card">
-        <h1>Suka sama project ini?</h1>
-        <p class="desc">API & Pastebin ini gw bikin di sela-sela waktu luang. Kalau ngerasa kebantu, support seikhlasnya bantu banget buat biaya perpanjangan hosting server + nambahin fitur & snippet baru.</p>
+    <div class="w-full max-w-md relative z-10 my-8">
         
-        <div class="qr-wrapper">
-            <img id="qris-img" src="https://arulz-uploader.vercel.app/files/CVmlrD.jpg" alt="QRIS Arulz-XD">
+        <div class="mb-6 flex justify-start">
+            <a href="/" class="inline-flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-cyan-500/50 rounded-xl text-slate-300 hover:text-cyan-400 transition-all text-sm font-medium backdrop-blur-md shadow-lg group">
+                <svg class="w-4 h-4 transform group-hover:-translate-x-0.5 transition-transform" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                Kembali ke Dashboard
+            </a>
         </div>
 
-        <div class="payment-info-box">
-            <span class="title">📱 SCAN PAKAI APPS PAYMENT APA AJA</span>
-            <div class="badges-container">
-                <div class="badge">DANA</div>
-                <div class="badge">OVO</div>
-                <div class="badge">GoPay</div>
-                <div class="badge">ShopeePay</div>
-                <div class="badge">LinkAja</div>
-                <div class="badge">BCA</div>
-                <div class="badge">Mandiri</div>
-                <div class="badge">BRI</div>
-                <div class="badge">BNI</div>
-                <div class="badge">Jenius</div>
+        <div class="bg-white/5 border border-white/10 rounded-3xl p-6 md:p-8 backdrop-blur-xl shadow-2xl relative overflow-hidden">
+            
+            <div class="flex justify-center mb-4">
+                <span class="px-3 py-1 bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-xs font-mono rounded-full uppercase tracking-widest font-semibold animate-pulse">
+                    ☕ Support Server
+                </span>
+            </div>
+
+            <h1 class="text-2xl font-extrabold text-center text-white mb-2 tracking-tight">Dukung Perkembangan API</h1>
+            <p class="text-xs text-slate-400 text-center font-medium leading-relaxed mb-6 px-2">
+                Suka sama project ini? Yuk support seikhlasnya buat bantu biaya perpanjangan hosting server biar tetap aktif 24 jam nonstop dan nambahin fitur baru!
+            </p>
+
+            <div class="bg-white/5 border border-white/10 rounded-2xl p-4 flex flex-col items-center justify-center relative group">
+                <div class="absolute inset-0 bg-cyan-500/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+                
+                <div class="bg-white p-3 rounded-xl shadow-xl border border-white/20 mb-3 relative">
+                    <img src="https://arulz-uploader.vercel.app/files/CVmlrD.jpg" alt="QRIS Arulz" class="w-48 h-48 md:w-52 md:h-52 object-contain rounded-lg">
+                </div>
+                
+                <span class="text-xs font-mono font-bold text-slate-400 uppercase tracking-wider">QRIS ALL PAYMENT</span>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 mt-6">
+                <button id="btn-download" onclick="downloadQR()" class="w-full py-3 px-4 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white text-xs md:text-sm font-semibold rounded-xl transition-all shadow-lg shadow-cyan-500/20 active:scale-[0.98] flex items-center justify-center gap-1.5">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    UNDUH QRIS
+                </button>
+
+                <button onclick="shareLink()" class="w-full py-3 px-4 bg-white/5 hover:bg-white/10 border border-white/10 text-slate-200 text-xs md:text-sm font-semibold rounded-xl transition-all active:scale-[0.98] flex items-center justify-center gap-1.5">
+                    <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.684 10.742l4.57 2.286m0 0A3 3 0 1117.142 16H6.858a3 3 0 110-6h10.284a3 3 0 11-4.57 2.286z" />
+                    </svg>
+                    BAGIKAN LINK
+                </button>
+            </div>
+            
+        </div>
+    </div>
+
+    <div id="custom-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300">
+        <div class="bg-slate-900 border border-white/10 rounded-2xl max-w-xs w-full p-5 shadow-2xl transform scale-95 transition-transform duration-300">
+            <div class="flex items-center gap-3 mb-3">
+                <div class="w-8 h-8 rounded-full bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 font-bold" id="modal-icon">✓</div>
+                <h3 class="text-sm font-bold text-white uppercase tracking-wider" id="modal-title">Notifikasi</h3>
+            </div>
+            <p class="text-xs text-slate-400 font-medium leading-relaxed mb-4" id="modal-message">Pesan sukses disini.</p>
+            <div class="flex justify-end">
+                <button onclick="closeModal()" class="px-4 py-1.5 bg-white/5 border border-white/10 hover:bg-white/10 text-white font-semibold text-xs rounded-lg transition-all">OK</button>
             </div>
         </div>
-
-        <button class="btn-action" id="btn-download" onclick="downloadQR()">📥 Simpan QR ke galeri</button>
-        <button class="btn-action orange-accent" onclick="shareLink()">🔗 Bagikan Link</button>
-
-        <p class="footer-note">✨ Makasih banget, kontribusi lo bikin gw semangat ngembangin lebih banyak snippet & feature.</p>
     </div>
-</div>
 
-<div class="modal-overlay" id="custom-modal">
-    <div class="modal-box">
-        <h3 id="modal-title">Pemberitahuan</h3>
-        <p id="modal-message">Isi pesan di sini...</p>
-        <button class="btn-modal-close" onclick="closeModal()">Oke</button>
-    </div>
-</div>
+    <script>
+        function showAlert(title, message, isSuccess = true) {
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-message').innerText = message;
+            const iconEl = document.getElementById('modal-icon');
+            
+            if(isSuccess) {
+                iconEl.innerText = "✓";
+                iconEl.className = "w-8 h-8 rounded-full bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 font-bold";
+            } else {
+                iconEl.innerText = "!";
+                iconEl.className = "w-8 h-8 rounded-full bg-red-500/10 border border-red-500/30 flex items-center justify-center text-red-400 font-bold";
+            }
 
-<script>
-    function showAlert(title, message) {
-        document.getElementById('modal-title').innerText = title;
-        document.getElementById('modal-message').innerText = message;
-        document.getElementById('custom-modal').classList.add('active');
-    }
-
-    function closeModal() {
-        document.getElementById('custom-modal').classList.remove('active');
-    }
-
-    // Fungsi download otomatis langsung memicu unduhan lokal biner tanpa buka tab baru
-    function downloadQR() {
-    const btn = document.getElementById('btn-download');
-    const originalText = btn.innerHTML;
-    
-    btn.innerHTML = "⏳ MENGUNDUH...";
-    btn.disabled = true;
-
-    // Arahkan ke Serverless Function Vercel
-    // Ini akan memicu pop-up download di HP tanpa membuka tab baru
-    window.location.href = "/database/download";
-
-    // Kembalikan status tombol setelah jeda singkat
-    setTimeout(() => {
-        btn.innerHTML = originalText;
-        btn.disabled = false;
-        showAlert("Berhasil 🎉", "Proses unduhan QRIS sedang berjalan.");
-    }, 1500);
-}
-
-    function shareLink() {
-        const shareData = {
-            title: 'Support — Arulz-XD API',
-            text: 'Suka sama project ini? Yuk dukung kelangsungan server & snippet barunya! 👇\n',
-            url: window.location.href
-        };
-
-        if (navigator.share) {
-            navigator.share(shareData)
-                .catch((err) => console.log('Batal membagikan:', err));
-        } else {
-            navigator.clipboard.writeText(window.location.href).then(() => {
-                showAlert("Disalin 🔗", "Link donasi berhasil disalin ke clipboard! Silakan share secara manual.");
-            });
+            const modal = document.getElementById('custom-modal');
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+            modal.querySelector('div').classList.remove('scale-95');
         }
-    }
-</script>
 
+        function closeModal() {
+            const modal = document.getElementById('custom-modal');
+            modal.classList.add('opacity-0', 'pointer-events-none');
+            modal.querySelector('div').classList.add('scale-95');
+        }
+
+        function downloadQR() {
+            const btn = document.getElementById('btn-download');
+            const originalText = btn.innerHTML;
+            
+            btn.innerHTML = `
+                <svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg> MENGUNDUH...`;
+            btn.disabled = true;
+
+            window.location.href = "/database/download";
+
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                showAlert("Berhasil 🎉", "Proses pengunduhan QRIS sedang berjalan otomatis.");
+            }, 1500);
+        }
+
+        function shareLink() {
+            const shareData = {
+                title: 'Support — Arulz-XD API',
+                text: 'Suka sama project ini? Yuk dukung kelangsungan server & snippet barunya! 👇\n',
+                url: window.location.href
+            };
+
+            if (navigator.share) {
+                navigator.share(shareData)
+                    .catch((err) => console.log('Batal membagikan:', err));
+            } else {
+                navigator.clipboard.writeText(window.location.href).then(() => {
+                    showAlert("Disalin 🔗", "Link donasi berhasil disalin ke clipboard! Silakan sebar secara manual.");
+                });
+            }
+        }
+    </script>
 </body>
 </html>

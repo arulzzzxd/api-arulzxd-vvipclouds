@@ -92,6 +92,15 @@ app.get('/pastecode', (req, res) => {
   res.sendFile(path.join(__dirname, 'pastecode.html'));
 });
 
+app.get('/privacy', (req, res) => {
+    res.sendFile(path.join(__dirname, 'privacy.html'));
+});
+
+app.get('/support', (req, res) => {
+    res.sendFile(path.join(__dirname, 'support.html'));
+});
+
+
 function getRequestProtocol(req) {
   const forwarded = req.headers['x-forwarded-proto'];
   if (forwarded) return forwarded.split(',')[0].trim();
@@ -795,7 +804,20 @@ app.get('/', (req, res) => {
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
                 BUG REPORT
-            </a>
+            </a>            
+<a href="/privacy" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-3 px-2 py-1.5 rounded-lg hover:bg-white/5">
+    <svg class="w-5 h-5 text-cyan-400 text-center" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+    </svg>
+    PRIVACY
+</a>
+
+<a href="/support" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-3 px-2 py-1.5 rounded-lg hover:bg-white/5">
+    <svg class="w-5 h-5 text-cyan-400 text-center" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+    </svg>
+    SUPPORT
+</a>
             <a href="https://wa.me/6285122629940?text=Halo+Arulz%2C+saya+ingin+bertanya+mengenai+REST+API+Anda." target="_blank" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-3 px-2 py-1.5 rounded-lg hover:bg-white/5 text-[11px] opacity-80">
                 <svg class="w-5 h-5 text-cyan-400 text-center fill-current" viewBox="0 0 24 24">
                     <path d="M12.004 2c-5.518 0-10 4.482-10 10 0 1.758.455 3.411 1.252 4.862l-1.252 4.568 4.673-1.226c1.403.766 2.992 1.196 4.68 1.196 5.517 0 10-4.482 10-10s-4.483-10-10-10zm5.82 14.195c-.244.688-1.22 1.252-1.682 1.32-.423.062-.977.112-2.923-.695-2.493-1.032-4.1-3.57-4.225-3.737-.123-.166-1.01-1.344-1.01-2.564 0-1.22.637-1.819.863-2.062.225-.244.49-.305.652-.305.162 0 .325.002.466.008.147.006.345-.056.54.412.2.482.686 1.674.747 1.798.06.124.102.268.02.433-.082.165-.124.268-.246.412-.124.143-.26.32-.37.43-.125.125-.254.26-.11.51.144.25.64 1.056 1.374 1.71.946.843 1.745 1.103 1.99 1.225.244.123.387.102.53-.062.143-.165.613-.713.776-.956.163-.244.325-.206.54-.124.215.083 1.363.643 1.597.76.235.118.39.176.448.275.058.1.058.58-.186 1.268z"/>
