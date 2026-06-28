@@ -2,7 +2,7 @@
 <html lang="id" class="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Arulz-XD API - Support & Donasi</title>
 
     <meta property="og:title" content="Support & Donasi — Arulz-XD API">
@@ -32,15 +32,15 @@
             background-color: #0b0c10;
         }
         .bg-gradient-blur {
-            background: radial-gradient(circle at 50% 25%, rgba(6, 182, 212, 0.15) 0%, transparent 70%);
+            background: radial-gradient(circle at 50% 20%, rgba(6, 182, 212, 0.15) 0%, transparent 70%);
         }
     </style>
 </head>
-<body class="text-slate-200 font-sans min-h-screen relative overflow-x-hidden antialiased bg-[#0b0c10]">
+<body class="text-slate-200 font-sans min-h-screen relative overflow-x-hidden antialiased bg-[#0b0c10] flex flex-col justify-between">
 
-    <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-lg h-[500px] bg-gradient-blur pointer-events-none z-0"></div>
+    <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[500px] bg-gradient-blur pointer-events-none z-0"></div>
 
-    <nav class="w-full bg-[#0b0c10]/80 border-b border-white/10 backdrop-blur-md sticky top-0 z-50 px-4 py-4 flex justify-between items-center">
+    <nav class="w-full bg-[#0b0c10]/80 border-b border-white/10 backdrop-blur-md sticky top-0 z-50 px-4 py-4 flex justify-between items-center box-border">
         <a href="/" class="flex items-center gap-2 text-white font-extrabold text-sm tracking-tight hover:text-cyan-400 transition-colors">
             <span class="bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 px-2 py-0.5 rounded text-[11px] font-mono">AD</span>
             Arulz-XD API
@@ -53,9 +53,9 @@
         </a>
     </nav>
 
-    <main class="w-full max-w-md mx-auto px-4 pt-6 pb-12 relative z-10 box-border">
+    <main class="w-full max-w-md mx-auto relative z-10 box-border flex-grow flex flex-col justify-start">
         
-        <div class="w-full bg-white/5 border border-white/10 rounded-3xl p-5 backdrop-blur-xl shadow-2xl relative overflow-hidden box-border">
+        <div class="w-full bg-white/5 border-x-0 sm:border-x border-y border-white/10 rounded-none sm:rounded-3xl p-5 backdrop-blur-xl shadow-2xl relative overflow-hidden box-border flex-grow sm:flex-grow-0 sm:my-6">
             
             <div class="flex justify-center mb-4">
                 <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-xs font-mono rounded-full uppercase tracking-widest font-semibold animate-pulse">
@@ -71,11 +71,11 @@
                 API & Pastebin ini gw bikin di sela-sela waktu luang. Kalau ngerasa kebantu, support seikhlasnya bantu banget buat biaya perpanjangan hosting server + nambahin fitur & snippet baru.
             </p>
 
-            <div class="bg-white/5 border border-white/10 rounded-2xl p-2.5 flex flex-col items-center justify-center relative group mb-5 w-full box-border">
+            <div class="bg-white/5 border border-white/10 rounded-2xl p-2 flex flex-col items-center justify-center relative group mb-5 w-full box-border">
                 <div class="absolute inset-0 bg-cyan-500/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
                 
                 <div class="bg-white p-2 rounded-xl shadow-xl w-full flex justify-center box-border">
-                    <img id="qris-img" src="https://arulz-uploader.vercel.app/files/CVmlrD.jpg" alt="QRIS Arulz-XD" class="w-full max-w-[320px] h-auto object-contain rounded-lg block">
+                    <img id="qris-img" src="https://arulz-uploader.vercel.app/files/CVmlrD.jpg" alt="QRIS Arulz-XD" class="w-full max-w-[340px] h-auto object-contain rounded-lg block">
                 </div>
             </div>
 
@@ -126,7 +126,7 @@
         </div>
     </main>
 
-    <footer class="w-full text-center py-4 text-[10px] text-slate-600 font-mono relative z-10 box-border mt-auto">
+    <footer class="w-full text-center py-4 text-[10px] text-slate-600 font-mono relative z-10 box-border border-t border-white/5 bg-[#0b0c10]">
         &copy; 2026 Arulz-XD. All rights reserved.
     </footer>
 
