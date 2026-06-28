@@ -16,39 +16,23 @@ const HEADERS = {
 async function fetchHTML(url) {
     const { data } = await axios.get(url, {
         headers: HEADERS,
-        timeout: 15000
+        timeout: 10000 // Mengurangi timeout sedikit agar tidak menggantung terlalu lama
     });
 
     return cheerio.load(data);
 }
 
 async function searchDafont(query) {
-    const searchURL =
-        `https://dafontstyle.io/?s=${encodeURIComponent(query)}`;
+    try {
+        const searchURL = `https://dafontstyle.io/?s=${encodeURIComponent(query)}`;
+        const $ = await fetchHTML(searchURL);
+        const items = [];
 
-    const $ = await fetchHTML(searchURL);
-
-    const items = [];
-
-    $("#archive-container li.entry-list-item").each(
-        (_, el) => {
-            const title = $(el)
-                .find("h2.entry-title a")
-                .text()
-                .trim();
-
-            const link = $(el)
-                .find("h2.entry-title a")
-                .attr("href");
-
-            const thumb = $(el)
-                .find(".post-thumbnail img")
-                .attr("src");
-
-            const category = $(el)
-                .find(".category-links a")
-                .text()
-                .trim();
+        $("#archive-container li.entry-list-item").each((_, el) => {
+            const title = $(el).find("h2.entry-title a").text().trim();
+            const link = $(el).find("h2.entry-title a").attr("href");
+            const thumb = $(el).find(".post-thumbnail img").attr("src");
+            const category = $(el).find(".category-links a").text().trim();
 
             if (title && link) {
                 items.push({
@@ -58,138 +42,96 @@ async function searchDafont(query) {
                     category
                 });
             }
-        }
-    );
+        });
 
-    return items;
+        return items;
+    } catch (err) {
+        // Jika pencarian utama gagal/error, balikkan array kosong agar tidak crash 500
+        return [];
+    }
 }
 
 async function getDetail(url) {
-    const $ = await fetchHTML(url);
+    try {
+        const $ = await fetchHTML(url);
 
-    const title =
-        $("h1.entry-title")
-            .text()
-            .trim();
+        const title = $("h1.entry-title").text().trim();
+        const download = $(".dfsp-container").attr("data-zip");
+        const desc = $(".dfsp-description p").text().trim() || $('meta[name="description"]').attr("content");
+        const image = $(".post-thumbnail img").attr("src") || $('meta[property="og:image"]').attr("content");
+        const category = $(".category-links a").text().trim() || $('meta[property="article:section"]').attr("content");
+        const published = $('meta[property="article:published_time"]').attr("content");
+        const modified = $('meta[property="article:modified_time"]').attr("content");
+        const author = $('meta[name="author"]').attr("content");
 
-    const download =
-        $(".dfsp-container")
-            .attr("data-zip");
-
-    const desc =
-        $(".dfsp-description p")
-            .text()
-            .trim() ||
-        $('meta[name="description"]')
-            .attr("content");
-
-    const image =
-        $(".post-thumbnail img")
-            .attr("src") ||
-        $('meta[property="og:image"]')
-            .attr("content");
-
-    const category =
-        $(".category-links a")
-            .text()
-            .trim() ||
-        $('meta[property="article:section"]')
-            .attr("content");
-
-    const published =
-        $('meta[property="article:published_time"]')
-            .attr("content");
-
-    const modified =
-        $('meta[property="article:modified_time"]')
-            .attr("content");
-
-    const author =
-        $('meta[name="author"]')
-            .attr("content");
-
-    const tags = [];
-
-    $(".wp-block-kadence-advancedheading").each(
-        (_, el) => {
-            const tag = $(el)
-                .text()
-                .trim();
-
+        const tags = [];
+        $(".wp-block-kadence-advancedheading").each((_, el) => {
+            const tag = $(el).text().trim();
             if (tag.startsWith("#")) {
-                tags.push(
-                    ...tag
-                        .split(/,\s*/)
-                        .map(v =>
-                            v.replace(/^#/, "").trim()
-                        )
-                );
+                tags.push(...tag.split(/,\s*/).map(v => v.replace(/^#/, "").trim()));
             }
-        }
-    );
+        });
 
-    return {
-        title,
-        url,
-        download,
-        description: desc,
-        previewImage: image,
-        category,
-        author,
-        published,
-        modified,
-        tags:
-            tags.length > 0
-                ? tags
-                : null
-    };
+        return {
+            title,
+            url,
+            download,
+            description: desc || null,
+            previewImage: image || null,
+            category: category || null,
+            author: author || null,
+            published: published || null,
+            modified: modified || null,
+            tags: tags.length > 0 ? tags : null
+        };
+    } catch (err) {
+        // Jika salah satu halaman detail error, balikkan null alih-alih melempar error keras
+        return null;
+    }
 }
 
 router.get("/", async (req, res) => {
     try {
-        const query =
-            req.query.q?.trim();
+        const query = req.query.q?.trim();
 
         if (!query) {
             return res.status(400).json({
                 status: false,
-                message:
-                    "Parameter q wajib"
+                creator: "ArulzXD",
+                message: "Parameter q wajib diisi"
             });
         }
 
-        const search =
-            await searchDafont(query);
+        const search = await searchDafont(query);
 
         if (!search.length) {
             return res.json({
                 status: true,
+                creator: "ArulzXD",
                 query,
                 count: 0,
                 results: []
             });
         }
 
-        const results =
-            await Promise.all(
-                search.map(item =>
-                    getDetail(item.link)
-                )
-            );
+        // Jalankan fetch detail, kumpulkan hasil yang sukses, buang yang null (gagal fetch)
+        const rawResults = await Promise.all(search.map(item => getDetail(item.link)));
+        const results = rawResults.filter(item => item !== null);
 
         res.json({
             status: true,
+            creator: "ArulzXD",
             query,
             count: results.length,
-            fetchedAt:
-                new Date().toISOString(),
+            fetchedAt: new Date().toISOString(),
             results
         });
 
     } catch (err) {
         res.status(500).json({
             status: false,
-            message: err.message
+            creator: "ArulzXD",
+            message: err.message || err
         });
     }
 });
