@@ -609,6 +609,21 @@ app.get('/', (req, res) => {
     }
     .scrollbar-hide::-webkit-scrollbar { display: none; }
     .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+    /* Custom Scrollbar untuk Popup Notifikasi */
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: rgba(6, 182, 212, 0.3);
+        border-radius: 10px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: rgba(6, 182, 212, 0.5);
+    }
     </style>
 </head>
 <body class="min-h-screen antialiased bg-[#030712] text-slate-100 relative">
@@ -694,10 +709,10 @@ app.get('/', (req, res) => {
 
     <div class="fixed top-6 right-6 z-40 flex items-center gap-3">
         <button id="notifMenuBtn" class="relative flex items-center justify-center w-12 h-12 rounded-xl glass-panel text-slate-300 hover:text-white shadow-lg transition-all active:scale-95 focus:outline-none light-mode:text-slate-700 light-mode:hover:text-slate-900">
-            <svg class="w-6 h-6 animate-[swing_2s_ease-in-out_infinite]" fill="none" stroke="currentColor" stroke-width="2.3" viewBox="0 0 24 24">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.3" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
             </svg>
-            <span id="notifBadge" class="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-md border border-slate-900 animate-pulse">1</span>
+            <span id="notifBadge" class="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-md border border-slate-900 animate-pulse">1</span>
         </button>
 
         <button id="bioMenuBtn" class="flex items-center justify-center w-12 h-12 rounded-xl glass-panel text-slate-300 hover:text-white shadow-lg transition-all active:scale-95 focus:outline-none light-mode:text-slate-700 light-mode:hover:text-slate-900">
@@ -776,7 +791,7 @@ app.get('/', (req, res) => {
                 <svg class="w-5 h-5 text-cyan-400 text-center" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M12 2a4 4 0 0 0-4 4h8a4 4 0 0 0-4-4z" />
                     <path fill-rule="evenodd" clip-rule="evenodd" d="M7.05 11c0-2.454 1.66-4.519 3.95-5.117v12.234A5.26 5.26 0 0 1 7.05 13V11zm5.95 7.117V5.883c2.29.598 3.95 2.663 3.95 5.117v2a5.26 5.26 0 0 1-3.95 5.117z" />
-                    <path d="M6 9.5a1 1 0 0 1 1-1h1v2H7a1 1 0 0 1-1-1zM4.707 15.707a1 1 0 0 1 0-1.414l1.5-1.5 1.414 1.414-1.5 1.5a1 1 0 0 1-1.414 0zM7.621 6.207l-1.5-1.5a1 1 0 1 0-1.414 1.414l1.5 1.5 1.414-1.414zM16 8.5h1a1 1 0 1 1 0 2h-1v-2zM16.379 6.207l1.5-1.5a1 1 0 1 1 1.414 1.414l-1.5 1.5-1.414-1.414zM17.793 15.707l-1.5-1.5 1.414-1.414 1.5 1.5a1 1 0 0 1 0 1.4141 1 1 0 0 1-1.414 0z" />
+                    <path d="M6 9.5a1 1 0 0 1 1-1h1v2H7a1 1 0 0 1-1-1zM4.707 15.707a1 1 0 0 1 0-1.414l1.5-1.5 1.414 1.414-1.5 1.5a1 1 0 0 1-1.414 0zM7.621 6.207l-1.5-1.5a1 1 0 1 0-1.414 1.414l1.5 1.5 1.414-1.414zM16 8.5h1a1 1 0 1 1 0 2h-1v-2zM16.379 6.207l1.5-1.5a1 1 0 1 1 1.414 1.414l-1.5 1.5-1.414-1.414zM17.793 15.707l-1.5-1.5 1.414-1.414 1.5 1.5a1 1 0 0 1 0 1.414z" />
                 </svg>
                 BUG REPORT
             </a>
@@ -943,7 +958,6 @@ app.get('/', (req, res) => {
     
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.30.1/moment.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.30.1/locale/id.min.js"></script>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.45/moment-timezone-with-data.min.js"></script>
 
 <script class="notranslate" translate="no">
@@ -953,18 +967,19 @@ app.get('/', (req, res) => {
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
+    // Logic untuk Welcome Popup Banner
     const popup = document.getElementById('welcomePopup');
     const closeBtn = document.getElementById('closePopupBtn');
     
-    // Tampilkan modal setiap kali halaman dimuat awal / direfresh
-    popup.classList.remove('hidden');
-    document.body.classList.add('overflow-hidden'); // Kunci scroll layar saat modal aktif
-    
-    // Fungsi untuk menutup modal
-    closeBtn.addEventListener('click', () => {
-        popup.classList.add('hidden');
-        document.body.classList.remove('overflow-hidden');
-    });
+    if(popup && closeBtn) {
+        popup.classList.remove('hidden');
+        document.body.classList.add('overflow-hidden');
+        
+        closeBtn.addEventListener('click', () => {
+            popup.classList.add('hidden');
+            document.body.classList.remove('overflow-hidden');
+        });
+    }
 });
 </script>
 
@@ -972,6 +987,7 @@ document.addEventListener('DOMContentLoaded', () => {
 </html>
     `);
 });
+
 
 
 if (require.main === module) {
