@@ -17,56 +17,66 @@ router.get("/", async (req, res) => {
         }
 
         // Request ke halaman pencarian Dafont
-        const response = await axios.get(`https://www.dafont.com/search.php`, {
+        const response = await axios.get("https://www.dafont.com/search.php", {
             params: { q: query },
             headers: {
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                "Accept-Language": "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7"
             }
         });
 
         const $ = cheerio.load(response.data);
         const results = [];
 
-        // Loop setiap kontainer font yang ditemukan
-        $(".gif_box").each((index, element) => {
-            const fontZone = $(element).prev(".fontzone");
+        // Di Dafont, setiap baris/kotak font dibungkus oleh class .fontbox
+        $(".fontbox").each((index, element) => {
+            const fontBox = $(element);
+
+            // 1. Mengambil Judul Font dan Author
+            const titleZone = fontBox.find(".lv1left");
+            const fontName = titleZone.find("a").first().text().trim() || "Unknown";
             
-            // Mengambil nama font dan author
-            const titleText = fontZone.find(".lv1left").text().trim();
-            // Format teks biasanya: "Font Name by Author"
-            const nameParts = titleText.split(" by ");
-            const fontName = nameParts[0] || "Unknown";
-            const author = nameParts[1] || "Unknown";
+            // Format author biasanya mengandung teks "by [Nama]"
+            const authorText = titleZone.text().replace(fontName, "").replace("by", "").trim();
+            const author = authorText || "Unknown";
 
-            // Mengambil info total download
-            const infoText = fontZone.find(".lv1right").text().trim();
-            const downloadCount = infoText.match(/[\d,]+/)?.[0] || "0";
+            // 2. Mengambil Informasi Lisensi & Jumlah Download
+            const rightZone = fontBox.find(".lv1right");
+            const downloadCount = rightZone.text().match(/[\d,.]+/)?.[0] || "0";
+            
+            const licenseZone = fontBox.find(".licence");
+            const license = licenseZone.text().trim() || "Unknown";
 
-            // Mengambil URL preview gambar teks font
-            const previewImg = $(element).find(".dl").attr("src");
+            // 3. Mengambil Gambar Preview Teks Font
+            // Dafont menaruh preview gambar di dalam elemen <a> yang membungkus <img> dengan class .dl atau sejenisnya
+            const previewImg = fontBox.find(".dl2 img, img.dl").attr("src");
             const previewUrl = previewImg ? `https://www.dafont.com/${previewImg}` : null;
 
-            // Mengambil ID font untuk mengonstruksi link download file .zip
-            const downloadHref = $(element).find(".dl2").attr("href");
+            // 4. Mengambil ID Font untuk Link Unduh (.zip)
+            const downloadHref = fontBox.find(".dl").attr("href");
             let downloadLink = null;
             if (downloadHref) {
                 const fontId = downloadHref.match(/id=(\d+)/)?.[1];
                 if (fontId) {
                     downloadLink = `https://dl.dafont.com/dl/?f=${fontId}`;
+                } else if (downloadHref.startsWith("//") || downloadHref.startsWith("http")) {
+                    downloadLink = downloadHref.startsWith("//") ? `https:${downloadHref}` : downloadHref;
+                } else {
+                    downloadLink = `https://www.dafont.com/${downloadHref}`;
                 }
             }
 
-            // Mengambil informasi lisensi (Free, Personal use, dll)
-            const license = $(element).find(".licence").text().trim() || "Unknown";
-
-            results.push({
-                name: fontName,
-                author: author,
-                total_downloads: downloadCount,
-                license: license,
-                preview_image: previewUrl,
-                download_zip: downloadLink
-            });
+            // Hindari memasukkan data kosong
+            if (fontName !== "Unknown") {
+                results.push({
+                    name: fontName,
+                    author: author,
+                    total_downloads: downloadCount,
+                    license: license,
+                    preview_image: previewUrl,
+                    download_zip: downloadLink
+                });
+            }
         });
 
         // Kirim response JSON hasil penelusuran
