@@ -339,7 +339,7 @@
     @media (max-width: 640px) {
         .theme-toggle-btn { width: 52px; height: 52px; bottom: 16px; right: 16px; }
     }
-    
+
     /* Efek teks Loading berkedip lembut */
     @keyframes pulseText {
        0%, 100% { opacity: 1; }
@@ -369,7 +369,7 @@
     .animate-blink {
       animation: blink 0.8s step-end infinite;
     }
-    
+
     /* Mengunci scroll body dan memberikan transisi halus saat modal terbuka */
     body.overflow-hidden {
       overflow: hidden;
@@ -388,7 +388,7 @@
       from { transform: scale(0.85); opacity: 0; }
       to { transform: scale(1); opacity: 1; }
     }
-    
+
     @keyframes swing {
       0%, 100% { transform: rotate(0deg); }
       20% { transform: rotate(15deg); }
@@ -396,4 +396,3 @@
       60% { transform: rotate(5deg); }
       80% { transform: rotate(-5deg); }
     }
-

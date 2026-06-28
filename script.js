@@ -442,7 +442,7 @@ function updateLivePreview(catIdx, epIdx, method, basePath, endpointType) {
 
     const formData = new FormData(form);
     const params = new URLSearchParams();
-    
+
     let userApikey = formData.get('apikey') || 'arulzxd-keys';
 
     for (const [key, value] of formData.entries()) {
@@ -498,10 +498,10 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
     isRequestInProgress = true;
     executeBtn.disabled = true;
     executeBtn.classList.add('btn-loading');
-    
+
     spinner.style.setProperty('display', 'none', 'important');
     spinner.classList.remove('active');
-    
+
     responseDiv.classList.remove('hidden');
 
     responseContent.innerHTML = `
@@ -709,14 +709,14 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
                         const mediaRes = await fetch(fullPath);
                         finalBlob = await mediaRes.blob();
                     }
-                    
+
                     const downloadUrl = URL.createObjectURL(finalBlob);
                     const a = document.createElement('a');
                     a.href = downloadUrl;
-                    
+
                     const ext = cleanContentType.split('/')[1] || 'bin';
                     a.download = `media-${Date.now()}.${ext}`;
-                    
+
                     document.body.appendChild(a);
                     a.click();
                     document.body.removeChild(a);
@@ -741,10 +741,10 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
         isRequestInProgress = false;
         executeBtn.disabled = false;
         executeBtn.classList.remove('btn-loading');
-        
+
         spinner.style.display = ''; 
         spinner.classList.remove('active');
-        
+
         executeBtn.innerHTML = originalBtnHtml;
     }
 }
@@ -985,7 +985,7 @@ function loadApis() {
                         html += `</div>`;
                     });
                 }
-                
+
                 html += `
                             </div>
                             <div class="flex gap-3">
@@ -1143,7 +1143,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initMultiMusicPlayer();
     initImageLightbox(); 
     setLanguage(savedLang);
-    
+
     const notifBtn = document.getElementById('notifMenuBtn');
 const notifPopup = document.getElementById('notifPopup');
 const closeNotifBtn = document.getElementById('closeNotifBtn');
@@ -1155,7 +1155,7 @@ if (notifBtn && notifPopup) {
     notifBtn.addEventListener('click', () => {
         notifPopup.classList.remove('hidden');
         document.body.classList.add('overflow-hidden');
-        
+
         // Sembunyikan angka 1 saat ditekan / dibaca
         if (notifBadge) {
             notifBadge.classList.add('hidden');
@@ -1202,10 +1202,11 @@ if (notifBtn && notifPopup) {
         });
     }
 
+    // KODE BARU:
     if (pastebinBtn) {
         pastebinBtn.addEventListener('click', () => {
-            window.open('https://arulz-pastecode.vercel.app/', '_blank');
-        });
+            window.location.href = '/pastecode'; 
+       });
     }
 
     fetch('/api/apilist')

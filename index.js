@@ -17,7 +17,7 @@ const PORT = process.env.PORT || 3000;
 app.use(express.static(path.join(__dirname)));
 app.use(express.json());
 
-const listNotifikasi = require('./notifikasi'); 
+const listNotifikasi = require('./database/notifikasi'); 
 
 // Middleware untuk menangani form file upload (Uploader)
 app.use(fileUpload());
@@ -85,6 +85,11 @@ const playlist = [
 
 app.get('/uploader', (req, res) => {
   res.sendFile(path.join(__dirname, 'uploader.html'));
+});
+
+// Menyajikan halaman utama Pastecode di domain yang sama
+app.get('/pastecode', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 function getRequestProtocol(req) {
@@ -359,7 +364,7 @@ router.use((req, res, next) => {
   if (req.files && Object.keys(req.files).length > 0) {
     for (const key in req.files) {
       const file = req.files[key];
-      
+
       // Bungkus data file agar mudah dibaca di dalam logic internal modul file Anda
       req.apiParams[key] = {
         name: file.name,
