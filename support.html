@@ -6,301 +6,322 @@
     <title>Arulz-XD API - Support & Donasi</title>
 
     <meta property="og:title" content="Support & Donasi — Arulz-XD API">
-    <meta property="og:description" content="Suka sama project ini? Yuk support seikhlasnya buat biaya perpanjangan hosting server + nambahin fitur & snippet baru.">
+    <meta property="og:description" content="API & Pastebin ini gw bikin di sela-sela waktu luang. Kalau ngerasa kebantu, support seikhlasnya bantu banget buat biaya perpanjangan hosting server + nambahin fitur & snippet baru.">
     <meta property="og:image" content="https://arulz-uploader.vercel.app/files/CVmlrD.jpg">
-    <meta property="og:url" content="https://api-arulzxd-vvipclouds.vercel.app/support">
+    <meta property="og:url" content="https://arul-pastecode.vercel.app/support">
     <meta property="og:type" content="website">
+
+    <!-- Menggunakan font monospace/JetBrains Mono agar sesuai style brutalisme asli -->
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 
     <style>
         :root { 
-            --bg-main: #f5f4ef; 
-            --border-dark: #000000; 
-            --yellow: #ffde00; 
-            --orange: #ff6b00; 
+            --bg-main: #0B0F19; 
+            --bg-card: #111827;
+            --text-primary: #FFFFFF;
+            --text-muted: #9CA3AF;
+            --cyan: #00D4FF;
+            --orange: #FF6B00; /* Warna tombol bagikan link dari gambar 2 */
+        }
+        
+        * {
+            box-sizing: border-box;
+            font-family: 'JetBrains Mono', monospace;
         }
 
         body { 
-            font-family: 'Courier New', Courier, monospace; 
             background-color: var(--bg-main);
-            background-image: radial-gradient(rgba(0, 0, 0, 0.15) 1.5px, transparent 1.5px);
+            /* Grid background efek titik-titik neon halus */
+            background-image: radial-gradient(rgba(0, 212, 255, 0.1) 1.5px, transparent 1.5px);
             background-size: 24px 24px;
-            color: #000; 
+            color: var(--text-primary); 
             margin: 0; 
-            padding: 0; 
-            font-weight: bold; 
+            padding: 0;
+            min-height: 100vh;
         }
 
-        .navbar { 
-            background: #0b0c10; 
-            color: white; 
-            padding: 15px 20px; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            border-bottom: 4px solid #000; 
-            position: relative;
-            z-index: 100;
-        }
-        .logo { font-size: 18px; font-weight: 900; text-decoration: none; color: white; display: flex; align-items: center; }
-        .logo span { background: var(--yellow); color: #000; padding: 4px 8px; margin-right: 10px; border: 3px solid #000; font-size: 14px; font-weight: 900; }
-        .btn-back-nav { background: var(--yellow); color: #000; padding: 8px 14px; text-decoration: none; border: 3px solid #000; font-size: 12px; font-weight: 900; box-shadow: 2px 2px 0px #000; }
-
-        .container { max-width: 650px; margin: 40px auto; padding: 0 20px; box-sizing: border-box; }
-
-        .donation-card {
-            background: #fff;
-            border: 4px solid #000;
-            box-shadow: 8px 8px 0px #000;
-            padding: 35px 25px;
-            text-align: center;
-        }
-
-        .donation-card h1 {
-            font-size: 30px;
-            margin: 0 0 15px 0;
-            font-weight: 900;
-            text-transform: uppercase;
-        }
-
-        .donation-card p.desc {
-            font-size: 14px;
-            color: #333;
-            line-height: 1.6;
-            margin: 0 0 30px 0;
-        }
-
-        .qr-wrapper {
-            background: #fff;
-            border: 4px solid #000;
-            box-shadow: 6px 6px 0px #000;
-            padding: 20px;
-            display: inline-block;
-            margin-bottom: 25px;
-            max-width: 100%;
-            box-sizing: border-box;
-        }
-
-        .qr-wrapper img {
-            max-width: 280px;
-            width: 100%;
-            height: auto;
-            display: block;
-            border: 2px solid #000;
-        }
-
-        .payment-info-box {
-            border: 3px solid #000;
-            background: #f5f4ef;
-            padding: 15px;
-            margin-bottom: 25px;
-        }
-
-        .payment-info-box span.title {
-            font-size: 11px;
-            display: block;
-            margin-bottom: 10px;
-            letter-spacing: 1px;
-            color: #555;
-        }
-
-        .badges-container {
+        /* --- TOP NAV BAR (Sesuai Gambar 2) --- */
+        .top-nav {
             display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 8px;
+            justify-content: space-between;
+            align-items: center;
+            background: #111827;
+            padding: 12px 16px;
+            border-bottom: 3px solid #000000;
         }
 
-        .badge {
-            background: #fff;
-            border: 2px solid #000;
-            padding: 4px 12px;
-            font-size: 12px;
-            border-radius: 20px;
-            font-weight: 900;
-        }
-
-        .btn-action {
-            width: 100%;
-            background: #fff;
-            color: #000;
-            border: 4px solid #000;
-            box-shadow: 4px 4px 0px #000;
-            padding: 14px;
-            font-size: 14px;
-            font-weight: 900;
-            font-family: inherit;
-            text-transform: uppercase;
-            cursor: pointer;
+        .brand-box {
             display: flex;
             align-items: center;
-            justify-content: center;
-            gap: 8px;
-            margin-bottom: 15px;
-            text-decoration: none;
-            box-sizing: border-box;
-            transition: transform 0.05s, box-shadow 0.05s;
+            gap: 10px;
         }
 
-        .btn-action:active {
-            transform: translate(2px, 2px);
+        .badge-ad {
+            background: #EAB308; /* Kuning lambang AD */
+            color: #000;
+            font-weight: bold;
+            padding: 2px 6px;
+            font-size: 0.75rem;
+            border: 2px solid #000;
             box-shadow: 2px 2px 0px #000;
         }
 
-        .btn-action.orange-accent {
-            background: var(--orange);
+        .brand-title {
+            font-weight: bold;
+            font-size: 1.1rem;
             color: #fff;
         }
 
-        .footer-note {
-            font-size: 12px;
-            color: #666;
-            margin-top: 25px;
-            font-style: italic;
-        }
-
-        /* --- STYLING CUSTOM ALERT MODAL BOX RETRO --- */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.6);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.2s ease-in-out;
-            z-index: 9999;
-            padding: 20px;
-            box-sizing: border-box;
-        }
-
-        .modal-overlay.active {
-            opacity: 1;
-            pointer-events: auto;
-        }
-
-        .modal-box {
-            background: #fff;
-            border: 4px solid #000;
-            box-shadow: 8px 8px 0px #000;
-            max-width: 400px;
-            width: 100%;
-            padding: 25px;
-            text-align: center;
-            transform: scale(0.9);
-            transition: transform 0.2s ease-in-out;
-        }
-
-        .modal-overlay.active .modal-box {
-            transform: scale(1);
-        }
-
-        .modal-box h3 {
-            margin: 0 0 10px 0;
-            font-size: 20px;
-            text-transform: uppercase;
+        .btn-kembali {
+            background: #EAB308;
             color: #000;
-        }
-
-        .modal-box p {
-            font-size: 13px;
-            color: #333;
-            line-height: 1.5;
-            margin: 0 0 20px 0;
-        }
-
-        .btn-modal-close {
-            background: var(--yellow);
-            color: #000;
-            border: 3px solid #000;
-            box-shadow: 3px 3px 0px #000;
-            padding: 10px 24px;
-            font-family: inherit;
-            font-size: 13px;
-            font-weight: 900;
-            text-transform: uppercase;
-            cursor: pointer;
-        }
-
-        .btn-modal-close:active {
-            transform: translate(1px, 1px);
+            text-decoration: none;
+            font-size: 0.8rem;
+            font-weight: bold;
+            padding: 6px 12px;
+            border: 2px solid #000;
             box-shadow: 2px 2px 0px #000;
         }
 
-        /* --- ANIMASI LOADING SPINNER SVG --- */
-        @keyframes spin {
-            100% { transform: rotate(360deg); }
+        /* --- MAIN CONTAINER --- */
+        .wrapper {
+            max-width: 500px;
+            margin: 30px auto;
+            padding: 0 16px 50px 16px;
         }
-        @keyframes dash {
-            0% { stroke-dasharray: 1, 150; stroke-dashoffset: 0; }
-            50% { stroke-dasharray: 90, 150; stroke-dashoffset: -35; }
-            100% { stroke-dasharray: 90, 150; stroke-dashoffset: -124; }
+
+        .main-card {
+            background: var(--bg-card);
+            border: 3px solid #000000;
+            box-shadow: 8px 8px 0px #000000;
+            padding: 30px 20px;
+        }
+
+        h1.title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            text-align: center;
+            text-transform: uppercase;
+            margin-top: 0;
+            margin-bottom: 20px;
+            line-height: 1.4;
+        }
+
+        .description {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            text-align: center;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+
+        /* --- QRIS FRAME (Neo-brutalism style) --- */
+        .qris-frame {
+            background: #FFFFFF;
+            border: 3px solid #000000;
+            box-shadow: 6px 6px 0px #000000;
+            padding: 16px;
+            margin-bottom: 25px;
+        }
+
+        .qris-image {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        /* --- PAYMENT METHOD BADGES BOX --- */
+        .payment-box {
+            border: 2px solid #000000;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 15px 10px;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        .payment-title {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+            letter-spacing: 1px;
+        }
+
+        .badge-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .pay-badge {
+            background: #FFFFFF;
+            color: #000000;
+            font-size: 0.75rem;
+            font-weight: bold;
+            padding: 4px 10px;
+            border-radius: 20px;
+            border: 1.5px solid #000000;
+        }
+
+        /* --- BUTTONS STYLING --- */
+        .btn-brutal {
+            display: block;
+            width: 100%;
+            padding: 14px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            text-align: center;
+            cursor: pointer;
+            margin-bottom: 16px;
+            border: 3px solid #000000;
+            box-shadow: 4px 4px 0px #000000;
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+
+        .btn-brutal:active {
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0px #000000;
+        }
+
+        .btn-white {
+            background: #FFFFFF;
+            color: #000000;
+        }
+
+        .btn-orange {
+            background: var(--orange);
+            color: #FFFFFF;
+        }
+
+        .btn-brutal:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: 4px 4px 0px #000000 !important;
+        }
+
+        /* --- FOOTER NOTE --- */
+        .footer-note {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-style: italic;
+            text-align: center;
+            line-height: 1.5;
+            margin-top: 25px;
+        }
+
+        /* --- TOAST NOTIFICATION --- */
+        .custom-alert {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: #111827;
+            border: 2px solid var(--cyan);
+            padding: 14px 20px;
+            z-index: 9999;
+            width: 90%;
+            max-width: 380px;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s;
+            opacity: 0;
+            box-shadow: 4px 4px 0px #000000;
+        }
+
+        .custom-alert.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        .alert-title {
+            font-weight: bold;
+            font-size: 0.85rem;
+            color: var(--cyan);
+            margin-bottom: 4px;
+        }
+
+        .alert-msg {
+            font-size: 0.8rem;
+            color: #fff;
         }
     </style>
 </head>
 <body>
 
-<div class="navbar">
-    <a href="/" class="logo"><span>AD</span> Arulz-XD API</a>
-    <a href="/" class="btn-back-nav">← KEMBALI</a>
-</div>
-
-<div class="container">
-    <div class="donation-card">
-        <h1>Suka sama project ini?</h1>
-        <p class="desc">API & Pastebin ini gw bikin di sela-sela waktu luang. Kalau ngerasa kebantu, support seikhlasnya bantu banget buat biaya perpanjangan hosting server + nambahin fitur & snippet baru.</p>
-
-        <div class="qr-wrapper">
-            <img id="qris-img" src="https://arulz-uploader.vercel.app/files/CVmlrD.jpg" alt="QRIS Arulz-XD">
+    <!-- Top Nav Bar sesuai Gambar 2 -->
+    <div class="top-nav">
+        <div class="brand-box">
+            <span class="badge-ad">AD</span>
+            <span class="brand-title">Arulz-XD API</span>
         </div>
+        <a href="/" class="btn-kembali">← KEMBALI</a>
+    </div>
 
-        <div class="payment-info-box">
-            <span class="title">📱 SCAN PAKAI APPS PAYMENT APA AJA</span>
-            <div class="badges-container">
-                <div class="badge">DANA</div>
-                <div class="badge">OVO</div>
-                <div class="badge">GoPay</div>
-                <div class="badge">ShopeePay</div>
-                <div class="badge">LinkAja</div>
-                <div class="badge">BCA</div>
-                <div class="badge">Mandiri</div>
-                <div class="badge">BRI</div>
-                <div class="badge">BNI</div>
-                <div class="badge">Jenius</div>
+    <!-- Main Content Area -->
+    <div class="wrapper">
+        <div class="main-card">
+            <h1 class="title">SUKA SAMA PROJECT INI?</h1>
+            <div class="description">
+                API &amp; Pastebin ini gw bikin di sela-sela waktu luang. Kalau ngerasa kebantu, support seikhlasnya bantu banget buat biaya perpanjangan hosting server + nambahin fitur &amp; snippet baru.
+            </div>
+
+            <!-- QRIS Frame Frame Putih Tebal -->
+            <div class="qris-frame">
+                <img src="https://arulz-uploader.vercel.app/files/CVmlrD.jpg" alt="QRIS Arulz" class="qris-image" id="qrisImg">
+            </div>
+
+            <!-- List Metode Pembayaran Pembayaran Berjejer -->
+            <div class="payment-box">
+                <div class="payment-title">📱 SCAN PAKAI APPS PAYMENT APA AJA</div>
+                <div class="badge-container">
+                    <span class="pay-badge">DANA</span>
+                    <span class="pay-badge">OVO</span>
+                    <span class="pay-badge">GoPay</span>
+                    <span class="pay-badge">ShopeePay</span>
+                    <span class="pay-badge">LinkAja</span>
+                    <span class="pay-badge">BCA</span>
+                    <span class="pay-badge">Mandiri</span>
+                    <span class="pay-badge">BRI</span>
+                    <span class="pay-badge">BNI</span>
+                    <span class="pay-badge">Jenius</span>
+                </div>
+            </div>
+
+            <!-- Tombol Aksi Simpan & Share -->
+            <button class="btn-brutal btn-white" id="downloadBtn" onclick="downloadQris()">
+                📥 SIMPAN QR KE GALERI
+            </button>
+
+            <button class="btn-brutal btn-orange" onclick="shareLink()">
+                🔗 BAGIKAN LINK
+            </button>
+
+            <!-- Catatan Kaki Terima Kasih -->
+            <div class="footer-note">
+                ✨ Makasih banget, kontribusi lo bikin gw semangat ngembangin lebih banyak snippet &amp; feature.
             </div>
         </div>
-
-        <button class="btn-action" id="btn-download" onclick="downloadQR()">📥 Simpan QR ke galeri</button>
-        <button class="btn-action orange-accent" onclick="shareLink()">🔗 Bagikan Link</button>
-
-        <p class="footer-note">✨ Makasih banget, kontribusi lo bikin gw semangat ngembangin lebih banyak snippet & feature.</p>
     </div>
-</div>
 
-<div class="modal-overlay" id="custom-modal">
-    <div class="modal-box">
-        <h3 id="modal-title">Pemberitahuan</h3>
-        <p id="modal-message">Isi pesan di sini...</p>
-        <button class="btn-modal-close" onclick="closeModal()">Oke</button>
+    <!-- Custom Toast Notification -->
+    <div class="custom-alert" id="customAlert">
+        <div class="alert-title" id="alertTitle">NOTIFIKASI</div>
+        <div class="alert-msg" id="alertMsg">Pesan sukses disini.</div>
     </div>
-</div>
 
-<script>
-    function showAlert(title, message) {
-        document.getElementById('modal-title').innerText = title;
-        document.getElementById('modal-message').innerText = message;
-        document.getElementById('custom-modal').classList.add('active');
-    }
+    <script>
+        function showAlert(title, message) {
+            const alertBox = document.getElementById('customAlert');
+            document.getElementById('alertTitle').innerText = title.toUpperCase();
+            document.getElementById('alertMsg').innerText = message;
+            
+            alertBox.classList.add('show');
+            setTimeout(() => {
+                alertBox.classList.remove('show');
+            }, 3500);
+        }
 
-    function closeModal() {
-        document.getElementById('custom-modal').classList.remove('active');
-    }
-
-    // Ambil biner lewat backend proxy lintas origin (Bypass CORS + Tanpa Canvas)
-    async function downloadQR() {
+        async function downloadQR() {
         const btn = document.getElementById('btn-download');
         const originalText = btn.innerHTML;
         const qrImgSrc = document.getElementById('qris-img').src;
@@ -341,23 +362,22 @@
         }
     }
 
-    function shareLink() {
-        const shareData = {
-            title: 'Support — Arulz-XD API',
-            text: 'Suka sama project ini? Yuk dukung kelangsungan server & snippet barunya! 👇\n',
-            url: window.location.href
-        };
+        function shareLink() {
+            const shareData = {
+                title: 'Support — Arulz-XD API',
+                text: 'API & Pastebin ini gw bikin di sela-sela waktu luang. Yuk support seikhlasnya! 👇\n',
+                url: window.location.href
+            };
 
-        if (navigator.share) {
-            navigator.share(shareData)
-                .catch((err) => console.log('Batal membagikan:', err));
-        } else {
-            navigator.clipboard.writeText(window.location.href).then(() => {
-                showAlert("Disalin 🔗", "Link donasi berhasil disalin ke clipboard! Silakan share secara manual.");
-            });
+            if (navigator.share) {
+                navigator.share(shareData).catch((err) => console.log('Batal share:', err));
+            } else {
+                navigator.clipboard.writeText(window.location.href).then(() => {
+                    showAlert("Disalin 🔗", "Link donasi berhasil disalin ke clipboard!");
+                });
+            }
         }
-    }
-</script>
-
+    </script>
 </body>
 </html>
+ 
