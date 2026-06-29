@@ -300,7 +300,7 @@
     btn.disabled = true;
 
     // Arahkan window ke endpoint backend sambil mengirim parameter URL gambar yang akan diunduh
-    window.location.href = `/database/download?url=${encodeURIComponent(qrImgSrc)}`;
+    window.location.href = `/database/download?imageUrl=${encodeURIComponent(qrImgSrc)}`;
 
     // Kembalikan status tombol setelah jeda singkat
     setTimeout(() => {
