@@ -289,53 +289,46 @@
         document.getElementById('custom-modal').classList.remove('active');
     }
 
-    // Fungsi download otomatis langsung memicu unduhan lokal biner tanpa buka tab baru
+    // FIX STRATEGI: Mengambil resource blob gambar langsung lewat client-side fetch agar terdownload otomatis
     async function downloadQR() {
-    const btn = document.getElementById('btn-download');
-    const originalText = btn.innerHTML;
-    // Mengambil URL target gambar langsung dari elemen img QRIS
-    const qrImgSrc = document.getElementById('qris-img').src; 
-    
-    btn.innerHTML = "⏳ MENGUNDUH...";
-    btn.disabled = true;
-
-    try {
-        // 1. Ambil data gambar lewat fetch biner
-        const res = await fetch(qrImgSrc);
-        if (!res.ok) throw new Error("Gagal mengambil file gambar server.");
-        const finalBlob = await res.blob();
-
-        // 2. Buat objek URL lokal dari Blob data gambar
-        const downloadUrl = URL.createObjectURL(finalBlob);
+        const btn = document.getElementById('btn-download');
+        const originalText = btn.innerHTML;
+        const qrImgSrc = document.getElementById('qris-img').src;
         
-        // 3. Buat elemen anchor samaran (a) untuk trigger download otomatis
-        const a = document.createElement('a');
-        a.href = downloadUrl;
-        
-        // Mengatur nama file keluaran saat diunduh
-        a.download = `qris-arulzxd-${Date.now()}.jpg`;
+        btn.innerHTML = "⏳ MENGUNDUH...";
+        btn.disabled = true;
 
-        // 4. Masukkan ke dokumen, klik otomatis, lalu langsung bersihkan
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        
-        // 5. Revoke objek untuk membebaskan memori browser
-        URL.revokeObjectURL(downloadUrl);
+        try {
+            // Ambil gambar biner secara asinkron
+            const mediaRes = await fetch(qrImgSrc);
+            if (!mediaRes.ok) throw new Error('Gagal mengunduh file dari server storage');
+            
+            const finalBlob = await mediaRes.blob();
 
-        // Tampilkan modal alert sukses bawaan template Anda
-        showAlert("Berhasil 🎉", "QRIS berhasil disimpan ke galeri perangkat Anda.");
-    } catch (err) {
-        console.error(err);
-        showAlert("Gagal ❌", "Gagal mengunduh otomatis. Alternatifnya, silakan tekan lama pada gambar lalu pilih 'Simpan Gambar'.");
-    } finally {
-        // Kembalikan state tombol ke semula
-        btn.innerHTML = originalText;
-        btn.disabled = false;
+            // Siasati trigger download via Object URL & elemen anchor bayangan
+            const downloadUrl = URL.createObjectURL(finalBlob);
+            const a = document.createElement('a');
+            a.href = downloadUrl;
+
+            // Atur ekstensi default atau gunakan .jpg langsung karena file aslinya adalah CVmlrD.jpg
+            a.download = `qris-arulzxd-${Date.now()}.jpg`;
+
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            
+            // Bersihkan objek URL dari memori browser
+            URL.revokeObjectURL(downloadUrl);
+
+            showAlert("Berhasil 🎉", "QRIS berhasil diunduh secara otomatis.");
+        } catch (err) {
+            console.error(err);
+            showAlert("Gagal ❌", "Tidak dapat mengunduh gambar otomatis. Silakan tekan lama gambar lalu pilih 'Simpan Gambar'.");
+        } finally {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }
     }
-}
-
-
 
     function shareLink() {
         const shareData = {
