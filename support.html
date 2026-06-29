@@ -4,11 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Arulz-XD API - Support & Donasi</title>
+
     <meta property="og:title" content="Support & Donasi — Arulz-XD API">
     <meta property="og:description" content="Suka sama project ini? Yuk support seikhlasnya buat biaya perpanjangan hosting server + nambahin fitur & snippet baru.">
     <meta property="og:image" content="https://arulz-uploader.vercel.app/files/CVmlrD.jpg">
     <meta property="og:url" content="https://arul-pastecode.vercel.app/support">
     <meta property="og:type" content="website">
+
     <style>
         :root { 
             --bg-main: #f5f4ef; 
@@ -16,6 +18,7 @@
             --yellow: #ffde00; 
             --orange: #ff6b00; 
         }
+        
         body { 
             font-family: 'Courier New', Courier, monospace; 
             background-color: var(--bg-main);
@@ -26,6 +29,7 @@
             padding: 0; 
             font-weight: bold; 
         }
+
         .navbar { 
             background: #0b0c10; 
             color: white; 
@@ -40,7 +44,9 @@
         .logo { font-size: 18px; font-weight: 900; text-decoration: none; color: white; display: flex; align-items: center; }
         .logo span { background: var(--yellow); color: #000; padding: 4px 8px; margin-right: 10px; border: 3px solid #000; font-size: 14px; font-weight: 900; }
         .btn-back-nav { background: var(--yellow); color: #000; padding: 8px 14px; text-decoration: none; border: 3px solid #000; font-size: 12px; font-weight: 900; box-shadow: 2px 2px 0px #000; }
+
         .container { max-width: 650px; margin: 40px auto; padding: 0 20px; box-sizing: border-box; }
+
         .donation-card {
             background: #fff;
             border: 4px solid #000;
@@ -48,18 +54,21 @@
             padding: 35px 25px;
             text-align: center;
         }
+
         .donation-card h1 {
             font-size: 30px;
             margin: 0 0 15px 0;
             font-weight: 900;
             text-transform: uppercase;
         }
+
         .donation-card p.desc {
             font-size: 14px;
             color: #333;
             line-height: 1.6;
             margin: 0 0 30px 0;
         }
+
         .qr-wrapper {
             background: #fff;
             border: 4px solid #000;
@@ -70,6 +79,7 @@
             max-width: 100%;
             box-sizing: border-box;
         }
+
         .qr-wrapper img {
             max-width: 280px;
             width: 100%;
@@ -77,12 +87,14 @@
             display: block;
             border: 2px solid #000;
         }
+
         .payment-info-box {
             border: 3px solid #000;
             background: #f5f4ef;
             padding: 15px;
             margin-bottom: 25px;
         }
+
         .payment-info-box span.title {
             font-size: 11px;
             display: block;
@@ -90,12 +102,14 @@
             letter-spacing: 1px;
             color: #555;
         }
+
         .badges-container {
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
             gap: 8px;
         }
+
         .badge {
             background: #fff;
             border: 2px solid #000;
@@ -104,6 +118,7 @@
             border-radius: 20px;
             font-weight: 900;
         }
+
         .btn-action {
             width: 100%;
             background: #fff;
@@ -125,20 +140,25 @@
             box-sizing: border-box;
             transition: transform 0.05s, box-shadow 0.05s;
         }
+
         .btn-action:active {
             transform: translate(2px, 2px);
             box-shadow: 2px 2px 0px #000;
         }
+
         .btn-action.orange-accent {
             background: var(--orange);
             color: #fff;
         }
+
         .footer-note {
             font-size: 12px;
             color: #666;
             margin-top: 25px;
             font-style: italic;
         }
+
+        /* --- STYLING CUSTOM ALERT MODAL BOX RETRO --- */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -156,10 +176,12 @@
             padding: 20px;
             box-sizing: border-box;
         }
+
         .modal-overlay.active {
             opacity: 1;
             pointer-events: auto;
         }
+
         .modal-box {
             background: #fff;
             border: 4px solid #000;
@@ -171,21 +193,25 @@
             transform: scale(0.9);
             transition: transform 0.2s ease-in-out;
         }
+
         .modal-overlay.active .modal-box {
             transform: scale(1);
         }
+
         .modal-box h3 {
             margin: 0 0 10px 0;
             font-size: 20px;
             text-transform: uppercase;
             color: #000;
         }
+
         .modal-box p {
             font-size: 13px;
             color: #333;
             line-height: 1.5;
             margin: 0 0 20px 0;
         }
+
         .btn-modal-close {
             background: var(--yellow);
             color: #000;
@@ -198,6 +224,7 @@
             text-transform: uppercase;
             cursor: pointer;
         }
+
         .btn-modal-close:active {
             transform: translate(1px, 1px);
             box-shadow: 2px 2px 0px #000;
@@ -215,7 +242,7 @@
     <div class="donation-card">
         <h1>Suka sama project ini?</h1>
         <p class="desc">API & Pastebin ini gw bikin di sela-sela waktu luang. Kalau ngerasa kebantu, support seikhlasnya bantu banget buat biaya perpanjangan hosting server + nambahin fitur & snippet baru.</p>
-
+        
         <div class="qr-wrapper">
             <img id="qris-img" src="https://arulz-uploader.vercel.app/files/CVmlrD.jpg" alt="QRIS Arulz-XD">
         </div>
@@ -262,51 +289,25 @@
         document.getElementById('custom-modal').classList.remove('active');
     }
 
+    // Fungsi download otomatis langsung memicu unduhan lokal biner tanpa buka tab baru
     function downloadQR() {
     const btn = document.getElementById('btn-download');
     const originalText = btn.innerHTML;
-    btn.innerHTML = "⌛ MENGUNDUH...";
+    
+    btn.innerHTML = "⏳ MENGUNDUH...";
     btn.disabled = true;
 
-    // Cache buster agar browser meminta data paling baru ke server
-    const qrisUrl = "https://arulz-uploader.vercel.app/files/CVmlrD.jpg?v=" + Date.now();
+    // Arahkan ke Serverless Function Vercel
+    // Ini akan memicu pop-up download di HP tanpa membuka tab baru
+    window.location.href = "/api/download";
 
-    fetch(qrisUrl, {
-        method: 'GET',
-        mode: 'cors',
-        cache: 'reload' // Memaksa browser mengabaikan cache lama yang rusak
-    })
-    .then(res => {
-        if (!res.ok) throw new Error('Gagal mengambil gambar dari server.');
-        return res.blob(); // Ambil biner mentah murni tanpa canvas & base64
-    })
-    .then(blob => {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = "qris-arulzxd.jpg"; 
-        a.style.display = 'none';
-
-        document.body.appendChild(a);
-        a.click(); // Unduh otomatis berjalan di background tanpa pindah tab
-
-        setTimeout(() => {
-            URL.revokeObjectURL(url);
-            a.remove();
-        }, 150);
-
+    // Kembalikan status tombol setelah jeda singkat
+    setTimeout(() => {
         btn.innerHTML = originalText;
         btn.disabled = false;
-        showAlert("Berhasil 🎉", "Gambar QRIS berhasil diunduh!");
-    })
-    .catch((err) => {
-        console.error(err);
-        btn.innerHTML = originalText;
-        btn.disabled = false;
-        showAlert("Info ℹ️", "Otomatis tidak bisa, silakan tekan lama gambar QRIS → pilih Simpan Gambar.");
-    });
+        showAlert("Berhasil 🎉", "Proses unduhan QRIS sedang berjalan.");
+    }, 1500);
 }
-
 
     function shareLink() {
         const shareData = {
@@ -314,11 +315,13 @@
             text: 'Suka sama project ini? Yuk dukung kelangsungan server & snippet barunya! 👇\n',
             url: window.location.href
         };
+
         if (navigator.share) {
-            navigator.share(shareData).catch(() => {});
+            navigator.share(shareData)
+                .catch((err) => console.log('Batal membagikan:', err));
         } else {
             navigator.clipboard.writeText(window.location.href).then(() => {
-                showAlert("Disalin 🔗", "Link berhasil disalin!");
+                showAlert("Disalin 🔗", "Link donasi berhasil disalin ke clipboard! Silakan share secara manual.");
             });
         }
     }
