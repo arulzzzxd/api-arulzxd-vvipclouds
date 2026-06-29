@@ -20,7 +20,6 @@
             --text-primary: #FFFFFF;
             --text-muted: #9CA3AF;
             --cyan: #00D4FF;
-            --orange: #FF6B00; 
         }
 
         * {
@@ -56,7 +55,7 @@
         }
 
         .badge-ad {
-            background: #EAB308; 
+            background: var(--cyan); 
             color: #000;
             font-weight: bold;
             padding: 2px 6px;
@@ -75,7 +74,7 @@
             display: flex;
             align-items: center;
             gap: 6px;
-            background: #EAB308;
+            background: var(--cyan);
             color: #000;
             text-decoration: none;
             font-size: 0.8rem;
@@ -198,9 +197,9 @@
             color: #000000;
         }
 
-        .btn-orange {
-            background: var(--orange);
-            color: #FFFFFF;
+        .btn-cyan {
+            background: var(--cyan);
+            color: #000000;
         }
 
         .btn-brutal:disabled {
@@ -325,7 +324,7 @@
                 <span>SIMPAN QR KE GALERI</span>
             </button>
 
-            <button class="btn-brutal btn-orange" onclick="shareLink()">
+            <button class="btn-brutal btn-cyan" onclick="shareLink()">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
                 BAGIKAN LINK
             </button>
@@ -346,7 +345,6 @@
     </div>
 
     <script>
-        // SVG Icon untuk pemberitahuan status alert
         const successSvg = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
         const errorSvg = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
 
@@ -356,7 +354,6 @@
             document.getElementById('alertMsg').innerText = message;
             document.getElementById('alertIcon').innerHTML = isSuccess ? successSvg : errorSvg;
             
-            // Ubah warna border sesuai tipe status
             alertBox.style.borderColor = isSuccess ? "var(--cyan)" : "#EF4444";
             document.getElementById('alertTitleBox').style.color = isSuccess ? "var(--cyan)" : "#EF4444";
 
@@ -371,7 +368,6 @@
             const originalText = btn.innerHTML;
             const qrImgSrc = document.getElementById('qrisImg').src;
 
-            // Render animasi loading SVG Spinner melingkar berputar
             btn.innerHTML = `
                 <svg viewBox="0 0 50 50" style="width: 18px; height: 18px; animation: spin 1s linear infinite; stroke: currentColor; display: inline-block; vertical-align: middle;">
                     <circle cx="25" cy="25" r="20" fill="none" stroke-width="5" stroke-dasharray="1, 150" stroke-dashoffset="0" stroke-linecap="round" style="animation: dash 1.5s ease-in-out infinite;"></circle>
@@ -381,13 +377,11 @@
             btn.disabled = true;
 
             try {
-                // Request stream biner ke server proxy endpoint internal CJS Anda
                 const res = await fetch(`/database/download?url=${encodeURIComponent(qrImgSrc)}`);
                 if (!res.ok) throw new Error("Gagal mengambil biner gambar dari server proxy.");
 
                 const finalBlob = await res.blob();
 
-                // Trigger unduhan biner otomatis aman bebas CORS tanpa canvas
                 const downloadUrl = URL.createObjectURL(finalBlob);
                 const a = document.createElement('a');
                 a.href = downloadUrl;
