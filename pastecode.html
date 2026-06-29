@@ -26,17 +26,24 @@
             margin: 0; 
             padding: 0; 
             font-weight: bold; 
-            padding-top: 85px; 
+            padding-top: 20px; 
         }
 
-        /* Kontainer Tombol Utama di Pojok Kiri Atas */
+        /* PERBAIKAN: Kontainer Navigasi Atas yang Responsif */
+        .top-nav-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+        }
+
         .top-left-nav {
-            position: fixed;
-            top: 16px;
-            left: 16px;
-            z-index: 1000;
             display: flex;
             gap: 10px;
+            align-items: center;
         }
 
         .btn-nav-top {
@@ -65,7 +72,8 @@
             color: #000;
         }
 
-        .container { max-width: 1000px; margin: 30px auto; padding: 0 20px; box-sizing: border-box; min-height: 400px; }
+        /* Margin atas container disesuaikan agar pas dengan navigasi baru */
+        .container { max-width: 1000px; margin: 15px auto 30px auto; padding: 0 20px; box-sizing: border-box; min-height: 400px; }
 
         .hero-banner { background: var(--bg-card); border: 2px solid var(--border-dark); box-shadow: 0px 10px 30px rgba(0,0,0,0.5); padding: 35px; margin-bottom: 35px; position: relative; border-radius: 12px; }
         .hero-tag { background: rgba(0, 163, 255, 0.1); color: var(--cyan); border: 1px solid var(--cyan); display: inline-block; padding: 4px 12px; font-size: 12px; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px; border-radius: 20px; }
@@ -164,20 +172,22 @@
 </head>
 <body>
 
-<div class="top-left-nav">
-    <a href="/" class="btn-nav-top">
-        <svg fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" style="width:14px; height:14px;">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-        </svg>
-        Kembali
-    </a>
+<div class="top-nav-container">
+    <div class="top-left-nav">
+        <a href="/" class="btn-nav-top">
+            <svg fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24" style="width:14px; height:14px;">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Kembali
+        </a>
 
-    <button id="translateBtn" class="btn-nav-top accent" onclick="toggleLanguageSystem()">
-        <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" style="width:14px; height:14px;">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 21l5.25-11.25L21 21m-9-3h7.5M3 5.621a48.474 48.474 0 016-.371m0 0c1.12 0 2.233.038 3.334.114M9 5.25V3m3.334 2.364C11.176 10.658 7.69 15.08 3 17.502m9.334-12.138c.896.061 1.785.147 2.666.257m-4.589 8.495a18.023 18.023 0 01-3.827-5.802" />
-        </svg>
-        <span id="translate-btn-text">EN</span>
-    </button>
+        <button id="translateBtn" class="btn-nav-top accent" onclick="toggleLanguageSystem()">
+            <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" style="width:14px; height:14px;">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 21l5.25-11.25L21 21m-9-3h7.5M3 5.621a48.474 48.474 0 016-.371m0 0c1.12 0 2.233.038 3.334.114M9 5.25V3m3.334 2.364C11.176 10.658 7.69 15.08 3 17.502m9.334-12.138c.896.061 1.785.147 2.666.257m-4.589 8.495a18.023 18.023 0 01-3.827-5.802" />
+            </svg>
+            <span id="translate-btn-text">EN</span>
+        </button>
+    </div>
 </div>
 
 <div class="container" id="page-content">
@@ -255,7 +265,6 @@
     const isRawMode = urlParams.get('raw') === 'true'; 
     let currentFilter = 'ALL';
 
-    // Fungsi untuk menghasilkan warna badge dinamis sesuai jenis bahasa
     function getLanguageStyle(lang) {
         const l = String(lang).toLowerCase().trim();
         switch(l) {
@@ -600,6 +609,7 @@
         applyFilterAndSearch();
     }
 
+    // Fungsi utilitas tetap sama
     function copyRawUrl() {
         const rawUrl = window.location.origin + "/pastecode?id=" + viewId + "&raw=true";
         navigator.clipboard.writeText(rawUrl).then(() => customAlert(translations[currentLang].alertShare));
