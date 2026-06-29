@@ -18,19 +18,12 @@
       }
     }
   ],
-  "rewrites": [
-    { "source": "/pastecode", "destination": "/pastecode.html" },
-    { "source": "/support", "destination": "/support.html" },
-    { "source": "/privacy", "destination": "/privacy.html" },
-    { "source": "/(.*)", "destination": "/index.js" }
-  ],
   "headers": [
     {
-      "source": "/(.*)",
+      "source": "/files/(.*)",
       "headers": [
-        { "key": "Access-Control-Allow-Origin", "value": "*" },
-        { "key": "Access-Control-Allow-Methods", "value": "GET, OPTIONS, POST, PUT, DELETE" },
-        { "key": "Access-Control-Allow-Headers", "value": "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version" }
+        { "key": "Access-Control-Allow-Origin", "value": "https://api-arulzxd-vvipclouds.vercel.app" },
+        { "key": "Access-Control-Allow-Methods", "value": "GET" }
       ]
     }
   ],
