@@ -8,7 +8,7 @@
     <meta property="og:title" content="Support & Donasi — Arulz-XD API">
     <meta property="og:description" content="Suka sama project ini? Yuk support seikhlasnya buat biaya perpanjangan hosting server + nambahin fitur & snippet baru.">
     <meta property="og:image" content="https://arulz-uploader.vercel.app/files/CVmlrD.jpg">
-    <meta property="og:url" content="https://api-arulzxd-vvipclouds.vercel.app/support">
+    <meta property="og:url" content="https://arul-pastecode.vercel.app/support">
     <meta property="og:type" content="website">
 
     <style>
@@ -289,46 +289,27 @@
         document.getElementById('custom-modal').classList.remove('active');
     }
 
-    // FIX STRATEGI: Mengambil resource blob gambar langsung lewat client-side fetch agar terdownload otomatis
+    // Fungsi download otomatis langsung memicu unduhan lokal biner tanpa buka tab baru
     async function downloadQR() {
-        const btn = document.getElementById('btn-download');
-        const originalText = btn.innerHTML;
-        const qrImgSrc = document.getElementById('qris-img').src;
-        
-        btn.innerHTML = "⏳ MENGUNDUH...";
-        btn.disabled = true;
+    function downloadQR() {
+    const btn = document.getElementById('btn-download');
+    const originalText = btn.innerHTML;
+    const qrImgSrc = document.getElementById('qris-img').src; // Mengambil URL https://arulz-uploader.vercel.app/files/CVmlrD.jpg
+    
+    btn.innerHTML = "⏳ MENGUNDUH...";
+    btn.disabled = true;
 
-        try {
-            // Ambil gambar biner secara asinkron
-            const mediaRes = await fetch(qrImgSrc);
-            if (!mediaRes.ok) throw new Error('Gagal mengunduh file dari server storage');
-            
-            const finalBlob = await mediaRes.blob();
+    // Arahkan window ke endpoint backend sambil mengirim parameter URL gambar yang akan diunduh
+    window.location.href = `/database/download?url=${encodeURIComponent(qrImgSrc)}`;
 
-            // Siasati trigger download via Object URL & elemen anchor bayangan
-            const downloadUrl = URL.createObjectURL(finalBlob);
-            const a = document.createElement('a');
-            a.href = downloadUrl;
+    // Kembalikan status tombol setelah jeda singkat
+    setTimeout(() => {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+        showAlert("Berhasil 🎉", "Proses unduhan QRIS sedang berjalan.");
+    }, 1500);
+}
 
-            // Atur ekstensi default atau gunakan .jpg langsung karena file aslinya adalah CVmlrD.jpg
-            a.download = `qris-arulzxd-${Date.now()}.jpg`;
-
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            
-            // Bersihkan objek URL dari memori browser
-            URL.revokeObjectURL(downloadUrl);
-
-            showAlert("Berhasil 🎉", "QRIS berhasil diunduh secara otomatis.");
-        } catch (err) {
-            console.error(err);
-            showAlert("Gagal ❌", "Tidak dapat mengunduh gambar otomatis. Silakan tekan lama gambar lalu pilih 'Simpan Gambar'.");
-        } finally {
-            btn.innerHTML = originalText;
-            btn.disabled = false;
-        }
-    }
 
     function shareLink() {
         const shareData = {

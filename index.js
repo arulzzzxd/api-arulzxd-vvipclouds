@@ -83,6 +83,36 @@ const playlist = [
   }
 ];
 
+// Endpoint untuk memproses unduhan otomatis gambar lintas domain (Bypass CORS)
+app.get('/database/download', async (req, res) => {
+    const imageUrl = req.query.imageUrl;
+
+    if (!imageUrl) {
+        return res.status(400).send('URL gambar tidak ditemukan.');
+    }
+
+    try {
+        // Ambil data gambar biner dari server uploader externo
+        const response = await axios({
+            method: 'get',
+            url: imageUrl,
+            responseType: 'stream'
+        });
+
+        // Setel header agar browser mengenali ini sebagai unduhan file (bukan dibuka di tab baru)
+        const namaFile = `qris-arulzxd-${Date.now()}.jpg`;
+        res.setHeader('Content-Disposition', `attachment; filename="${namaFile}"`);
+        res.setHeader('Content-Type', response.headers['content-type'] || 'image/jpeg');
+
+        // Alirkan (pipe) biner data langsung ke browser user
+        response.data.pipe(res);
+    } catch (error) {
+        console.error('Gagal mengunduh gambar via backend:', error.message);
+        res.status(500).send('Gagal memproses unduhan otomatis server.');
+    }
+});
+
+
 app.get('/uploader', (req, res) => {
   res.sendFile(path.join(__dirname, 'uploader.html'));
 });
