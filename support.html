@@ -71,9 +71,9 @@
                 API & Pastebin ini gw bikin di sela-sela waktu luang. Kalau ngerasa kebantu, support seikhlasnya bantu banget buat biaya perpanjangan hosting server + nambahin fitur & snippet baru.
             </p>
 
-            <!-- FIX BACKGROUND: Mengubah wadah menjadi full putih bersih agar menyatu dengan foto QRIS -->
-            <div class="bg-white rounded-2xl p-2 flex flex-col items-center justify-center relative group mb-5 w-full box-border shadow-xl">
-                <div class="bg-white rounded-xl w-full flex justify-center box-border">
+            <!-- FIX BACKGROUND: Menggunakan warna putih pekat murni tanpa border/padding abu-abu yang tersisa di sudut -->
+            <div class="bg-white rounded-2xl p-3 flex flex-col items-center justify-center relative mb-5 w-full box-border shadow-xl border-none">
+                <div class="w-full flex justify-center box-border bg-white rounded-xl">
                     <img id="qris-img" src="https://arulz-uploader.vercel.app/files/CVmlrD.jpg" alt="QRIS Arulz-XD" class="w-full max-w-[340px] h-auto object-contain rounded-lg block">
                 </div>
             </div>
@@ -173,8 +173,8 @@
             modal.querySelector('div').classList.add('scale-95');
         }
 
-        // FIX AUTOMATIC DOWNLOAD: Mendownload langsung via backend tanpa redirect halaman utama
-        async function downloadQR() {
+        // FIX DOWNLOAD OTOMATIS AMAN CORS & TANPA PINDAH URL/TAB BARU
+        function downloadQR() {
             const btn = document.getElementById('btn-download');
             const originalText = btn.innerHTML;
             
@@ -186,28 +186,44 @@
             btn.disabled = true;
 
             try {
-                // Fetch response sebagai Blob biner dari endpoint API database kamu
-                const response = await fetch('/database/download');
-                if (!response.ok) throw new Error();
-
-                const blob = await response.blob();
+                const imgElement = document.getElementById('qris-img');
                 
-                // Trigger download otomatis bayangan di background browser tanpa pindah tab
-                const downloadUrl = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = downloadUrl;
-                a.download = "QRIS_Idzharul_Store.jpg";
-                document.body.appendChild(a);
-                a.click();
+                // Membuat elemen canvas bayangan untuk memproses file lokal image
+                const canvas = document.createElement('@napi-rs/canvas');
+                const ctx = canvas.getContext('2d');
+                const img = new Image();
                 
-                // Cleanup memori
-                document.body.removeChild(a);
-                window.URL.revokeObjectURL(downloadUrl);
+                img.crossOrigin = "anonymous"; 
+                img.src = imgElement.src;
+                
+                img.onload = function () {
+                    canvas.width = img.naturalWidth;
+                    canvas.height = img.naturalHeight;
+                    ctx.drawImage(img, 0, 0);
+                    
+                    // Merubah data gambar menjadi format link download browser dataURL
+                    const dataURL = canvas.toDataURL('image/jpeg');
+                    const a = document.createElement('a');
+                    a.href = dataURL;
+                    a.download = "QRIS_Idzharul_Store.jpg";
+                    
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    
+                    showAlert("Berhasil", "QRIS berhasil disimpan ke galeri.");
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                };
 
-                showAlert("Berhasil", "QRIS berhasil disimpan ke galeri.");
+                img.onerror = function() {
+                    throw new Error("Gagal memuat elemen gambar biner");
+                };
+
             } catch (error) {
-                showAlert("Gagal", "Terjadi kesalahan saat mengunduh gambar.", false);
-            } finally {
+                // Alternatif fallback jika render canvas perangkat seluler sedang sibuk
+                window.open('/database/download', '_blank');
+                showAlert("Pemberitahuan", "Membuka gambar di tab baru untuk disimpan.", true);
                 btn.innerHTML = originalText;
                 btn.disabled = false;
             }
