@@ -264,41 +264,56 @@
 
     // Download tanpa pindah tab - pakai blob + fetch dengan mode CORS
     function downloadQR() {
-        const btn = document.getElementById('btn-download');
-        const originalText = btn.innerHTML;
-        btn.innerHTML = "⌛ MENGUNDUH...";
-        btn.disabled = true;
+    const btn = document.getElementById('btn-download');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = "⌛ MENGUNDUH...";
+    btn.disabled = true;
 
-        const qrisUrl = "https://arulz-uploader.vercel.app/files/CVmlrD.jpg";
+    const qrisUrl = "https://arulz-uploader.vercel.app/files/CVmlrD.jpg";
 
-        fetch(qrisUrl, { mode: 'cors' })
-            .then(res => {
-                if (!res.ok) throw new Error('Gagal ambil gambar');
-                return res.blob();
-            })
-            .then(blob => {
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = "qris-arulzxd.jpg";
-                a.style.display = 'none';
-                document.body.appendChild(a);
-                a.click();
-                setTimeout(() => {
-                    URL.revokeObjectURL(url);
-                    a.remove();
-                }, 100);
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-                showAlert("Berhasil 🎉", "Gambar QRIS tersimpan di galeri!");
-            })
-            .catch(() => {
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-                // Solusi cadangan kalau CORS gagal
-                showAlert("Info ℹ️", "Otomatis tidak bisa, silakan tekan lama gambar QRIS → pilih Simpan Gambar.");
-            });
-    }
+    // Ambil data gambar langsung sebagai biner (Blob) lewat koneksi CORS yang sudah diizinkan vercel.json
+    fetch(qrisUrl, {
+        method: 'GET',
+        mode: 'cors',
+        headers: {
+            'Accept': 'image/jpeg,image/png'
+        }
+    })
+    .then(res => {
+        if (!res.ok) throw new Error('Gagal mengunduh file dari server');
+        return res.blob(); // Mengubah response menjadi object Blob (Biner, bukan Base64)
+    })
+    .then(blob => {
+        // Membuat URL lokal temporer di dalam memori browser sandbox
+        const url = URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = "qris-arulzxd.jpg"; // Memaksa browser untuk download, bukan buka tab baru
+        a.style.display = 'none';
+        
+        document.body.appendChild(a);
+        a.click(); // Memicu proses unduhan langsung di latar belakang
+
+        // Membersihkan memori browser setelah unduhan selesai dipicu
+        setTimeout(() => {
+            URL.revokeObjectURL(url);
+            a.remove();
+        }, 150);
+
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+        showAlert("Berhasil 🎉", "Gambar QRIS berhasil diunduh langsung!");
+    })
+    .catch((err) => {
+        console.error(err);
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+        // Fallback jika dibuka lewat browser bawaan aplikasi (in-app webview) yang memblokir fungsi download otomatis
+        showAlert("Info ℹ️", "Otomatis tidak bisa, silakan tekan lama gambar QRIS → pilih Simpan Gambar.");
+    });
+}
+
 
     function shareLink() {
         const shareData = {
