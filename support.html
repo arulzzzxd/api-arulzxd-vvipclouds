@@ -290,24 +290,47 @@
     }
 
     // Fungsi download otomatis langsung memicu unduhan lokal biner tanpa buka tab baru
-    function downloadQR() {
+    async function downloadQR() {
     const btn = document.getElementById('btn-download');
     const originalText = btn.innerHTML;
+    const qrImgSrc = document.getElementById('qris-img').src; // Mengambil URL gambar QRIS
     
     btn.innerHTML = "⏳ MENGUNDUH...";
     btn.disabled = true;
 
-    // Arahkan ke Serverless Function Vercel
-    // Ini akan memicu pop-up download di HP tanpa membuka tab baru
-    window.location.href = "/api/download";
+    try {
+        // 1. Ambil data gambar sebagai Blob
+        const response = await fetch(qrImgSrc);
+        if (!response.ok) throw new Error('Gagal mengambil gambar');
+        const blob = await response.blob();
 
-    // Kembalikan status tombol setelah jeda singkat
-    setTimeout(() => {
+        // 2. Buat Object URL dari Blob tersebut
+        const downloadUrl = URL.createObjectURL(blob);
+        
+        // 3. Buat elemen <a> bayangan untuk memicu download otomatis
+        const a = document.createElement('a');
+        a.href = downloadUrl;
+        a.download = `QRIS-Arulz-XD-${Date.now()}.jpg`; // Nama file hasil download
+
+        // 4. Masukkan ke dokumen, klik, lalu hapus kembali
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+
+        // 5. Bersihkan memori Object URL
+        URL.revokeObjectURL(downloadUrl);
+
+        showAlert("Berhasil 🎉", "QRIS berhasil disimpan ke perangkat Anda.");
+    } catch (err) {
+        console.error(err);
+        showAlert("Gagal ❌", "Gagal mengunduh gambar secara otomatis. Silakan tekan lama pada gambar untuk menyimpan.");
+    } finally {
+        // Kembalikan status tombol ke semula
         btn.innerHTML = originalText;
         btn.disabled = false;
-        showAlert("Berhasil 🎉", "Proses unduhan QRIS sedang berjalan.");
-    }, 1500);
+    }
 }
+
 
     function shareLink() {
         const shareData = {
