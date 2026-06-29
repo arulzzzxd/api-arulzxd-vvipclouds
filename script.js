@@ -1205,8 +1205,8 @@ if (notifBtn && notifPopup) {
     // KODE BARU:
     if (pastebinBtn) {
         pastebinBtn.addEventListener('click', () => {
-            window.location.href = '/pastecode'; 
-       });
+            window.location.href = '/pastecode.html'; 
+        });
     }
 
     fetch('/api/apilist')
