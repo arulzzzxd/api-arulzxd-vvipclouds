@@ -1179,7 +1179,6 @@ if (notifBtn && notifPopup) {
     }
 }
     const uploaderBtn = document.getElementById('uploaderMenuBtn'); 
-    const pastebinBtn = document.getElementById('pastebinMenuBtn'); 
     const bioMenuBtn = document.getElementById('bioMenuBtn');
     const bioDropdown = document.getElementById('bioDropdown');
     const closeMenuBtn = document.getElementById('closeMenuBtn');
@@ -1199,13 +1198,6 @@ if (notifBtn && notifPopup) {
     if (uploaderBtn) {
         uploaderBtn.addEventListener('click', () => {
             window.location.href = '/uploader'; 
-        });
-    }
-
-    // KODE BARU:
-    if (pastebinBtn) {
-        pastebinBtn.addEventListener('click', () => {
-            window.location.href = '/pastecode.html'; 
         });
     }
 
