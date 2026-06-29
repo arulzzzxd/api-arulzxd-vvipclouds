@@ -6,12 +6,11 @@
     <title>Arulz-XD API - Support & Donasi</title>
 
     <meta property="og:title" content="Support & Donasi — Arulz-XD API">
-    <meta property="og:description" content="API & Pastebin ini gw bikin di sela-sela waktu luang. Kalau ngerasa kebantu, support seikhlasnya bantu banget buat biaya perpanjangan hosting server + nambahin fitur & snippet baru.">
+    <meta property="og:description" content="API &amp; Pastebin ini gw bikin di sela-sela waktu luang. Kalau ngerasa kebantu, support seikhlasnya bantu banget buat biaya perpanjangan hosting server + nambahin fitur &amp; snippet baru.">
     <meta property="og:image" content="https://arulz-uploader.vercel.app/files/CVmlrD.jpg">
     <meta property="og:url" content="https://arul-pastecode.vercel.app/support">
     <meta property="og:type" content="website">
 
-    <!-- Menggunakan font monospace/JetBrains Mono agar sesuai style brutalisme asli -->
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 
     <style>
@@ -21,9 +20,9 @@
             --text-primary: #FFFFFF;
             --text-muted: #9CA3AF;
             --cyan: #00D4FF;
-            --orange: #FF6B00; /* Warna tombol bagikan link dari gambar 2 */
+            --orange: #FF6B00; 
         }
-        
+
         * {
             box-sizing: border-box;
             font-family: 'JetBrains Mono', monospace;
@@ -40,7 +39,7 @@
             min-height: 100vh;
         }
 
-        /* --- TOP NAV BAR (Sesuai Gambar 2) --- */
+        /* --- TOP NAV BAR --- */
         .top-nav {
             display: flex;
             justify-content: space-between;
@@ -57,7 +56,7 @@
         }
 
         .badge-ad {
-            background: #EAB308; /* Kuning lambang AD */
+            background: #EAB308; 
             color: #000;
             font-weight: bold;
             padding: 2px 6px;
@@ -73,6 +72,9 @@
         }
 
         .btn-kembali {
+            display: flex;
+            align-items: center;
+            gap: 6px;
             background: #EAB308;
             color: #000;
             text-decoration: none;
@@ -115,7 +117,7 @@
             margin-bottom: 30px;
         }
 
-        /* --- QRIS FRAME (Neo-brutalism style) --- */
+        /* --- QRIS FRAME --- */
         .qris-frame {
             background: #FFFFFF;
             border: 3px solid #000000;
@@ -140,6 +142,10 @@
         }
 
         .payment-title {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
             font-size: 0.75rem;
             color: var(--text-muted);
             margin-bottom: 12px;
@@ -165,7 +171,10 @@
 
         /* --- BUTTONS STYLING --- */
         .btn-brutal {
-            display: block;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
             width: 100%;
             padding: 14px;
             font-size: 0.9rem;
@@ -203,12 +212,21 @@
 
         /* --- FOOTER NOTE --- */
         .footer-note {
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            gap: 6px;
             font-size: 0.75rem;
             color: var(--text-muted);
             font-style: italic;
             text-align: center;
             line-height: 1.5;
             margin-top: 25px;
+        }
+
+        .footer-note svg {
+            flex-shrink: 0;
+            margin-top: 2px;
         }
 
         /* --- TOAST NOTIFICATION --- */
@@ -233,7 +251,10 @@
             opacity: 1;
         }
 
-        .alert-title {
+        .alert-title-box {
+            display: flex;
+            align-items: center;
+            gap: 6px;
             font-weight: bold;
             font-size: 0.85rem;
             color: var(--cyan);
@@ -244,20 +265,31 @@
             font-size: 0.8rem;
             color: #fff;
         }
+
+        /* --- ANIMASI KEYFRAMES SVG SPINNER --- */
+        @keyframes spin {
+            100% { transform: rotate(360deg); }
+        }
+        @keyframes dash {
+            0% { stroke-dasharray: 1, 150; stroke-dashoffset: 0; }
+            50% { stroke-dasharray: 90, 150; stroke-dashoffset: -35; }
+            100% { stroke-dasharray: 90, 150; stroke-dashoffset: -124; }
+        }
     </style>
 </head>
 <body>
 
-    <!-- Top Nav Bar sesuai Gambar 2 -->
     <div class="top-nav">
         <div class="brand-box">
             <span class="badge-ad">AD</span>
             <span class="brand-title">Arulz-XD API</span>
         </div>
-        <a href="/" class="btn-kembali">← KEMBALI</a>
+        <a href="/" class="btn-kembali">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+            KEMBALI
+        </a>
     </div>
 
-    <!-- Main Content Area -->
     <div class="wrapper">
         <div class="main-card">
             <h1 class="title">SUKA SAMA PROJECT INI?</h1>
@@ -265,14 +297,15 @@
                 API &amp; Pastebin ini gw bikin di sela-sela waktu luang. Kalau ngerasa kebantu, support seikhlasnya bantu banget buat biaya perpanjangan hosting server + nambahin fitur &amp; snippet baru.
             </div>
 
-            <!-- QRIS Frame Frame Putih Tebal -->
             <div class="qris-frame">
                 <img src="https://arulz-uploader.vercel.app/files/CVmlrD.jpg" alt="QRIS Arulz" class="qris-image" id="qrisImg">
             </div>
 
-            <!-- List Metode Pembayaran Pembayaran Berjejer -->
             <div class="payment-box">
-                <div class="payment-title">📱 SCAN PAKAI APPS PAYMENT APA AJA</div>
+                <div class="payment-title">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>
+                    SCAN PAKAI APPS PAYMENT APA AJA
+                </div>
                 <div class="badge-container">
                     <span class="pay-badge">DANA</span>
                     <span class="pay-badge">OVO</span>
@@ -287,80 +320,93 @@
                 </div>
             </div>
 
-            <!-- Tombol Aksi Simpan & Share -->
             <button class="btn-brutal btn-white" id="downloadBtn" onclick="downloadQris()">
-                📥 SIMPAN QR KE GALERI
+                <svg id="downloadIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                <span>SIMPAN QR KE GALERI</span>
             </button>
 
             <button class="btn-brutal btn-orange" onclick="shareLink()">
-                🔗 BAGIKAN LINK
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+                BAGIKAN LINK
             </button>
 
-            <!-- Catatan Kaki Terima Kasih -->
             <div class="footer-note">
-                ✨ Makasih banget, kontribusi lo bikin gw semangat ngembangin lebih banyak snippet &amp; feature.
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M14 12a2 2 0 1 1-4 0 2 2 0 0 1 4 0z"></path></svg>
+                <span>Makasih banget, kontribusi lo bikin gw semangat ngembangin lebih banyak snippet &amp; feature.</span>
             </div>
         </div>
     </div>
 
-    <!-- Custom Toast Notification -->
     <div class="custom-alert" id="customAlert">
-        <div class="alert-title" id="alertTitle">NOTIFIKASI</div>
+        <div class="alert-title-box" id="alertTitleBox">
+            <span id="alertIcon"></span>
+            <span id="alertTitle">NOTIFIKASI</span>
+        </div>
         <div class="alert-msg" id="alertMsg">Pesan sukses disini.</div>
     </div>
 
     <script>
-        function showAlert(title, message) {
+        // SVG Icon untuk pemberitahuan status alert
+        const successSvg = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+        const errorSvg = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
+
+        function showAlert(title, message, isSuccess = true) {
             const alertBox = document.getElementById('customAlert');
             document.getElementById('alertTitle').innerText = title.toUpperCase();
             document.getElementById('alertMsg').innerText = message;
+            document.getElementById('alertIcon').innerHTML = isSuccess ? successSvg : errorSvg;
             
+            // Ubah warna border sesuai tipe status
+            alertBox.style.borderColor = isSuccess ? "var(--cyan)" : "#EF4444";
+            document.getElementById('alertTitleBox').style.color = isSuccess ? "var(--cyan)" : "#EF4444";
+
             alertBox.classList.add('show');
             setTimeout(() => {
                 alertBox.classList.remove('show');
             }, 3500);
         }
 
-        async function downloadQR() {
-        const btn = document.getElementById('btn-download');
-        const originalText = btn.innerHTML;
-        const qrImgSrc = document.getElementById('qris-img').src;
+        async function downloadQris() {
+            const btn = document.getElementById('downloadBtn');
+            const originalText = btn.innerHTML;
+            const qrImgSrc = document.getElementById('qrisImg').src;
 
-        // Render animasi loading SVG Spinner
-        btn.innerHTML = `
-            <svg viewBox="0 0 50 50" style="width: 18px; height: 18px; animation: spin 1s linear infinite; stroke: currentColor; display: inline-block; vertical-align: middle; margin-right: 8px;">
-                <circle cx="25" cy="25" r="20" fill="none" stroke-width="5" stroke-dasharray="1, 150" stroke-dashoffset="0" stroke-linecap="round" style="animation: dash 1.5s ease-in-out infinite;"></circle>
-            </svg>
-            <span>MENGUNDUH...</span>
-        `;
-        btn.disabled = true;
+            // Render animasi loading SVG Spinner melingkar berputar
+            btn.innerHTML = `
+                <svg viewBox="0 0 50 50" style="width: 18px; height: 18px; animation: spin 1s linear infinite; stroke: currentColor; display: inline-block; vertical-align: middle;">
+                    <circle cx="25" cy="25" r="20" fill="none" stroke-width="5" stroke-dasharray="1, 150" stroke-dashoffset="0" stroke-linecap="round" style="animation: dash 1.5s ease-in-out infinite;"></circle>
+                </svg>
+                <span>MENGUNDUH...</span>
+            `;
+            btn.disabled = true;
 
-        try {
-            const res = await fetch(`/database/download?url=${encodeURIComponent(qrImgSrc)}`);
-            if (!res.ok) throw new Error("Gagal mengambil biner gambar dari server proxy.");
-            
-            const finalBlob = await res.blob();
+            try {
+                // Request stream biner ke server proxy endpoint internal CJS Anda
+                const res = await fetch(`/database/download?url=${encodeURIComponent(qrImgSrc)}`);
+                if (!res.ok) throw new Error("Gagal mengambil biner gambar dari server proxy.");
 
-            // Pemicu unduhan otomatis murni dari blob data
-            const downloadUrl = URL.createObjectURL(finalBlob);
-            const a = document.createElement('a');
-            a.href = downloadUrl;
-            a.download = `qris-arulzxd-${Date.now()}.jpg`;
+                const finalBlob = await res.blob();
 
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
+                // Trigger unduhan biner otomatis aman bebas CORS tanpa canvas
+                const downloadUrl = URL.createObjectURL(finalBlob);
+                const a = document.createElement('a');
+                a.href = downloadUrl;
+                a.download = `qris-arulzxd-${Date.now()}.jpg`;
 
-            URL.revokeObjectURL(downloadUrl);
-            showAlert("Berhasil 🎉", "QRIS berhasil disimpan ke galeri perangkat Anda.");
-        } catch (err) {
-            console.error(err);
-            showAlert("Gagal ❌", "Gagal mengunduh otomatis. Silakan simpan manual dengan menekan lama gambar QRIS.");
-        } finally {
-            btn.innerHTML = originalText;
-            btn.disabled = false;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+
+                URL.revokeObjectURL(downloadUrl);
+                showAlert("Berhasil", "QRIS berhasil disimpan ke galeri perangkat Anda.", true);
+            } catch (err) {
+                console.error(err);
+                showAlert("Gagal", "Gagal mengunduh otomatis. Silakan simpan manual dengan menekan lama gambar QRIS.", false);
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
         }
-    }
 
         function shareLink() {
             const shareData = {
@@ -373,11 +419,10 @@
                 navigator.share(shareData).catch((err) => console.log('Batal share:', err));
             } else {
                 navigator.clipboard.writeText(window.location.href).then(() => {
-                    showAlert("Disalin 🔗", "Link donasi berhasil disalin ke clipboard!");
+                    showAlert("Disalin", "Link donasi berhasil disalin ke clipboard!", true);
                 });
             }
         }
     </script>
 </body>
 </html>
- 
