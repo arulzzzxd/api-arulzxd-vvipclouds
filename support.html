@@ -288,44 +288,28 @@
         document.getElementById('custom-modal').classList.remove('active');
     }
 
+    // Fungsi download yang sudah diperbaiki - TANPA PINDAH TAB
     function downloadQR() {
-    const btn = document.getElementById('btn-download');
-    const originalText = btn.innerHTML;
+        const btn = document.getElementById('btn-download');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = "⌛ MENGUNDUH...";
+        btn.disabled = true;
 
-    btn.innerHTML = "⌛ MENGUNDUH...";
-    btn.disabled = true;
+        // Langsung pakai URL gambar asli, tidak lewat endpoint server
+        const qrisUrl = "https://arulz-uploader.vercel.app/files/CVmlrD.jpg";
+        
+        const a = document.createElement('a');
+        a.href = qrisUrl;
+        a.download = "qris-arulzxd.jpg"; // Nama file saat disimpan
+        a.style.display = 'none';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
 
-    // Langsung ambil gambar QRIS dari URL aslinya
-    const qrisUrl = "https://arulz-uploader.vercel.app/files/CVmlrD.jpg";
-
-    fetch(qrisUrl)
-        .then(response => {
-            if (!response.ok) throw new Error("Gagal mengambil gambar");
-            return response.blob();
-        })
-        .then(blob => {
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.style.display = 'none';
-            a.href = url;
-            a.download = 'qris-arulzxd.jpg'; // Nama file saat disimpan
-            document.body.appendChild(a);
-            a.click(); // Pemicu unduh otomatis
-            window.URL.revokeObjectURL(url);
-            a.remove();
-
-            btn.innerHTML = originalText;
-            btn.disabled = false;
-            showAlert("Berhasil 🎉", "Gambar QRIS berhasil disimpan ke galeri!");
-        })
-        .catch(err => {
-            console.error(err);
-            btn.innerHTML = originalText;
-            btn.disabled = false;
-            showAlert("Gagal ❌", "Tekan lama gambar QRIS lalu pilih 'Simpan Gambar' ya.");
-        });
-}
-
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+        showAlert("Berhasil 🎉", "Gambar QRIS berhasil disimpan! Cek galeri ya.");
+    }
 
     function shareLink() {
         const shareData = {
