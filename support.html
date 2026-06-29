@@ -243,7 +243,7 @@
         <p class="desc">API & Pastebin ini gw bikin di sela-sela waktu luang. Kalau ngerasa kebantu, support seikhlasnya bantu banget buat biaya perpanjangan hosting server + nambahin fitur & snippet baru.</p>
 
         <div class="qr-wrapper">
-            <img id="qris-img" src="https://arulz-uploader.vercel.app/files/CVmlrD.jpg" crossOrigin="anonymous" alt="QRIS Arulz-XD">
+            <img id="qris-img" src="https://arulz-uploader.vercel.app/files/CVmlrD.jpg" alt="QRIS Arulz-XD">
         </div>
 
         <div class="payment-info-box">
@@ -288,43 +288,21 @@
         document.getElementById('custom-modal').classList.remove('active');
     }
 
-    // Menggunakan teknik konversi internal CORS proxy / Base64 bypass yang aman dari restriksi browser
-    async function downloadQR() {
+    function downloadQR() {
         const btn = document.getElementById('btn-download');
         const originalText = btn.innerHTML;
 
         btn.innerHTML = "⌛ MENGUNDUH...";
         btn.disabled = true;
 
-        const imgElement = document.getElementById('qris-img');
-        
-        try {
-            // Mengunduh resource lewat fetch dengan mode cors eksplisit
-            const response = await fetch(imgElement.src, { mode: 'cors' });
-            if (!response.ok) throw new Error();
-            const blob = await response.blob();
-            
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.style.display = 'none';
-            a.href = url;
-            a.download = 'qris-arulzxd.jpg';
-            document.body.appendChild(a);
-            a.click();
-            
-            window.URL.revokeObjectURL(url);
-            a.remove();
-            
-            btn.innerHTML = originalText;
-            btn.disabled = false;
-            showAlert("Berhasil 🎉", "Gambar QRIS berhasil diunduh ke galeri perangkat lo.");
-        } catch (err) {
-            // Jika fetch gagal akibat header CORS di server uploader, gunakan proxy gratisan agar tembus 100%
-            try {
-                const proxyUrl = "https://api.allorigins.win/raw?url=" + encodeURIComponent(imgElement.src);
-                const response = await fetch(proxyUrl);
-                const blob = await response.blob();
-                
+        // Memanggil internal route Vercel Anda lewat AJAX latar belakang (Fetch)
+        fetch("/database/download")
+            .then(response => {
+                if (!response.ok) throw new Error("Gagal mengambil data dari server endpoint.");
+                return response.blob();
+            })
+            .then(blob => {
+                // Membuat trigger download biner murni secara lokal di browser client
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.style.display = 'none';
@@ -338,13 +316,14 @@
                 
                 btn.innerHTML = originalText;
                 btn.disabled = false;
-                showAlert("Berhasil 🎉", "Gambar QRIS berhasil diunduh via aman.");
-            } catch (proxyErr) {
+                showAlert("Berhasil 🎉", "Gambar QRIS berhasil disimpan ke galeri perangkat lo.");
+            })
+            .catch(err => {
+                console.error(err);
                 btn.innerHTML = originalText;
                 btn.disabled = false;
-                showAlert("Gagal ❌", "Sistem gagal memproses unduhan otomatis. Silakan tekan lama pada gambar QRIS untuk menyimpannya secara manual.");
-            }
-        }
+                showAlert("Gagal ❌", "Terjadi error sistem internal. Alternatif: silakan tekan lama pada gambar QRIS lalu pilih 'Simpan Gambar'.");
+            });
     }
 
     function shareLink() {
