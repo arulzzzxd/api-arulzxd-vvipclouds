@@ -6,247 +6,316 @@
     <title>Arulz-XD API - Support & Donasi</title>
 
     <meta property="og:title" content="Support & Donasi — Arulz-XD API">
-    <meta property="og:description" content="Suka sama project ini? Yuk support seikhlasnya buat biaya perpanjangan hosting server + nambahin fitur & snippet baru.">
+    <meta property="og:description" content="API & Pastebin ini gw bikin di sela-sela waktu luang. Kalau ngerasa kebantu, support seikhlasnya bantu banget buat biaya perpanjangan hosting server + nambahin fitur & snippet baru.">
     <meta property="og:image" content="https://arulz-uploader.vercel.app/files/CVmlrD.jpg">
     <meta property="og:url" content="https://arul-pastecode.vercel.app/support">
     <meta property="og:type" content="website">
 
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Menggunakan font monospace/JetBrains Mono agar sesuai style brutalisme asli -->
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 
     <style>
         :root { 
-            --bg-main: #0B0F19; /* Gelap Cyberpunk */
-            --bg-card: rgba(17, 24, 39, 0.7); /* Transparan Glassmorphism */
-            --border-neon: rgba(0, 212, 255, 0.2); 
-            --cyan: #00D4FF;
-            --cyan-hover: #00B9E0;
-            --text-primary: #E5E7EB;
+            --bg-main: #0B0F19; 
+            --bg-card: #111827;
+            --text-primary: #FFFFFF;
             --text-muted: #9CA3AF;
+            --cyan: #00D4FF;
+            --orange: #FF6B00; /* Warna tombol bagikan link dari gambar 2 */
         }
         
         * {
             box-sizing: border-box;
+            font-family: 'JetBrains Mono', monospace;
         }
 
         body { 
-            font-family: 'Poppins', sans-serif; 
             background-color: var(--bg-main);
-            background-image: 
-                radial-gradient(rgba(0, 212, 255, 0.05) 1.5px, transparent 1.5px),
-                linear-gradient(to bottom, #0B0F19, #05070B);
-            background-size: 24px 24px, 100% 100%;
+            /* Grid background efek titik-titik neon halus */
+            background-image: radial-gradient(rgba(0, 212, 255, 0.1) 1.5px, transparent 1.5px);
+            background-size: 24px 24px;
             color: var(--text-primary); 
             margin: 0; 
-            padding: 20px;
+            padding: 0;
             min-height: 100vh;
+        }
+
+        /* --- TOP NAV BAR (Sesuai Gambar 2) --- */
+        .top-nav {
             display: flex;
-            justify-content: center;
+            justify-content: space-between;
             align-items: center;
+            background: #111827;
+            padding: 12px 16px;
+            border-bottom: 3px solid #000000;
         }
 
-        .container {
-            max-width: 450px;
-            width: 100%;
-            background: var(--bg-card);
-            border: 1px solid var(--border-neon);
-            border-radius: 16px;
-            padding: 24px;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            position: relative;
-            overflow: hidden;
+        .brand-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
-        /* Efek garis aksen cyber di bagian atas card */
-        .container::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 4px;
-            background: linear-gradient(90deg, #00D4FF, #005F73);
+        .badge-ad {
+            background: #EAB308; /* Kuning lambang AD */
+            color: #000;
+            font-weight: bold;
+            padding: 2px 6px;
+            font-size: 0.75rem;
+            border: 2px solid #000;
+            box-shadow: 2px 2px 0px #000;
         }
 
-        /* Header Style */
-        h1 {
-            font-size: 1.5rem;
-            font-weight: 700;
-            margin-top: 0;
-            margin-bottom: 8px;
+        .brand-title {
+            font-weight: bold;
+            font-size: 1.1rem;
             color: #fff;
-            text-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
-            text-align: center;
         }
 
-        .subtitle {
+        .btn-kembali {
+            background: #EAB308;
+            color: #000;
+            text-decoration: none;
+            font-size: 0.8rem;
+            font-weight: bold;
+            padding: 6px 12px;
+            border: 2px solid #000;
+            box-shadow: 2px 2px 0px #000;
+        }
+
+        /* --- MAIN CONTAINER --- */
+        .wrapper {
+            max-width: 500px;
+            margin: 30px auto;
+            padding: 0 16px 50px 16px;
+        }
+
+        .main-card {
+            background: var(--bg-card);
+            border: 3px solid #000000;
+            box-shadow: 8px 8px 0px #000000;
+            padding: 30px 20px;
+        }
+
+        h1.title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            text-align: center;
+            text-transform: uppercase;
+            margin-top: 0;
+            margin-bottom: 20px;
+            line-height: 1.4;
+        }
+
+        .description {
             font-size: 0.85rem;
             color: var(--text-muted);
             text-align: center;
-            margin-bottom: 24px;
-            line-height: 1.5;
+            line-height: 1.6;
+            margin-bottom: 30px;
         }
 
-        /* QRIS Frame Box */
-        .qris-box {
-            background: rgba(0, 0, 0, 0.4);
-            border: 1px dashed rgba(0, 212, 255, 0.3);
-            border-radius: 12px;
+        /* --- QRIS FRAME (Neo-brutalism style) --- */
+        .qris-frame {
+            background: #FFFFFF;
+            border: 3px solid #000000;
+            box-shadow: 6px 6px 0px #000000;
             padding: 16px;
-            text-align: center;
-            margin-bottom: 20px;
-            position: relative;
+            margin-bottom: 25px;
         }
 
         .qris-image {
             width: 100%;
-            max-width: 280px;
             height: auto;
-            border-radius: 8px;
             display: block;
-            margin: 0 auto;
-            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        /* Buttons Style */
-        .btn {
-            display: inline-flex;
-            align-items: center;
+        /* --- PAYMENT METHOD BADGES BOX --- */
+        .payment-box {
+            border: 2px solid #000000;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 15px 10px;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        .payment-title {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+            letter-spacing: 1px;
+        }
+
+        .badge-container {
+            display: flex;
+            flex-wrap: wrap;
             justify-content: center;
+            gap: 6px;
+        }
+
+        .pay-badge {
+            background: #FFFFFF;
+            color: #000000;
+            font-size: 0.75rem;
+            font-weight: bold;
+            padding: 4px 10px;
+            border-radius: 20px;
+            border: 1.5px solid #000000;
+        }
+
+        /* --- BUTTONS STYLING --- */
+        .btn-brutal {
+            display: block;
             width: 100%;
-            padding: 12px 16px;
-            font-family: 'JetBrains Mono', monospace;
+            padding: 14px;
             font-size: 0.9rem;
             font-weight: 700;
             text-transform: uppercase;
-            border-radius: 8px;
+            text-align: center;
             cursor: pointer;
-            transition: all 0.2s ease;
-            margin-bottom: 12px;
-            border: none;
+            margin-bottom: 16px;
+            border: 3px solid #000000;
+            box-shadow: 4px 4px 0px #000000;
+            transition: transform 0.1s, box-shadow 0.1s;
         }
 
-        .btn-primary {
-            background: var(--cyan);
-            color: #05070B;
-            box-shadow: 0 4px 14px rgba(0, 212, 255, 0.3);
+        .btn-brutal:active {
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0px #000000;
         }
 
-        .btn-primary:hover {
-            background: var(--cyan-hover);
-            transform: translateY(-1px);
-            box-shadow: 0 6px 20px rgba(0, 212, 255, 0.4);
+        .btn-white {
+            background: #FFFFFF;
+            color: #000000;
         }
 
-        .btn-secondary {
-            background: rgba(255, 255, 255, 0.05);
-            color: #fff;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+        .btn-orange {
+            background: var(--orange);
+            color: #FFFFFF;
         }
 
-        .btn-secondary:hover {
-            background: rgba(255, 255, 255, 0.1);
-            border-color: var(--cyan);
-            color: var(--cyan);
-        }
-
-        .btn:disabled {
-            opacity: 0.5;
+        .btn-brutal:disabled {
+            opacity: 0.6;
             cursor: not-allowed;
             transform: none !important;
-            box-shadow: none !important;
+            box-shadow: 4px 4px 0px #000000 !important;
         }
 
-        /* Info Badge / Nominal */
-        .info-badge {
-            background: rgba(0, 212, 255, 0.06);
-            border: 1px solid rgba(0, 212, 255, 0.15);
-            color: var(--cyan);
-            font-family: 'JetBrains Mono', monospace;
-            padding: 8px 12px;
-            border-radius: 6px;
-            font-size: 0.8rem;
+        /* --- FOOTER NOTE --- */
+        .footer-note {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-style: italic;
             text-align: center;
-            margin-top: 12px;
+            line-height: 1.5;
+            margin-top: 25px;
         }
 
-        /* Custom Alert Notification */
+        /* --- TOAST NOTIFICATION --- */
         .custom-alert {
             position: fixed;
             bottom: 24px;
-            left: 51%;
+            left: 50%;
             transform: translateX(-50%) translateY(100px);
-            background: #0B0F19;
-            border: 1px solid var(--cyan);
-            box-shadow: 0 0 15px rgba(0, 212, 255, 0.2);
-            padding: 16px 20px;
-            border-radius: 10px;
+            background: #111827;
+            border: 2px solid var(--cyan);
+            padding: 14px 20px;
             z-index: 9999;
             width: 90%;
             max-width: 380px;
-            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s;
             opacity: 0;
-            pointer-events: none;
+            box-shadow: 4px 4px 0px #000000;
         }
 
         .custom-alert.show {
             transform: translateX(-50%) translateY(0);
             opacity: 1;
-            pointer-events: auto;
         }
 
         .alert-title {
-            font-weight: 700;
-            font-size: 0.95rem;
+            font-weight: bold;
+            font-size: 0.85rem;
             color: var(--cyan);
             margin-bottom: 4px;
         }
 
         .alert-msg {
-            font-size: 0.85rem;
-            color: var(--text-primary);
-            line-height: 1.4;
+            font-size: 0.8rem;
+            color: #fff;
         }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <h1>Support & Donasi</h1>
-        <div class="subtitle">
-            Suka sama project ini? Yuk support seikhlasnya buat biaya perpanjangan hosting server + nambahin fitur &amp; snippet baru.
+    <!-- Top Nav Bar sesuai Gambar 2 -->
+    <div class="top-nav">
+        <div class="brand-box">
+            <span class="badge-ad">AD</span>
+            <span class="brand-title">Arulz-XD API</span>
         </div>
-
-        <div class="qris-box">
-            <img src="https://arulz-uploader.vercel.app/files/CVmlrD.jpg" alt="QRIS Arulz-XD" class="qris-image" id="qrisImg">
-            <div class="info-badge">
-                💵 Minimal Donasi: Rp1.000,-
-            </div>
-        </div>
-
-        <button class="btn btn-primary" id="downloadBtn" onclick="downloadQris()">
-            📥 Simpan QRIS ke Galeri
-        </button>
-
-        <button class="btn btn-secondary" onclick="shareLink()">
-            🔗 Bagikan Link Ini
-        </button>
+        <a href="/" class="btn-kembali">← KEMBALI</a>
     </div>
 
+    <!-- Main Content Area -->
+    <div class="wrapper">
+        <div class="main-card">
+            <h1 class="title">SUKA SAMA PROJECT INI?</h1>
+            <div class="description">
+                API &amp; Pastebin ini gw bikin di sela-sela waktu luang. Kalau ngerasa kebantu, support seikhlasnya bantu banget buat biaya perpanjangan hosting server + nambahin fitur &amp; snippet baru.
+            </div>
+
+            <!-- QRIS Frame Frame Putih Tebal -->
+            <div class="qris-frame">
+                <img src="https://arulz-uploader.vercel.app/files/CVmlrD.jpg" alt="QRIS Arulz" class="qris-image" id="qrisImg">
+            </div>
+
+            <!-- List Metode Pembayaran Pembayaran Berjejer -->
+            <div class="payment-box">
+                <div class="payment-title">📱 SCAN PAKAI APPS PAYMENT APA AJA</div>
+                <div class="badge-container">
+                    <span class="pay-badge">DANA</span>
+                    <span class="pay-badge">OVO</span>
+                    <span class="pay-badge">GoPay</span>
+                    <span class="pay-badge">ShopeePay</span>
+                    <span class="pay-badge">LinkAja</span>
+                    <span class="pay-badge">BCA</span>
+                    <span class="pay-badge">Mandiri</span>
+                    <span class="pay-badge">BRI</span>
+                    <span class="pay-badge">BNI</span>
+                    <span class="pay-badge">Jenius</span>
+                </div>
+            </div>
+
+            <!-- Tombol Aksi Simpan & Share -->
+            <button class="btn-brutal btn-white" id="downloadBtn" onclick="downloadQris()">
+                📥 SIMPAN QR KE GALERI
+            </button>
+
+            <button class="btn-brutal btn-orange" onclick="shareLink()">
+                🔗 BAGIKAN LINK
+            </button>
+
+            <!-- Catatan Kaki Terima Kasih -->
+            <div class="footer-note">
+                ✨ Makasih banget, kontribusi lo bikin gw semangat ngembangin lebih banyak snippet &amp; feature.
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Toast Notification -->
     <div class="custom-alert" id="customAlert">
-        <div class="alert-title" id="alertTitle">Notifikasi</div>
+        <div class="alert-title" id="alertTitle">NOTIFIKASI</div>
         <div class="alert-msg" id="alertMsg">Pesan sukses disini.</div>
     </div>
 
     <script>
         function showAlert(title, message) {
             const alertBox = document.getElementById('customAlert');
-            document.getElementById('alertTitle').innerText = title;
+            document.getElementById('alertTitle').innerText = title.toUpperCase();
             document.getElementById('alertMsg').innerText = message;
             
             alertBox.classList.add('show');
-            
             setTimeout(() => {
                 alertBox.classList.remove('show');
             }, 3500);
@@ -257,12 +326,12 @@
             const imgElement = document.getElementById('qrisImg');
             const originalText = btn.innerHTML;
             
-            btn.innerHTML = "⏳ Memproses...";
+            btn.innerHTML = "⏳ MEMPROSES...";
             btn.disabled = true;
 
             try {
                 const response = await fetch(imgElement.src);
-                if (!response.ok) throw new Error("Gagal mengambil data gambar.");
+                if (!response.ok) throw new Error("Gagal mengambil data.");
                 
                 const blob = await response.blob();
                 const finalBlob = new Blob([blob], { type: 'image/jpeg' });
@@ -275,13 +344,12 @@
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
-
                 URL.revokeObjectURL(downloadUrl);
 
-                showAlert("Berhasil 🎉", "QRIS berhasil disimpan ke galeri perangkat Anda.");
+                showAlert("Berhasil 🎉", "QRIS disimpan ke galeri perangkat Anda.");
             } catch (err) {
                 console.error(err);
-                showAlert("Gagal ❌", "Gagal mengunduh otomatis. Silakan tekan lama pada gambar lalu pilih 'Simpan Gambar'.");
+                showAlert("Gagal ❌", "Gagal mengunduh otomatis. Tekan lama pada gambar QRIS untuk menyimpan.");
             } finally {
                 btn.innerHTML = originalText;
                 btn.disabled = false;
@@ -291,13 +359,12 @@
         function shareLink() {
             const shareData = {
                 title: 'Support — Arulz-XD API',
-                text: 'Suka sama project ini? Yuk dukung kelangsungan server & snippet barunya! 👇\n',
+                text: 'API & Pastebin ini gw bikin di sela-sela waktu luang. Yuk support seikhlasnya! 👇\n',
                 url: window.location.href
             };
 
             if (navigator.share) {
-                navigator.share(shareData)
-                    .catch((err) => console.log('Batal membagikan:', err));
+                navigator.share(shareData).catch((err) => console.log('Batal share:', err));
             } else {
                 navigator.clipboard.writeText(window.location.href).then(() => {
                     showAlert("Disalin 🔗", "Link donasi berhasil disalin ke clipboard!");
