@@ -262,53 +262,54 @@
         document.getElementById('custom-modal').classList.remove('active');
     }
 
-    // Download tanpa pindah tab - pakai blob + fetch dengan mode CORS
     function downloadQR() {
-    const btn = document.getElementById('btn-download');
-    const originalText = btn.innerHTML;
-    btn.innerHTML = "⌛ MENGUNDUH...";
-    btn.disabled = true;
+        const btn = document.getElementById('btn-download');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = "⌛ MENGUNDUH...";
+        btn.disabled = true;
 
-    // Ditambahkan timestamp unik agar browser tidak mengambil dari cache yang rusak lama
-    const qrisUrl = "https://arulz-uploader.vercel.app/files/CVmlrD.jpg?t=" + new Date().getTime();
+        // Ditambahkan cache buster (?cb=) & cache policy 'no-cache' agar browser tidak membaca respon cache uploader tanpa CORS lama
+        const qrisUrl = "https://arulz-uploader.vercel.app/files/CVmlrD.jpg?cb=" + Date.now();
 
-    fetch(qrisUrl, {
-        method: 'GET',
-        mode: 'cors',
-        credentials: 'omit'
-    })
-    .then(res => {
-        if (!res.ok) throw new Error('Gagal mengunduh, status: ' + res.status);
-        return res.blob(); // Tetap menggunakan Biner murni (Blob)
-    })
-    .then(blob => {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = "qris-arulzxd.jpg"; 
-        a.style.display = 'none';
-        
-        document.body.appendChild(a);
-        a.click(); // Memicu download otomatis langsung di latar belakang browser
+        fetch(qrisUrl, {
+            method: 'GET',
+            mode: 'cors',
+            cache: 'no-cache',
+            headers: {
+                'Accept': 'image/jpeg,image/png'
+            }
+        })
+        .then(res => {
+            if (!res.ok) throw new Error('Status respon buruk');
+            return res.blob(); 
+        })
+        .then(blob => {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = "qris-arulzxd.jpg"; 
+            a.style.display = 'none';
 
-        setTimeout(() => {
-            URL.revokeObjectURL(url);
-            a.remove();
-        }, 150);
+            document.body.appendChild(a);
+            a.click(); // Unduh langsung tanpa buka tab/jendela baru
 
-        btn.innerHTML = originalText;
-        btn.disabled = false;
-        showAlert("Berhasil 🎉", "Gambar QRIS berhasil disimpan!");
-    })
-    .catch((err) => {
-        console.error(err);
-        btn.innerHTML = originalText;
-        btn.disabled = false;
-        showAlert("Info ℹ️", "Otomatis tidak bisa, silakan tekan lama gambar QRIS → pilih Simpan Gambar.");
-    });
-}
+            setTimeout(() => {
+                URL.revokeObjectURL(url);
+                a.remove();
+            }, 200);
 
-
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+            showAlert("Berhasil 🎉", "Gambar QRIS berhasil disimpan!");
+        })
+        .catch((err) => {
+            console.error(err);
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+            // Penanganan jika di-klik di dalam browser internal aplikasi sosmed (In-app WebView)
+            showAlert("Info ℹ️", "Otomatis tidak bisa, silakan tekan lama gambar QRIS → pilih Simpan Gambar.");
+        });
+    }
 
     function shareLink() {
         const shareData = {
