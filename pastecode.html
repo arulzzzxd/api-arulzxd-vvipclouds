@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -256,7 +255,6 @@
     const isRawMode = urlParams.get('raw') === 'true'; 
     let currentFilter = 'ALL';
 
-    // Fungsi untuk menghasilkan warna badge dinamis sesuai jenis bahasa
     function getLanguageStyle(lang) {
         const l = String(lang).toLowerCase().trim();
         switch(l) {
@@ -365,39 +363,27 @@
         if (!target) return;
         const t = translations[currentLang];
 
-   // JIKA MODE RAW: Bersihkan total semua elemen HTML bawaan
-if (viewId && isRawMode) {
-    const current = pastes.find(p => p.id.toString() === viewId.toString());
-    if (!current) { 
-        document.body.innerHTML = "Data tidak ditemukan."; 
-        return; 
-    }
-    
-    // 1. Paksa hancurkan elemen navigasi atas jika masih tersisa di DOM
-    const topNav = document.querySelector('.top-left-nav');
-    if (topNav) topNav.remove(); 
-    
-    // 2. Suntikkan CSS keras untuk menghilangkan background dot, padding, dan menyembunyikan navigasi
-    const styleRaw = document.createElement('style');
-    styleRaw.innerHTML = `
-        body { 
-            background: #fff !important; 
-            background-image: none !important; 
-            padding: 0 !important; 
-            margin: 0 !important; 
+        // LOGIKA PENYEMBUNYIAN TOMBOL NAVIGASI ATAS
+        const topLeftNav = document.querySelector('.top-left-nav');
+        if (topLeftNav) {
+            if (viewId) {
+                topLeftNav.style.display = 'none'; // Sembunyikan jika di dalam URL detail (?id=)
+            } else {
+                topLeftNav.style.display = 'flex'; // Munculkan kembali jika di halaman list utama
+            }
         }
-        .top-left-nav, .footer, #rawModal, #alertModal { 
-            display: none !important; 
+
+        if (pastes.length === 0 && !viewId) {
+            target.innerHTML = `<div style="text-align:center; padding:40px; border:2px dashed var(--border-dark); background:var(--bg-card);">${t.noData}</div>`;
+            return;
         }
-    `;
-    document.head.appendChild(styleRaw);
-    
-    // 3. Render isi teks kode saja
-    document.body.innerHTML = `<pre style="margin: 0; padding: 15px; white-space: pre-wrap; font-family: monospace; font-size: 14px; color: #000; background: #fff;">${escapeHTML(current.content)}</pre>`;
-    return;
-}
 
-
+        if (viewId && isRawMode) {
+            const current = pastes.find(p => p.id.toString() === viewId.toString());
+            if (!current) { document.body.innerHTML = "Data tidak ditemukan."; return; }
+            document.body.innerHTML = `<pre style="margin: 0; padding:15px; white-space: pre-wrap; font-family: monospace; font-size: 14px; color:#000; background:#fff;">${current.content}</pre>`;
+            return;
+        }
 
         if (viewId) {
             const idx = pastes.findIndex(p => p.id.toString() === viewId.toString());
@@ -568,7 +554,6 @@ if (viewId && isRawMode) {
         renderPaginationControls(totalPages, items);
     }
 
-    // Kode fungsi pagination bawaan anda tetap aman
     function renderPaginationControls(totalPages, currentItems) {
         const wrapper = document.getElementById('pagination-wrapper');
         if (!wrapper) return;
