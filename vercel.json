@@ -20,7 +20,7 @@
   ],
   "headers": [
     {
-      "source": "/files/(.*)",
+      "source": "/support/(.*)",
       "headers": [
         { "key": "Access-Control-Allow-Origin", "value": "https://api-arulzxd-vvipclouds.vercel.app" },
         { "key": "Access-Control-Allow-Methods", "value": "GET" }
