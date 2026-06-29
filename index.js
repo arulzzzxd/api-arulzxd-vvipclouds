@@ -84,33 +84,32 @@ const playlist = [
 ];
 
 // Endpoint untuk memproses unduhan otomatis gambar lintas domain (Bypass CORS)
+// Endpoint Proxy Download Otomatis - Gaya CommonJS (CJS)
 app.get('/database/download', async (req, res) => {
-    const imageUrl = req.query.imageUrl;
-
-    if (!imageUrl) {
-        return res.status(400).send('URL gambar tidak ditemukan.');
-    }
+    // Ambil target url gambar dari query parameter frontend, atau gunakan default jika kosong
+    const imageUrl = req.query.url || "https://arulz-uploader.vercel.app/files/CVmlrD.jpg";
 
     try {
-        // Ambil data gambar biner dari server uploader externo
+        // Tarik gambar server-to-server (Sistem Vercel/VPS tidak terikat CORS Browser)
         const response = await axios({
             method: 'get',
             url: imageUrl,
-            responseType: 'stream'
+            responseType: 'stream' // Alirkan data sebagai stream data mentah
         });
 
-        // Setel header agar browser mengenali ini sebagai unduhan file (bukan dibuka di tab baru)
-        const namaFile = `qris-arulzxd-${Date.now()}.jpg`;
-        res.setHeader('Content-Disposition', `attachment; filename="${namaFile}"`);
+        // Set header wajib untuk memaksa perangkat langsung mengunduh otomatis file biner
         res.setHeader('Content-Type', response.headers['content-type'] || 'image/jpeg');
+        res.setHeader('Content-Disposition', 'attachment; filename="QRIS_Arulz_XD.jpg"');
+        res.setHeader('Access-Control-Allow-Origin', '*'); // Bypass izin CORS
 
-        // Alirkan (pipe) biner data langsung ke browser user
+        // Alirkan langsung pipa biner gambar ke browser user
         response.data.pipe(res);
     } catch (error) {
-        console.error('Gagal mengunduh gambar via backend:', error.message);
-        res.status(500).send('Gagal memproses unduhan otomatis server.');
+        console.error('Gagal memproses unduhan QRIS:', error.message);
+        res.status(500).json({ error: "Gagal memproses unduhan otomatis di tingkat backend." });
     }
 });
+
 
 
 app.get('/uploader', (req, res) => {

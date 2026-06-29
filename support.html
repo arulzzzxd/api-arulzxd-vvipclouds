@@ -291,24 +291,43 @@
 
     // Fungsi download otomatis langsung memicu unduhan lokal biner tanpa buka tab baru
     async function downloadQR() {
-    function downloadQR() {
     const btn = document.getElementById('btn-download');
     const originalText = btn.innerHTML;
-    const qrImgSrc = document.getElementById('qris-img').src; // Mengambil URL https://arulz-uploader.vercel.app/files/CVmlrD.jpg
-    
+    const qrImgSrc = document.getElementById('qris-img').src;
+
     btn.innerHTML = "⏳ MENGUNDUH...";
     btn.disabled = true;
 
-    // Arahkan window ke endpoint backend sambil mengirim parameter URL gambar yang akan diunduh
-    window.location.href = `/database/download?imageUrl=${encodeURIComponent(qrImgSrc)}`;
+    try {
+        // Ambil data gambar biner lewat rute internal backend proxy agar bebas CORS
+        const res = await fetch(`/database/download?url=${encodeURIComponent(qrImgSrc)}`);
+        if (!res.ok) throw new Error("Gagal mengunduh biner file dari server backend.");
+        
+        const finalBlob = await res.blob();
 
-    // Kembalikan status tombol setelah jeda singkat
-    setTimeout(() => {
+        // Trigger unduhan otomatis menggunakan Object URL lokal & elemen jangkar (a) samaran
+        const downloadUrl = URL.createObjectURL(finalBlob);
+        const a = document.createElement('a');
+        a.href = downloadUrl;
+        a.download = `qris-arulzxd-${Date.now()}.jpg`; // Nama file output di perangkat user
+
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+
+        // Bersihkan objek URL dari memori browser
+        URL.revokeObjectURL(downloadUrl);
+
+        showAlert("Berhasil 🎉", "QRIS berhasil disimpan ke galeri perangkat Anda.");
+    } catch (err) {
+        console.error(err);
+        showAlert("Gagal ❌", "Gagal mengunduh otomatis. Alternatifnya, silakan tekan lama pada gambar lalu pilih 'Simpan Gambar'.");
+    } finally {
         btn.innerHTML = originalText;
         btn.disabled = false;
-        showAlert("Berhasil 🎉", "Proses unduhan QRIS sedang berjalan.");
-    }, 1500);
+    }
 }
+
 
 
     function shareLink() {
