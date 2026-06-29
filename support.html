@@ -269,33 +269,28 @@
     btn.innerHTML = "⌛ MENGUNDUH...";
     btn.disabled = true;
 
-    const qrisUrl = "https://arulz-uploader.vercel.app/files/CVmlrD.jpg";
+    // Ditambahkan timestamp unik agar browser tidak mengambil dari cache yang rusak lama
+    const qrisUrl = "https://arulz-uploader.vercel.app/files/CVmlrD.jpg?t=" + new Date().getTime();
 
-    // Ambil data gambar langsung sebagai biner (Blob) lewat koneksi CORS yang sudah diizinkan vercel.json
     fetch(qrisUrl, {
         method: 'GET',
         mode: 'cors',
-        headers: {
-            'Accept': 'image/jpeg,image/png'
-        }
+        credentials: 'omit'
     })
     .then(res => {
-        if (!res.ok) throw new Error('Gagal mengunduh file dari server');
-        return res.blob(); // Mengubah response menjadi object Blob (Biner, bukan Base64)
+        if (!res.ok) throw new Error('Gagal mengunduh, status: ' + res.status);
+        return res.blob(); // Tetap menggunakan Biner murni (Blob)
     })
     .then(blob => {
-        // Membuat URL lokal temporer di dalam memori browser sandbox
         const url = URL.createObjectURL(blob);
-        
         const a = document.createElement('a');
         a.href = url;
-        a.download = "qris-arulzxd.jpg"; // Memaksa browser untuk download, bukan buka tab baru
+        a.download = "qris-arulzxd.jpg"; 
         a.style.display = 'none';
         
         document.body.appendChild(a);
-        a.click(); // Memicu proses unduhan langsung di latar belakang
+        a.click(); // Memicu download otomatis langsung di latar belakang browser
 
-        // Membersihkan memori browser setelah unduhan selesai dipicu
         setTimeout(() => {
             URL.revokeObjectURL(url);
             a.remove();
@@ -303,16 +298,16 @@
 
         btn.innerHTML = originalText;
         btn.disabled = false;
-        showAlert("Berhasil 🎉", "Gambar QRIS berhasil diunduh langsung!");
+        showAlert("Berhasil 🎉", "Gambar QRIS berhasil disimpan!");
     })
     .catch((err) => {
         console.error(err);
         btn.innerHTML = originalText;
         btn.disabled = false;
-        // Fallback jika dibuka lewat browser bawaan aplikasi (in-app webview) yang memblokir fungsi download otomatis
         showAlert("Info ℹ️", "Otomatis tidak bisa, silakan tekan lama gambar QRIS → pilih Simpan Gambar.");
     });
 }
+
 
 
     function shareLink() {
