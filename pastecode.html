@@ -365,21 +365,24 @@
         const t = translations[currentLang];
 
         // JIKA MODE RAW: Singkirkan navigasi atas agar tidak ikut ke dalam text-plain
-        if (viewId && isRawMode) {
-            const current = pastes.find(p => p.id.toString() === viewId.toString());
-            if (!current) { document.body.innerHTML = "Data tidak ditemukan."; return; }
-            
-            const topNav = document.querySelector('.top-left-nav');
-            if (topNav) topNav.remove(); 
-            
-            document.body.innerHTML = `<pre style="margin: 0; padding:15px; white-space: pre-wrap; font-family: monospace; font-size: 14px; color:#000; background:#fff;">${current.content}</pre>`;
-            return;
-        }
+if (viewId && isRawMode) {
+    const current = pastes.find(p => p.id.toString() === viewId.toString());
+    if (!current) { document.body.innerHTML = "Data tidak ditemukan."; return; }
+    
+    // PERBAIKAN: Hapus seluruh container navigasi atas secara paksa
+    const topNav = document.querySelector('.top-left-nav');
+    if (topNav) {
+        topNav.remove(); 
+    }
+    
+    // Hapus juga padding-top pada body agar teks bersih di pojok kiri atas
+    document.body.style.paddingTop = "0";
+    document.body.style.backgroundImage = "none"; // Opsional: hilangkan dot background di mode RAW
+    
+    document.body.innerHTML = `<pre style="margin: 0; padding:15px; white-space: pre-wrap; font-family: monospace; font-size: 14px; color:#000; background:#fff;">${current.content}</pre>`;
+    return;
+}
 
-        if (pastes.length === 0 && !viewId) {
-            target.innerHTML = `<div style="text-align:center; padding:40px; border:2px dashed var(--border-dark); background:var(--bg-card);">${t.noData}</div>`;
-            return;
-        }
 
         if (viewId) {
             const idx = pastes.findIndex(p => p.id.toString() === viewId.toString());
