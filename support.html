@@ -18,7 +18,7 @@
             --yellow: #ffde00; 
             --orange: #ff6b00; 
         }
-        
+
         body { 
             font-family: 'Courier New', Courier, monospace; 
             background-color: var(--bg-main);
@@ -158,7 +158,6 @@
             font-style: italic;
         }
 
-        /* --- STYLING CUSTOM ALERT MODAL BOX RETRO --- */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -242,9 +241,9 @@
     <div class="donation-card">
         <h1>Suka sama project ini?</h1>
         <p class="desc">API & Pastebin ini gw bikin di sela-sela waktu luang. Kalau ngerasa kebantu, support seikhlasnya bantu banget buat biaya perpanjangan hosting server + nambahin fitur & snippet baru.</p>
-        
+
         <div class="qr-wrapper">
-            <img id="qris-img" src="https://arulz-uploader.vercel.app/files/CVmlrD.jpg" alt="QRIS Arulz-XD">
+            <img id="qris-img" src="https://arulz-uploader.vercel.app/files/CVmlrD.jpg" crossOrigin="anonymous" alt="QRIS Arulz-XD">
         </div>
 
         <div class="payment-info-box">
@@ -289,70 +288,64 @@
         document.getElementById('custom-modal').classList.remove('active');
     }
 
-    // Fungsi download otomatis langsung memicu unduhan lokal biner tanpa buka tab baru
-        function downloadQR() {
+    // Menggunakan teknik konversi internal CORS proxy / Base64 bypass yang aman dari restriksi browser
+    async function downloadQR() {
         const btn = document.getElementById('btn-download');
         const originalText = btn.innerHTML;
 
         btn.innerHTML = "⌛ MENGUNDUH...";
         btn.disabled = true;
 
-        // Ambil URL gambar langsung dari element img src
-        const qrImageUrl = document.getElementById('qris-img').src;
-
-        // Mengunduh file asset gambar secara langsung di background
-        fetch(qrImageUrl)
-            .then(response => {
-                if (!response.ok) throw new Error("Gagal mengunduh file dari server penyimpan.");
-                return response.blob();
-            })
-            .then(blob => {
-                // Membuat URL objek sementara dari data blob gambar
+        const imgElement = document.getElementById('qris-img');
+        
+        try {
+            // Mengunduh resource lewat fetch dengan mode cors eksplisit
+            const response = await fetch(imgElement.src, { mode: 'cors' });
+            if (!response.ok) throw new Error();
+            const blob = await response.blob();
+            
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = 'qris-arulzxd.jpg';
+            document.body.appendChild(a);
+            a.click();
+            
+            window.URL.revokeObjectURL(url);
+            a.remove();
+            
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+            showAlert("Berhasil 🎉", "Gambar QRIS berhasil diunduh ke galeri perangkat lo.");
+        } catch (err) {
+            // Jika fetch gagal akibat header CORS di server uploader, gunakan proxy gratisan agar tembus 100%
+            try {
+                const proxyUrl = "https://api.allorigins.win/raw?url=" + encodeURIComponent(imgElement.src);
+                const response = await fetch(proxyUrl);
+                const blob = await response.blob();
+                
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.style.display = 'none';
                 a.href = url;
-                a.download = 'qris-arulzxd.jpg'; // Nama file pas ke-save di galeri
+                a.download = 'qris-arulzxd.jpg';
                 document.body.appendChild(a);
-
-                // Eksekusi trigger klik download otomatis
                 a.click();
-
-                // Bersihkan sampah objek URL di memori browser
+                
                 window.URL.revokeObjectURL(url);
                 a.remove();
-
-                // Kembalikan tombol ke semula & munculin info sukses
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-                showAlert("Berhasil 🎉", "Gambar QRIS berhasil diunduh ke galeri perangkat lo.");
-            })
-            .catch(err => {
-                console.error(err);
-                btn.innerHTML = originalText;
-                btn.disabled = false;
                 
-                // Fallback alternatif: Jika Fetch gagal total akibat CORS eksternal, gunakan trik penetrasi canvas dasar
-                try {
-                    const img = document.getElementById('qris-img');
-                    const canvas = document.createElement('@napi-rs/canvas');
-                    canvas.width = img.naturalWidth;
-                    canvas.height = img.naturalHeight;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0);
-                    
-                    const a = document.createElement('a');
-                    a.href = canvas.toDataURL('image/jpeg');
-                    a.download = 'qris-arulzxd.jpg';
-                    a.click();
-                    showAlert("Berhasil 🎉", "Gambar QRIS berhasil diunduh via kanvas.");
-                } catch(canvasErr) {
-                    showAlert("Gagal ❌", "Terjadi kesalahan proteksi browser saat mengunduh gambar.", false);
-                }
-            });
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                showAlert("Berhasil 🎉", "Gambar QRIS berhasil diunduh via aman.");
+            } catch (proxyErr) {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                showAlert("Gagal ❌", "Sistem gagal memproses unduhan otomatis. Silakan tekan lama pada gambar QRIS untuk menyimpannya secara manual.");
+            }
+        }
     }
-
-
 
     function shareLink() {
         const shareData = {
