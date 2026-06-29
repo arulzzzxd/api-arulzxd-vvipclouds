@@ -110,7 +110,7 @@
         .mac-dots { display: flex; gap: 6px; }
         .dot { width: 10px; height: 10px; border-radius: 50%; background: #ff5f56; }
         .dot.y { background: #ffbd2e; } .dot.g { background: #27c93f; }
-        .lang-badge { background: rgba(0, 163, 255, 0.1); color: var(--cyan); padding: 3px 8px; font-size: 11px; border: 1px solid var(--cyan); border-radius: 4px; text-transform: lowercase; font-weight: 900; }
+        .lang-badge { padding: 3px 10px; font-size: 11px; border-radius: 4px; text-transform: lowercase; font-weight: 900; }
         .card-body { padding: 20px; background: var(--bg-card); }
         .card-title { margin: 0 0 15px 0; font-size: 16px; font-weight: 900; color: var(--text-main); text-transform: lowercase; cursor: pointer; display: inline-block; }
         .card-title:hover { color: var(--cyan); }
@@ -255,6 +255,25 @@
     const isRawMode = urlParams.get('raw') === 'true'; 
     let currentFilter = 'ALL';
 
+    // Fungsi untuk menghasilkan warna badge dinamis sesuai jenis bahasa
+    function getLanguageStyle(lang) {
+        const l = String(lang).toLowerCase().trim();
+        switch(l) {
+            case 'javascript': case 'js':
+                return 'background: rgba(247, 223, 30, 0.1); color: #f7df1e; border: 1px solid #f7df1e;';
+            case 'html':
+                return 'background: rgba(227, 76, 38, 0.1); color: #e34c26; border: 1px solid #e34c26;';
+            case 'php':
+                return 'background: rgba(119, 123, 180, 0.1); color: #8892bf; border: 1px solid #8892bf;';
+            case 'python':
+                return 'background: rgba(55, 118, 171, 0.1); color: #4584b6; border: 1px solid #4584b6;';
+            case 'scrape':
+                return 'background: rgba(0, 255, 204, 0.1); color: #00ffcc; border: 1px solid #00ffcc;';
+            default:
+                return 'background: rgba(0, 163, 255, 0.1); color: var(--cyan); border: 1px solid var(--cyan);';
+        }
+    }
+
     function customAlert(message) {
         document.getElementById('alertModalMessage').innerText = message;
         document.getElementById('alertModal').style.display = 'flex';
@@ -380,7 +399,7 @@
                             <p style="margin:0 0 15px 0; font-size:14px; color:var(--text-muted); font-weight:normal;">${current.desc || 'Tidak ada deskripsi.'}</p>
                         </div>
                         <div>
-                            <div class="detail-lang-badge" style="background: rgba(0,163,255,0.1); color: var(--cyan); padding: 4px 10px; border: 1px solid var(--cyan); border-radius:4px; font-weight: 900; font-size: 13px;">${current.language}</div>
+                            <div class="detail-lang-badge" style="${getLanguageStyle(current.language)}">${current.language}</div>
                         </div>
                     </div>
                     <div style="font-size:12px; color:var(--text-muted); margin-top: 10px; display:flex; align-items:center; gap:10px;">
@@ -467,6 +486,7 @@
                     <button class="btn-filter id-filter-html" onclick="filterLanguage('html')">HTML</button>
                     <button class="btn-filter id-filter-php" onclick="filterLanguage('php')">PHP</button>
                     <button class="btn-filter id-filter-python" onclick="filterLanguage('python')">Python</button>
+                    <button class="btn-filter id-filter-scrape" onclick="filterLanguage('scrape')">Scrape</button>
                     <button class="btn-filter id-filter-plaintext" onclick="filterLanguage('plaintext')">Plaintext</button>
                 </div>
 
@@ -502,7 +522,7 @@
                 <div class="paste-card" onclick="window.location.href='/pastecode?id=${p.id}'">
                     <div class="card-top">
                         <div class="mac-dots"><div class="dot"></div><div class="dot y"></div><div class="dot g"></div></div>
-                        <div class="lang-badge">${p.language}</div>
+                        <div class="lang-badge" style="${getLanguageStyle(p.language)}">${p.language}</div>
                     </div>
                     <div class="card-body">
                         <h3 class="card-title" style="margin:0 0 15px 0;">${p.title}</h3>
