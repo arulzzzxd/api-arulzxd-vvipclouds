@@ -560,32 +560,11 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
                 fetchOptions.body = rawFormData;
             } else {
                 fetchOptions.headers = { 'Content-Type': 'application/json' };
-                
-                // MENDUKUNG RAW JSON: Cek apakah form memiliki input area khusus teks JSON mentah (misal name="raw_json")
-                const rawJsonInput = form.querySelector('[name="raw_json"]');
-                if (rawJsonInput && rawJsonInput.value.trim() !== "") {
-                    try {
-                        // Memvalidasi apakah input string adalah JSON yang valid sebelum dikirim
-                        const parsedJson = JSON.parse(rawJsonInput.value);
-                        fetchOptions.body = JSON.stringify(parsedJson);
-                    } catch (e) {
-                        throw new Error("Format JSON mentah (Raw JSON) tidak valid!");
-                    }
-                } else {
-                    // Jika tidak ada input JSON mentah, buat JSON dari data input form biasa
-                    const jsonBody = {};
-                    for (const [key, value] of rawFormData.entries()) {
-                        if (value !== undefined && value !== '') {
-                            // Cek jika nilainya terlihat seperti array/object ter-serialize
-                            if (typeof value === 'string' && (value.startsWith('{') || value.startsWith('['))) {
-                                try { jsonBody[key] = JSON.parse(value); } catch(err) { jsonBody[key] = value; }
-                            } else {
-                                jsonBody[key] = value;
-                            }
-                        }
-                    }
-                    fetchOptions.body = JSON.stringify(jsonBody);
+                const jsonBody = {};
+                for (const [key, value] of rawFormData.entries()) {
+                    if (value) jsonBody[key] = value;
                 }
+                fetchOptions.body = JSON.stringify(jsonBody);
             }
         }
 
@@ -594,17 +573,10 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
         const endTime = performance.now();
         const duration = Math.round(endTime - startTime);
 
-        // Handler Error Status (403 / 503 / 400 dll yang mengembalikan JSON)
-        if (!response.ok && (response.status === 403 || response.status === 503 || response.status === 400)) {
-            let errorData;
-            let rawErrText = "";
-            try {
-                errorData = await response.json();
-                rawErrText = JSON.stringify(errorData, null, 2);
-            } catch(e) {
-                rawErrText = await response.text();
-            }
-
+        // Handler Error Status (403 / 503)
+        if (response.status === 403 || response.status === 503) {
+            const data = await response.json();
+            const rawErrText = JSON.stringify(data, null, 2);
             responseContent.innerHTML = `
                 <div class="rounded-xl overflow-hidden border-2 border-red-500 bg-slate-950/50 backdrop-blur-md shadow-2xl">
                     <div class="flex items-center justify-between px-4 py-3 bg-red-950/20 border-b-2 border-red-500">
@@ -618,7 +590,7 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
                     <pre class="p-4 overflow-x-auto text-xs font-mono leading-relaxed text-red-400 max-h-96 scrollbar-thin bg-black/20 shadow-inner"><code>${escapeHtml(rawErrText)}</code></pre>
                 </div>
             `;
-            showToast((errorData && errorData.message) || `Error HTTP ${response.status}`, true);
+            showToast(data.message || "Akses Ditolak!", true);
             return;
         }
 
@@ -635,7 +607,6 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
         let mediaBlobObject = null;
         let hintText = ""; 
 
-        // RAW SUPPORT JSON RESPONSE DETECTION
         if (cleanContentType.includes("application/json")) {
             const data = await response.json();
             rawResponseText = JSON.stringify(data, null, 2);
@@ -665,26 +636,13 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
             const blobUrl = URL.createObjectURL(mediaBlobObject);
             finalInnerContent = `<div class="p-6 bg-black/10 dark:bg-black/20 light-mode:bg-slate-50 shadow-inner flex justify-center items-center cursor-zoom-in" onclick="if(typeof zoomMedia==='function') zoomMedia('${blobUrl}')">${createMediaPreview(blobUrl, cleanContentType, fullPath)}</div>`;
         } else {
-            // Berjaga-jaga jika content-type bukan JSON tetapi teksnya adalah string JSON mentah
             rawResponseText = await response.text();
             if (!bytes) bytes = new Blob([rawResponseText]).size;
-            
-            try {
-                // Mencoba memparsing teks bebas ke JSON format
-                const parsedTextJson = JSON.parse(rawResponseText);
-                rawResponseText = JSON.stringify(parsedTextJson, null, 2);
-                hintText = "Format JSON Terdeteksi";
-                finalInnerContent = `
-                    <div class="px-4 pt-3 text-[10px] font-bold text-cyan-400 uppercase tracking-widest font-mono">RAW JSON DATA (Parsed)</div>
-                    <pre id="raw-text-${catIdx}-${epIdx}" class="p-4 overflow-x-auto text-xs font-mono leading-relaxed text-cyan-400 dark:text-cyan-400 light-mode:text-cyan-600 max-h-96 scrollbar-thin bg-black/10 dark:bg-black/20 light-mode:bg-slate-50 shadow-inner" ><code>${escapeHtml(rawResponseText)}</code></pre>
-                `;
-            } catch(e) {
-                hintText = "Klik teks untuk memperbesar";
-                finalInnerContent = `
-                    <div class="px-4 pt-3 text-[10px] font-bold text-slate-400 dark:text-slate-400 light-mode:text-slate-500 uppercase tracking-widest font-mono">RAW TEXT DATA</div>
-                    <pre id="raw-text-${catIdx}-${epIdx}" class="p-4 overflow-x-auto text-xs font-mono leading-relaxed text-slate-300 dark:text-slate-300 light-mode:text-slate-700 max-h-96 scrollbar-thin bg-black/10 dark:bg-black/20 light-mode:bg-slate-50 shadow-inner cursor-zoom-in" onclick="if(typeof zoomText==='function'){zoomText(this.innerText)}else{showToast('Klik terdeteksi')}"><code>${escapeHtml(rawResponseText)}</code></pre>
-                `;
-            }
+            hintText = "Klik teks untuk memperbesar";
+            finalInnerContent = `
+                <div class="px-4 pt-3 text-[10px] font-bold text-slate-400 dark:text-slate-400 light-mode:text-slate-500 uppercase tracking-widest font-mono">RAW TEXT DATA</div>
+                <pre id="raw-text-${catIdx}-${epIdx}" class="p-4 overflow-x-auto text-xs font-mono leading-relaxed text-slate-300 dark:text-slate-300 light-mode:text-slate-700 max-h-96 scrollbar-thin bg-black/10 dark:bg-black/20 light-mode:bg-slate-50 shadow-inner cursor-zoom-in" onclick="if(typeof zoomText==='function'){zoomText(this.innerText)}else{showToast('Klik terdeteksi')}"><code>${escapeHtml(rawResponseText)}</code></pre>
+            `;
         }
 
         if (bytes >= 1048576) sizeText = `${(bytes / 1048576).toFixed(1)} MB`;
@@ -702,8 +660,10 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
             </button>
         `;
 
+        // RENDER CONTAINER UTAMA (Grid layout diperbarui menjadi 3 kolom dasar atau full-span jika ada hint)
         responseContent.innerHTML = `
             <div class="rounded-xl overflow-hidden border-2 border-cyan-500/40 dark:border-2 dark:border-cyan-500/40 light-mode:border-2 light-mode:border-slate-400 bg-slate-950/40 dark:bg-slate-950/40 light-mode:bg-white shadow-2xl transition-all duration-300">
+                
                 <div class="px-4 py-2.5 bg-black/60 dark:bg-black/60 light-mode:bg-slate-100 border-b-2 border-white/20 light-mode:border-slate-300 flex items-center justify-between">
                     <div class="flex items-center gap-2">
                         <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
@@ -711,24 +671,30 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 p-3 bg-black/30 dark:bg-black/30 light-mode:bg-slate-50 border-b-2 border-white/20 light-mode:border-slate-300 text-center text-xs font-mono">
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 p-3 bg-black/30 dark:bg-black/30 light-mode:bg-slate-50 border-b-2 border-white/20 light-mode:border-slate-300 text-center text-xs font-mono">
                     <div class="flex flex-col justify-center items-center p-2 rounded-lg border-2 border-white/10 light-mode:border-2 light-mode:border-slate-200 bg-black/10 dark:bg-black/10 light-mode:bg-white">
                         <span class="text-[10px] text-slate-500 uppercase font-semibold mb-1">Status</span>
                         <span class="px-2 py-0.5 rounded text-[11px] font-black ${statusColor}">${response.status}</span>
                     </div>
-                    <div class="relative flex flex-col justify-center items-center p-2 rounded-lg border-2 border-white/10 light-mode:border-2 light-mode:border-slate-200 bg-black/10 dark:bg-black/10 light-mode:bg-white">
-                        <span class="text-[10px] text-slate-500 uppercase font-semibold mb-0.5">Time</span>
+                    <div class="flex flex-col justify-center items-center p-2 rounded-lg border-2 border-white/10 light-mode:border-2 light-mode:border-slate-200 bg-black/10 dark:bg-black/10 light-mode:bg-white">
+                        <span class="text-[10px] text-slate-500 uppercase font-semibold mb-1">Time</span>
                         <span class="text-[11px] text-amber-400 dark:text-amber-400 light-mode:text-amber-600 font-bold">${duration} ms</span>
-                        ${hintText ? `<span class="text-[8px] text-cyan-400/90 dark:text-cyan-400/90 light-mode:text-cyan-600 font-bold tracking-tighter uppercase mt-0.5 block animate-pulse">${hintText}</span>` : ''}
                     </div>
                     <div class="flex flex-col justify-center items-center p-2 rounded-lg border-2 border-white/10 light-mode:border-2 light-mode:border-slate-200 bg-black/10 dark:bg-black/10 light-mode:bg-white">
                         <span class="text-[10px] text-slate-500 uppercase font-semibold mb-1">Size</span>
                         <span class="text-[11px] text-cyan-400 dark:text-cyan-400 light-mode:text-cyan-600 font-bold">${sizeText}</span>
                     </div>
-                    <div class="flex flex-col justify-center items-center p-2 rounded-lg border-2 border-white/10 light-mode:border-2 light-mode:border-slate-200 bg-black/10 dark:bg-black/10 light-mode:bg-white col-span-2 sm:col-span-1">
+                    <div class="flex flex-col justify-center items-center p-2 rounded-lg border-2 border-white/10 light-mode:border-2 light-mode:border-slate-200 bg-black/10 dark:bg-black/10 light-mode:bg-white col-span-2 sm:col-span-2 text-left px-3">
                         <span class="text-[10px] text-slate-500 uppercase font-semibold mb-1">Content Type</span>
-                        <span class="text-[10px] text-slate-300 dark:text-slate-300 light-mode:text-slate-600 truncate max-w-full font-semibold px-1" title="${cleanContentType}">${cleanContentType}</span>
+                        <span class="text-[11px] text-slate-300 dark:text-slate-300 light-mode:text-slate-600 truncate max-w-full font-semibold" title="${cleanContentType}">${cleanContentType}</span>
                     </div>
+                    
+                    ${hintText ? `
+                    <div class="flex flex-col justify-center items-center p-2 rounded-lg border-2 border-cyan-500/30 bg-cyan-950/20 col-span-2 sm:col-span-1 animate-pulse">
+                        <span class="text-[9px] text-cyan-500 uppercase font-bold tracking-wider mb-0.5">Action Hint</span>
+                        <span class="text-[10px] text-cyan-400 dark:text-cyan-400 light-mode:text-cyan-600 font-black tracking-tight uppercase text-center">${hintText}</span>
+                    </div>
+                    ` : ''}
                 </div>
 
                 <div class="relative group">
@@ -743,9 +709,11 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
                     
                     ${downloadButtonHtml}
                 </div>
+
             </div>
         `;
 
+        // PENGIKAT EVENT HANDLER
         document.getElementById(`copy-btn-${catIdx}-${epIdx}`).onclick = () => {
             copyText(rawResponseText || JSON.stringify({status: response.status, info: cleanContentType}), "Response");
         };
@@ -753,7 +721,7 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
         const downloadBtn = document.getElementById(`download-btn-${catIdx}-${epIdx}`);
         if (!isMedia) {
             downloadBtn.onclick = () => {
-                const blob = new Blob([rawResponseText], { type: cleanContentType.includes('json') ? 'application/json' : cleanContentType });
+                const blob = new Blob([rawResponseText], { type: cleanContentType });
                 const extension = cleanContentType.includes('json') ? 'json' : (cleanContentType.includes('html') ? 'html' : 'txt');
                 const downloadUrl = URL.createObjectURL(blob);
                 const a = document.createElement('a');
