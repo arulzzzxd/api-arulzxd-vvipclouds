@@ -40,13 +40,19 @@ router.get("/", async (req, res) => {
 
         const baseURL = "https://tikwm.com";
 
+        // Fungsi pembantu untuk memastikan URL valid dan tidak double domain
+        const fixURL = (url) => {
+            if (!url) return null;
+            return url.startsWith("http") ? url : baseURL + url;
+        };
+
         const videos = data.data.videos.map(video => ({
             ...video,
-            play: baseURL + video.play,
-            wmplay: baseURL + video.wmplay,
-            music: baseURL + video.music,
-            cover: baseURL + video.cover,
-            avatar: baseURL + video.avatar
+            play: fixURL(video.play),
+            wmplay: fixURL(video.wmplay),
+            music: fixURL(video.music),
+            cover: fixURL(video.cover),
+            avatar: fixURL(video.author?.avatar || video.avatar) // Mengamankan jika avatar ada di dalam objek author
         }));
 
         return res.status(200).json({
