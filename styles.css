@@ -396,3 +396,23 @@
       60% { transform: rotate(5deg); }
       80% { transform: rotate(-5deg); }
     }
+    /* Scrollbar Kustom Halus Untuk Box JSON */
+.scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+.scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 9999px;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: rgba(6, 182, 212, 0.3); /* Warna Cyan saat di-hover */
+}
+
+/* Penyesuaian skema warna Light Mode */
+.light-mode .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.1);
+}

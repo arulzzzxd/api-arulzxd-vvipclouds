@@ -504,14 +504,14 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
 
     responseDiv.classList.remove('hidden');
 
+    // LOADING STATE: Lebih modern dengan dual-ring pulse
     responseContent.innerHTML = `
-        <div class="flex items-center justify-center p-8 text-sm font-mono tracking-wider text-cyan-400 gap-1.5">
-            <span>FETCHING RESPONSE</span>
-            <span class="flex gap-1 items-center pt-1">
-                <span class="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-[bounce_1s_infinite_100ms]"></span>
-                <span class="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-[bounce_1s_infinite_200ms]"></span>
-                <span class="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-[bounce_1s_infinite_300ms]"></span>
-            </span>
+        <div class="flex flex-col items-center justify-center p-12 text-sm font-mono tracking-wider text-cyan-400 gap-3">
+            <div class="relative flex h-4 w-4">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-4 w-4 bg-cyan-500"></span>
+            </div>
+            <span class="animate-pulse text-xs uppercase tracking-widest font-semibold text-slate-400">Fetching Response...</span>
         </div>
     `;
 
@@ -573,9 +573,23 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
         const endTime = performance.now();
         const duration = Math.round(endTime - startTime);
 
+        // Handle error status khusus (403 / 503) dengan panel box yang serasi
         if (response.status === 403 || response.status === 503) {
             const data = await response.json();
-            responseContent.innerHTML = `<pre class="text-red-400 code-font text-sm overflow-auto p-2 bg-black/50 rounded-lg">${JSON.stringify(data, null, 2)}</pre>`;
+            const rawErrText = JSON.stringify(data, null, 2);
+            responseContent.innerHTML = `
+                <div class="rounded-xl overflow-hidden border border-red-500/20 bg-slate-950/40 backdrop-blur-md shadow-2xl">
+                    <div class="flex items-center justify-between px-4 py-3 bg-red-950/20 border-b border-red-500/10">
+                        <span class="px-2 py-0.5 rounded text-[10px] font-black tracking-wider uppercase border border-red-500/30 bg-red-500/10 text-red-400">
+                            STATUS: ${response.status}
+                        </span>
+                        <button type="button" onclick="copyText(\`${rawErrText.replace(/`/g, '\\`').replace(/\$/g, '\\$')}\`, 'Error Response')" class="p-1.5 text-slate-400 hover:text-red-400 hover:bg-white/5 rounded-lg transition-all">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
+                        </button>
+                    </div>
+                    <pre class="p-4 overflow-x-auto text-xs font-mono leading-relaxed text-red-400 max-h-96 scrollbar-thin bg-black/10 shadow-inner"><code>${escapeHtml(rawErrText)}</code></pre>
+                </div>
+            `;
             showToast(data.message || "Akses Ditolak!", true);
             return;
         }
@@ -590,7 +604,7 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
         let bytes = contentLength ? parseInt(contentLength, 10) : 0;
         let rawResponseText = "";
         let finalInnerContent = "";
-        let mediaBlobObject = null; // Menampung objek blob asli dari gambar response
+        let mediaBlobObject = null;
 
         if (cleanContentType.includes("application/json")) {
             const data = await response.json();
@@ -603,79 +617,88 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
             else if (data.result && data.result.url && typeof data.result.url === 'string') detectedMediaUrl = data.result.url;
 
             if (detectedMediaUrl && (detectedMediaUrl.match(/\.(jpeg|jpg|gif|png|webp|mp4|mp3|webm|mov|wav|ogg|pdf|docx|xlsx|zip|txt|js)/i))) {
-                 finalInnerContent = createMediaPreview(detectedMediaUrl, null, detectedMediaUrl) + `<div class="mt-4 text-xs font-bold text-slate-500 uppercase">RAW JSON DATA</div><pre id="raw-text-${catIdx}-${epIdx}" class="code-font text-sm overflow-auto text-cyan-400 p-2 bg-black/50 rounded-lg mt-2">${rawResponseText}</pre>`;
+                 finalInnerContent = `
+                    <div class="p-4 border-b border-white/5 bg-black/20">${createMediaPreview(detectedMediaUrl, null, detectedMediaUrl)}</div>
+                    <div class="px-4 pt-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest">RAW JSON DATA</div>
+                    <pre id="raw-text-${catIdx}-${epIdx}" class="p-4 overflow-x-auto text-xs font-mono leading-relaxed text-cyan-400 max-h-80 scrollbar-thin bg-black/10 shadow-inner"><code>${escapeHtml(rawResponseText)}</code></pre>
+                 `;
                  isMedia = true;
             } else {
-                 finalInnerContent = `<pre id="raw-text-${catIdx}-${epIdx}" class="code-font text-sm overflow-auto text-cyan-400 p-2">${rawResponseText}</pre>`;
+                 finalInnerContent = `<pre id="raw-text-${catIdx}-${epIdx}" class="p-4 overflow-x-auto text-xs font-mono leading-relaxed text-cyan-400 max-h-96 scrollbar-thin bg-black/10 shadow-inner"><code>${escapeHtml(rawResponseText)}</code></pre>`;
             }
         } else if (cleanContentType.startsWith("image/") || cleanContentType.startsWith("video/") || cleanContentType.startsWith("audio/") || cleanContentType.includes("application/pdf")) {
             isMedia = true;
-            mediaBlobObject = await response.blob(); // Ambil blob respons biner langsung
+            mediaBlobObject = await response.blob(); 
             if (!bytes) bytes = mediaBlobObject.size;
             const blobUrl = URL.createObjectURL(mediaBlobObject);
-            finalInnerContent = createMediaPreview(blobUrl, cleanContentType, fullPath);
+            finalInnerContent = `<div class="p-4 bg-black/10 shadow-inner">${createMediaPreview(blobUrl, cleanContentType, fullPath)}</div>`;
         } else {
             rawResponseText = await response.text();
             if (!bytes) bytes = new Blob([rawResponseText]).size;
-            finalInnerContent = `<pre id="raw-text-${catIdx}-${epIdx}" class="code-font text-sm overflow-auto p-2">${rawResponseText}</pre>`;
+            finalInnerContent = `<pre id="raw-text-${catIdx}-${epIdx}" class="p-4 overflow-x-auto text-xs font-mono leading-relaxed text-slate-300 max-h-96 scrollbar-thin bg-black/10 shadow-inner"><code>${escapeHtml(rawResponseText)}</code></pre>`;
         }
 
         if (bytes >= 1048576) sizeText = `${(bytes / 1048576).toFixed(1)} MB`;
         else if (bytes >= 1024) sizeText = `${(bytes / 1024).toFixed(1)} KB`;
         else sizeText = `${bytes} B`;
 
-        // 1. Badge Atas diubah warnanya menjadi Cyan transparan (Hanya memuat HTTP & Durasi)
-        const metadataBadgeHtml = `
-            <div class="flex flex-wrap items-center gap-2 px-4 py-2 mb-4 text-xs font-mono font-bold rounded-lg bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 shadow-sm w-fit">
-                <span>HTTP ${response.status}</span>
-                <span class="opacity-40">•</span>
-                <span>${duration}ms</span>
+        // Pewarnaan dinamis badge status HTTP (Green / Red)
+        const statusColor = response.ok ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' : 'text-red-400 bg-red-500/10 border-red-500/20';
+
+        // BLOK ELEGAN UTAMA: Response Box Card View
+        responseContent.innerHTML = `
+            <div class="rounded-xl overflow-hidden border border-white/10 dark:border-white/10 light-mode:border-slate-200 bg-slate-950/40 backdrop-blur-md shadow-2xl transition-all duration-300">
+                <div class="flex items-center justify-between px-4 py-3 bg-black/40 light-mode:bg-slate-100 border-b border-white/5 light-mode:border-slate-200">
+                    <div class="flex items-center gap-2">
+                        <span class="px-2.5 py-1 rounded-md text-[10px] font-black tracking-wider uppercase border ${statusColor}">
+                            STATUS: ${response.status}
+                        </span>
+                        <span class="text-[10px] text-slate-400 dark:text-slate-400 light-mode:text-slate-600 font-mono font-semibold bg-white/5 light-mode:bg-slate-200 px-2 py-1 rounded border border-white/5 light-mode:border-slate-300">
+                            ${duration} ms
+                        </span>
+                        <span class="text-[10px] text-cyan-400 font-mono font-semibold bg-cyan-500/10 px-2 py-1 rounded border border-cyan-500/20 uppercase tracking-wide">
+                            ${sizeText}
+                        </span>
+                    </div>
+                    
+                    <div class="text-[10px] text-slate-500 font-mono hidden sm:inline-block truncate max-w-[200px]" title="${cleanContentType}">
+                        ${cleanContentType}
+                    </div>
+                </div>
+
+                <div class="relative group">
+                    ${finalInnerContent}
+                </div>
             </div>
         `;
 
-        // Gabungkan Badge HTTP dan Gambar/Response teks ke penampung utama
-        responseContent.innerHTML = metadataBadgeHtml + finalInnerContent;
-
+        // Desain Tombol Aksi Bawah yang Sinkron & Rapi
         const isLightMode = body.classList.contains('light-mode');
         const btnStyle = isLightMode 
-            ? 'px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-lg text-[11px] font-semibold transition-colors code-font border border-black/5 flex items-center gap-1.5 shadow-sm'
-            : 'px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-[11px] font-semibold transition-colors code-font border border-white/5 flex items-center gap-1.5';
+            ? 'px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-lg text-[11px] font-semibold transition-all code-font border border-black/5 flex items-center gap-1.5 shadow-sm'
+            : 'px-3 py-1.5 bg-slate-900/60 hover:bg-slate-800 text-white rounded-lg text-[11px] font-semibold transition-all code-font border border-white/10 flex items-center gap-1.5 hover:border-cyan-500/30';
 
-        // Container utama untuk membungkus info berkas bawah dan tombol aksi
         const actionContainer = document.createElement('div');
-        actionContainer.className = "flex flex-col gap-3 mb-3 border-b border-white/10 light-mode:border-slate-200 pb-3 mt-4";
+        actionContainer.className = "flex flex-wrap gap-2 mt-3 pt-1";
 
-        // 2. Kotak Badge Info File: Content-Type & File Size (Gaya warna Cyan transparan)
-        const fileInfoBadge = document.createElement('div');
-        fileInfoBadge.className = "flex items-center gap-2 px-3 py-1.5 text-xs font-mono font-bold rounded-lg bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 shadow-sm w-fit uppercase tracking-wider";
-        fileInfoBadge.innerHTML = `
-            <span>${cleanContentType}</span>
-            <span class="opacity-40">•</span>
-            <span>file size ${sizeText}</span>
-        `;
-        actionContainer.appendChild(fileInfoBadge);
-
-        // Container horizontal khusus untuk menderetkan tombol aksi secara rapi ke samping
-        const buttonsFlexContainer = document.createElement('div');
-        buttonsFlexContainer.className = "flex flex-wrap gap-2";
-
-        // Tombol Copy Response JSON diposisikan mendatar di bawah kotak info berkas
+        // Tombol Copy JSON Data
         const copyResponseBtn = document.createElement('button');
         copyResponseBtn.type = "button";
         copyResponseBtn.className = btnStyle;
         copyResponseBtn.innerHTML = `
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
-            <span>Copy Response JSON</span>
+            <svg class="w-3.5 h-3.5 text-cyan-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+            <span>Copy JSON Data</span>
         `;
-        copyResponseBtn.onclick = () => copyText(rawResponseText || "", "Response");
-        buttonsFlexContainer.appendChild(copyResponseBtn);
+        copyResponseBtn.onclick = () => copyText(rawResponseText || JSON.stringify({status: response.status, info: cleanContentType}), "Response");
+        actionContainer.appendChild(copyResponseBtn);
 
+        // Tombol Unduh Dinamis
         if (!isMedia) {
             const downloadResponseBtn = document.createElement('button');
             downloadResponseBtn.type = "button";
             downloadResponseBtn.className = btnStyle;
             downloadResponseBtn.innerHTML = `
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                 <span>Download Response</span>
             `;
             downloadResponseBtn.onclick = () => {
@@ -690,33 +713,27 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
                 document.body.removeChild(a);
                 URL.revokeObjectURL(downloadUrl);
             };
-            buttonsFlexContainer.appendChild(downloadResponseBtn);
+            actionContainer.appendChild(downloadResponseBtn);
         } else {
             const downloadMediaBtn = document.createElement('button');
             downloadMediaBtn.type = "button";
             downloadMediaBtn.className = btnStyle;
             downloadMediaBtn.innerHTML = `
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                 <span>Download Media</span>
             `;
             downloadMediaBtn.onclick = async () => {
                 try {
                     let finalBlob = mediaBlobObject;
-
-                    // FIX STRATEGI: Jika respons berupa JSON tapi di dalamnya ada tautan media (detected URL), 
-                    // ambil gambar aktual yang sedang dirender saat itu ke dalam blob agar unduhan valid.
                     if (!finalBlob) {
                         const mediaRes = await fetch(fullPath);
                         finalBlob = await mediaRes.blob();
                     }
-
                     const downloadUrl = URL.createObjectURL(finalBlob);
                     const a = document.createElement('a');
                     a.href = downloadUrl;
-
                     const ext = cleanContentType.split('/')[1] || 'bin';
                     a.download = `media-${Date.now()}.${ext}`;
-
                     document.body.appendChild(a);
                     a.click();
                     document.body.removeChild(a);
@@ -725,17 +742,20 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
                     showToast('Gagal mengunduh file media', true);
                 }
             };
-            buttonsFlexContainer.appendChild(downloadMediaBtn);
+            actionContainer.appendChild(downloadMediaBtn);
         }
 
-        actionContainer.appendChild(buttonsFlexContainer);
-
-        // Selalu tambahkan actionContainer di paling bawah (setfter gambar/response)
+        // Sematkan deretan tombol aksi tepat di bawah Box Panel Utama
         responseContent.appendChild(actionContainer);
 
         showToast(i18n[currentLang].toastRequestSuccess);
     } catch (error) {
-        responseContent.innerHTML = `<pre class="text-red-400 code-font text-sm p-2 bg-red-500/10 rounded-lg">Error: ${error.message}</pre>`;
+        responseContent.innerHTML = `
+            <div class="p-4 rounded-xl border border-red-500/20 bg-red-500/5 text-red-400 text-xs font-mono break-all flex items-center gap-2">
+                <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                <span>Error: ${error.message}</span>
+            </div>
+        `;
         showToast(i18n[currentLang].toastRequestFailed, true);
     } finally {
         isRequestInProgress = false;
@@ -749,6 +769,16 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
     }
 }
 
+// Tambahkan helper function ini jika belum ada untuk menghindari XSS/kerusakan markup HTML
+function escapeHtml(text) {
+    if (typeof text !== 'string') return text;
+    return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
 
 function clearResponse(catIdx, epIdx, endpointType) {
     const responseDiv = document.getElementById(`response-${catIdx}-${epIdx}`);
