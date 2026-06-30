@@ -682,7 +682,7 @@ app.get('/', (req, res) => {
           </div>
           
           <div class="text-center text-slate-300 text-xs sm:text-sm mb-6 px-2 leading-relaxed">
-            <p>Halloo, ini adalah salah satu projek ku, jangan di hujat yaa masih pemula :D</p>
+            <p>Halo! 👋 Selamat datang di Arulz-XD API. Terima kasih sudah berkunjung. API ini dibuat untuk membantu developer dengan berbagai fitur yang terus diperbarui. Silakan gunakan Free API Key di bawah ini, dan jika proyek ini bermanfaat, jangan lupa dukung pengembang agar layanan tetap online dan terus berkembang. 🚀</p>
           </div>
           
           <div class="mb-6 flex justify-center">
@@ -694,15 +694,15 @@ app.get('/', (req, res) => {
           </div>
           
           <div class="text-center text-slate-400 text-[11px] mb-5 flex items-center justify-center gap-1.5 font-medium tracking-wide">
-            <span>Support project ini biar makin semangat</span>
+            <span>💙 Jika API ini bermanfaat, dukung pengembang agar layanan tetap aktif, terus berkembang, dan mendapatkan pembaruan fitur secara berkala.</span>
             <svg class="w-4 h-4 text-cyan-400 animate-bounce" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M15.59 14.37a6 6 0 01-5.84 7.38v-4.8m5.84-2.58a14.98 14.98 0 006.16-12.12A14.98 14.98 0 009.63 3.31a14.98 14.98 0 00-6.16 12.12A14.98 14.98 0 0015.59 14.37z" />
             </svg>
           </div>
           
-          <a href="https://wa.me/6285122629940?text=Halo%20Arulz%2C%20saya%20ingin%20donate%20untuk%20layanan%20REST%20API%20Anda." target="_blank" class="w-full bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-500 hover:to-cyan-400 text-white font-bold py-3 px-6 rounded-xl shadow-lg shadow-cyan-950/50 transition-all active:scale-95 text-sm block text-center tracking-wider uppercase">
-            Donate Sekarang
-          </a>
+          <a href="/support" class="w-full bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-500 hover:to-cyan-400 text-white font-bold py-3 px-6 rounded-xl shadow-lg shadow-cyan-950/50 transition-all active:scale-95 text-sm block text-center tracking-wider uppercase">
+    Donate Sekarang
+</a>
         </div>
       </div>
     </div>
@@ -749,7 +749,7 @@ app.get('/', (req, res) => {
             <svg class="w-6 h-6 animate-[swing_2s_ease-in-out_infinite]" fill="none" stroke="currentColor" stroke-width="2.3" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
             </svg>
-            <span id="notifBadge" class="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-md border border-slate-900 animate-pulse">1</span>
+            <span id="notifBadge" class="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-md border border-slate-900 animate-pulse">•</span>
         </button>
 
         <button id="bioMenuBtn" class="flex items-center justify-center w-12 h-12 rounded-xl glass-panel text-slate-300 hover:text-white shadow-lg transition-all active:scale-95 focus:outline-none light-mode:text-slate-700 light-mode:hover:text-slate-900">
