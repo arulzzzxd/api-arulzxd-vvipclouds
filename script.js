@@ -578,9 +578,9 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
             const data = await response.json();
             const rawErrText = JSON.stringify(data, null, 2);
             responseContent.innerHTML = `
-                <div class="rounded-xl overflow-hidden border border-red-500/30 bg-slate-950/50 backdrop-blur-md shadow-2xl">
-                    <div class="flex items-center justify-between px-4 py-3 bg-red-950/20 border-b border-red-500/10">
-                        <span class="px-2.5 py-1 rounded-md text-[10px] font-black tracking-wider uppercase border border-red-500/30 bg-red-500/10 text-red-400">
+                <div class="rounded-xl overflow-hidden border border-red-500/40 bg-slate-950/50 backdrop-blur-md shadow-2xl">
+                    <div class="flex items-center justify-between px-4 py-3 bg-red-950/20 border-b border-red-500/20">
+                        <span class="px-2.5 py-1 rounded-md text-[10px] font-black tracking-wider uppercase border border-red-500/40 bg-red-500/10 text-red-400">
                             STATUS: ${response.status}
                         </span>
                         <button type="button" onclick="copyText(\`${rawErrText.replace(/`/g, '\\`').replace(/\$/g, '\\$')}\`, 'Error Response')" class="p-1.5 text-slate-400 hover:text-red-400 hover:bg-white/5 rounded-lg transition-all">
@@ -618,8 +618,8 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
 
             if (detectedMediaUrl && (detectedMediaUrl.match(/\.(jpeg|jpg|gif|png|webp|mp4|mp3|webm|mov|wav|ogg|pdf|docx|xlsx|zip|txt|js)/i))) {
                  finalInnerContent = `
-                    <div class="p-4 border-b border-white/5 dark:border-white/5 light-mode:border-slate-200 bg-black/20 flex justify-center items-center">${createMediaPreview(detectedMediaUrl, null, detectedMediaUrl)}</div>
-                    <div class="px-4 pt-3 text-[10px] font-bold text-slate-500 dark:text-slate-500 light-mode:text-slate-400 uppercase tracking-widest font-mono">RAW JSON DATA</div>
+                    <div class="p-4 border-b border-white/20 dark:border-white/20 light-mode:border-slate-300 bg-black/20 flex justify-center items-center">${createMediaPreview(detectedMediaUrl, null, detectedMediaUrl)}</div>
+                    <div class="px-4 pt-3 text-[10px] font-bold text-slate-400 dark:text-slate-400 light-mode:text-slate-500 uppercase tracking-widest font-mono">RAW JSON DATA</div>
                     <pre id="raw-text-${catIdx}-${epIdx}" class="p-4 overflow-x-auto text-xs font-mono leading-relaxed text-cyan-400 dark:text-cyan-400 light-mode:text-cyan-600 max-h-80 scrollbar-thin bg-black/10 dark:bg-black/20 light-mode:bg-slate-50 shadow-inner"><code>${escapeHtml(rawResponseText)}</code></pre>
                  `;
                  isMedia = true;
@@ -633,61 +633,55 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
             const blobUrl = URL.createObjectURL(mediaBlobObject);
             finalInnerContent = `<div class="p-6 bg-black/10 dark:bg-black/20 light-mode:bg-slate-50 shadow-inner flex justify-center items-center">${createMediaPreview(blobUrl, cleanContentType, fullPath)}</div>`;
         } else {
+            // JIKA RESPONSE TEXT / HTML (Menambahkan penanda RAW TEXT DATA yang jelas)
             rawResponseText = await response.text();
             if (!bytes) bytes = new Blob([rawResponseText]).size;
-            finalInnerContent = `<pre id="raw-text-${catIdx}-${epIdx}" class="p-4 overflow-x-auto text-xs font-mono leading-relaxed text-slate-300 dark:text-slate-300 light-mode:text-slate-700 max-h-96 scrollbar-thin bg-black/10 dark:bg-black/20 light-mode:bg-slate-50 shadow-inner"><code>${escapeHtml(rawResponseText)}</code></pre>`;
+            finalInnerContent = `
+                <div class="px-4 pt-3 text-[10px] font-bold text-slate-400 dark:text-slate-400 light-mode:text-slate-500 uppercase tracking-widest font-mono">RAW TEXT DATA</div>
+                <pre id="raw-text-${catIdx}-${epIdx}" class="p-4 overflow-x-auto text-xs font-mono leading-relaxed text-slate-300 dark:text-slate-300 light-mode:text-slate-700 max-h-96 scrollbar-thin bg-black/10 dark:bg-black/20 light-mode:bg-slate-50 shadow-inner"><code>${escapeHtml(rawResponseText)}</code></pre>
+            `;
         }
 
         if (bytes >= 1048576) sizeText = `${(bytes / 1048576).toFixed(1)} MB`;
         else if (bytes >= 1024) sizeText = `${(bytes / 1024).toFixed(1)} KB`;
         else sizeText = `${bytes} B`;
 
-        // Pewarnaan dinamis badge status HTTP (Green / Red)
+        // Pewarnaan dinamis badge status HTTP (Garis pembatas lebih tebal)
         const statusColor = response.ok 
-            ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20 dark:text-emerald-400 dark:bg-emerald-500/10 dark:border-emerald-500/20 light-mode:text-emerald-600 light-mode:bg-emerald-500/5 light-mode:border-emerald-500/20' 
-            : 'text-red-400 bg-red-500/10 border-red-500/20 dark:text-red-400 dark:bg-red-500/10 dark:border-red-500/20 light-mode:text-red-600 light-mode:bg-red-500/5 light-mode:border-red-500/20';
+            ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30 dark:text-emerald-400 dark:bg-emerald-500/10 dark:border-emerald-500/30 light-mode:text-emerald-700 light-mode:bg-emerald-500/5 light-mode:border-emerald-500/30' 
+            : 'text-red-400 bg-red-500/10 border-red-500/30 dark:text-red-400 dark:bg-red-500/10 dark:border-red-500/30 light-mode:text-red-700 light-mode:bg-red-500/5 light-mode:border-red-500/30';
 
-        // Desain tombol aksi download dinamis text vs media berkas
-        let downloadButtonHtml = '';
-        if (!isMedia) {
-            downloadButtonHtml = `
-                <button type="button" id="download-btn-${catIdx}-${epIdx}" class="px-3.5 py-2 bg-slate-900/80 dark:bg-slate-900/80 light-mode:bg-slate-200/80 hover:bg-slate-800 light-mode:hover:bg-slate-300 text-white light-mode:text-slate-800 rounded-lg text-xs font-semibold border border-white/5 dark:border-white/5 light-mode:border-slate-300 flex items-center gap-2 transition-all hover:scale-[1.02] active:scale-[0.98]">
-                    <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                    <span>Download JSON</span>
-                </button>
-            `;
-        } else {
-            downloadButtonHtml = `
-                <button type="button" id="download-btn-${catIdx}-${epIdx}" class="px-3.5 py-2 bg-slate-900/80 dark:bg-slate-900/80 light-mode:bg-slate-200/80 hover:bg-slate-800 light-mode:hover:bg-slate-300 text-white light-mode:text-slate-800 rounded-lg text-xs font-semibold border border-white/5 dark:border-white/5 light-mode:border-slate-300 flex items-center gap-2 transition-all hover:scale-[1.02] active:scale-[0.98]">
-                    <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                    <span>Download Media</span>
-                </button>
-            `;
-        }
+        // Penyesuaian teks tombol unduh dinamis
+        let downloadButtonHtml = `
+            <button type="button" id="download-btn-${catIdx}-${epIdx}" class="px-3.5 py-2 bg-slate-900/80 dark:bg-slate-900/80 light-mode:bg-slate-200/80 hover:bg-slate-800 light-mode:hover:bg-slate-300 text-white light-mode:text-slate-800 rounded-lg text-xs font-semibold border border-white/20 dark:border-white/20 light-mode:border-slate-300 flex items-center gap-2 transition-all hover:scale-[1.02] active:scale-[0.98]">
+                <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                <span>Download ${isMedia ? 'Media' : 'Response'}</span>
+            </button>
+        `;
 
-        // RENDER CONTAINER UTAMA (Menjamin seluruh elemen berada di dalam satu wrapper terstruktur)
+        // RENDER CONTAINER UTAMA (Dengan border yang diperjelas secara tegas)
         responseContent.innerHTML = `
-            <div class="rounded-xl overflow-hidden border border-white/10 dark:border-white/10 light-mode:border-slate-200 bg-slate-950/40 dark:bg-slate-950/40 light-mode:bg-white shadow-2xl transition-all duration-300">
+            <div class="rounded-xl overflow-hidden border-2 border-white/20 dark:border-2 dark:border-white/20 light-mode:border-2 light-mode:border-slate-300 bg-slate-950/40 dark:bg-slate-950/40 light-mode:bg-white shadow-2xl transition-all duration-300">
                 
-                <div class="px-4 py-2.5 bg-black/60 dark:bg-black/60 light-mode:bg-slate-100 border-b border-white/5 light-mode:border-slate-200 flex items-center gap-2">
+                <div class="px-4 py-2.5 bg-black/60 dark:bg-black/60 light-mode:bg-slate-100 border-b border-white/20 light-mode:border-slate-300 flex items-center gap-2">
                     <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
                     <span class="text-xs font-bold tracking-wider font-mono text-slate-300 dark:text-slate-300 light-mode:text-slate-700 uppercase">Server Response</span>
                 </div>
 
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 p-3 bg-black/30 dark:bg-black/30 light-mode:bg-slate-50 border-b border-white/5 light-mode:border-slate-100 text-center text-xs font-mono">
-                    <div class="flex flex-col justify-center items-center p-2 rounded-lg border border-white/5 light-mode:border-slate-200/60 bg-black/10 dark:bg-black/10 light-mode:bg-white">
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 p-3 bg-black/30 dark:bg-black/30 light-mode:bg-slate-50 border-b border-white/20 light-mode:border-slate-200 text-center text-xs font-mono">
+                    <div class="flex flex-col justify-center items-center p-2 rounded-lg border border-white/10 light-mode:border-slate-200 bg-black/10 dark:bg-black/10 light-mode:bg-white">
                         <span class="text-[10px] text-slate-500 uppercase font-semibold mb-1">Status</span>
                         <span class="px-2 py-0.5 rounded text-[11px] font-bold ${statusColor}">${response.status}</span>
                     </div>
-                    <div class="flex flex-col justify-center items-center p-2 rounded-lg border border-white/5 light-mode:border-slate-200/60 bg-black/10 dark:bg-black/10 light-mode:bg-white">
+                    <div class="flex flex-col justify-center items-center p-2 rounded-lg border border-white/10 light-mode:border-slate-200 bg-black/10 dark:bg-black/10 light-mode:bg-white">
                         <span class="text-[10px] text-slate-500 uppercase font-semibold mb-1">Time</span>
                         <span class="text-[11px] text-amber-400 dark:text-amber-400 light-mode:text-amber-600 font-bold">${duration} ms</span>
                     </div>
-                    <div class="flex flex-col justify-center items-center p-2 rounded-lg border border-white/5 light-mode:border-slate-200/60 bg-black/10 dark:bg-black/10 light-mode:bg-white">
+                    <div class="flex flex-col justify-center items-center p-2 rounded-lg border border-white/10 light-mode:border-slate-200 bg-black/10 dark:bg-black/10 light-mode:bg-white">
                         <span class="text-[10px] text-slate-500 uppercase font-semibold mb-1">Size</span>
                         <span class="text-[11px] text-cyan-400 dark:text-cyan-400 light-mode:text-cyan-600 font-bold">${sizeText}</span>
                     </div>
-                    <div class="flex flex-col justify-center items-center p-2 rounded-lg border border-white/5 light-mode:border-slate-200/60 bg-black/10 dark:bg-black/10 light-mode:bg-white col-span-2 sm:col-span-1">
+                    <div class="flex flex-col justify-center items-center p-2 rounded-lg border border-white/10 light-mode:border-slate-200 bg-black/10 dark:bg-black/10 light-mode:bg-white col-span-2 sm:col-span-1">
                         <span class="text-[10px] text-slate-500 uppercase font-semibold mb-1">Content Type</span>
                         <span class="text-[10px] text-slate-300 dark:text-slate-300 light-mode:text-slate-600 truncate max-w-full font-semibold px-1" title="${cleanContentType}">${cleanContentType}</span>
                     </div>
@@ -697,8 +691,8 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
                     ${finalInnerContent}
                 </div>
 
-                <div class="flex flex-wrap items-center gap-3 px-4 py-3 bg-black/40 dark:bg-black/40 light-mode:bg-slate-50 border-t border-white/5 light-mode:border-slate-200">
-                    <button type="button" id="copy-btn-${catIdx}-${epIdx}" class="px-3.5 py-2 bg-slate-900/80 dark:bg-slate-900/80 light-mode:bg-slate-200/80 hover:bg-slate-800 light-mode:hover:bg-slate-300 text-white light-mode:text-slate-800 rounded-lg text-xs font-semibold border border-white/5 dark:border-white/5 light-mode:border-slate-300 flex items-center gap-2 transition-all hover:scale-[1.02] active:scale-[0.98]">
+                <div class="flex flex-wrap items-center gap-3 px-4 py-3 bg-black/40 dark:bg-black/40 light-mode:bg-slate-50 border-t border-white/20 light-mode:border-slate-300">
+                    <button type="button" id="copy-btn-${catIdx}-${epIdx}" class="px-3.5 py-2 bg-slate-900/80 dark:bg-slate-900/80 light-mode:bg-slate-200/80 hover:bg-slate-800 light-mode:hover:bg-slate-300 text-white light-mode:text-slate-800 rounded-lg text-xs font-semibold border border-white/20 dark:border-white/20 light-mode:border-slate-300 flex items-center gap-2 transition-all hover:scale-[1.02] active:scale-[0.98]">
                         <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
                         <span>Copy Response</span>
                     </button>
@@ -709,7 +703,7 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
             </div>
         `;
 
-        // PENGIKAT EVENT HANDLER (Didaftarkan setelah elemen disuntikkan ke DOM)
+        // PENGIKAT EVENT HANDLER
         document.getElementById(`copy-btn-${catIdx}-${epIdx}`).onclick = () => {
             copyText(rawResponseText || JSON.stringify({status: response.status, info: cleanContentType}), "Response");
         };
@@ -718,7 +712,7 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
         if (!isMedia) {
             downloadBtn.onclick = () => {
                 const blob = new Blob([rawResponseText], { type: cleanContentType });
-                const extension = cleanContentType.includes('json') ? 'json' : 'txt';
+                const extension = cleanContentType.includes('json') ? 'json' : (cleanContentType.includes('html') ? 'html' : 'txt');
                 const downloadUrl = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = downloadUrl;
@@ -754,7 +748,7 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
         showToast(i18n[currentLang].toastRequestSuccess);
     } catch (error) {
         responseContent.innerHTML = `
-            <div class="p-4 rounded-xl border border-red-500/20 bg-red-500/5 text-red-400 text-xs font-mono break-all flex items-center gap-2">
+            <div class="p-4 rounded-xl border border-red-500/30 bg-red-500/5 text-red-400 text-xs font-mono break-all flex items-center gap-2">
                 <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
                 <span>Error: ${error.message}</span>
             </div>
