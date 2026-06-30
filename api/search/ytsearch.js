@@ -5,7 +5,7 @@ const router = express.Router();
 
 router.get("/", async (req, res) => {
     try {
-        const query = req.query.query;
+        const query = req.query.query?.trim();
 
         if (!query) {
             return res.status(400).json({
@@ -16,26 +16,39 @@ router.get("/", async (req, res) => {
 
         const search = await yts(query);
 
-        const result = search.videos.map(v => ({
-            type: v.type,
-            videoId: v.videoId,
-            title: v.title,
-            url: v.url,
-            timestamp: v.timestamp,
-            duration: {
-                seconds: v.seconds,
-                timestamp: v.timestamp
-            },
-            views: v.views,
-            ago: v.ago,
-            author: {
-                name: v.author.name,
-                url: v.author.url
-            },
-            thumbnail: v.thumbnail
-        }));
+        // Pastikan search.videos ada dan berbentuk array sebelum di-map
+        const videos = search?.videos || [];
 
-        res.json({
+        const result = videos.map(v => {
+            // Ambil views aman, handle jika berupa angka atau string teks ribuan
+            let formattedViews = 0;
+            if (v?.views) {
+                formattedViews = typeof v.views === "number" 
+                    ? v.views.toLocaleString('id-ID') 
+                    : v.views.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+            }
+
+            return {
+                type: v?.type || "video",
+                videoId: v?.videoId || "",
+                title: v?.title || "No Title",
+                url: v?.url || "",
+                timestamp: v?.timestamp || "00:00",
+                duration: {
+                    seconds: v?.seconds || 0,
+                    timestamp: v?.timestamp || "00:00"
+                },
+                views: formattedViews,
+                ago: v?.ago || "Unknown Date",
+                author: {
+                    name: v?.author?.name || "Unknown Channel",
+                    url: v?.author?.url || ""
+                },
+                thumbnail: v?.thumbnail || v?.image || `https://i.ytimg.com/vi/${v?.videoId}/hqdefault.jpg`
+            };
+        });
+
+        return res.status(200).json({
             status: true,
             creator: "ArulzXD",
             total: result.length,
@@ -43,9 +56,11 @@ router.get("/", async (req, res) => {
         });
 
     } catch (err) {
-        res.status(500).json({
+        console.error("YT Search Error:", err.message);
+        return res.status(500).json({
             status: false,
-            message: err.message
+            message: "Gagal mengambil data dari YouTube, coba lagi nanti.",
+            error: err.message
         });
     }
 });
