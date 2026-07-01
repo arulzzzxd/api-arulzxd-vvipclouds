@@ -4,15 +4,20 @@ const FormData = require("form-data");
 
 const router = express.Router();
 
+async function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 async function removeBgimage(imageUrl) {
     const image = await axios.get(imageUrl, {
-        responseType: "arraybuffer"
+        responseType: "arraybuffer",
+        headers: {
+            "User-Agent": "Mozilla/5.0"
+        }
     });
 
-    const buffer = Buffer.from(image.data);
-
     const form = new FormData();
-    form.append("file", buffer, {
+    form.append("file", Buffer.from(image.data), {
         filename: "image.png",
         contentType: "image/png"
     });
@@ -28,19 +33,19 @@ async function removeBgimage(imageUrl) {
                 origin: "https://bgeraser.com",
                 referer: "https://bgeraser.com/",
                 "user-agent":
-                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36"
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
             }
         }
     );
 
-    if (!upload.taskId) {
-        throw new Error("Gagal mengupload gambar.");
+    if (!upload || !upload.taskId) {
+        throw new Error("Upload gagal.");
     }
 
     const taskId = upload.taskId;
 
     for (let i = 0; i < 20; i++) {
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        await sleep(2000);
 
         const { data: status } = await axios.post(
             "https://bgeraser.com/api/bgeraser/legacy/status",
@@ -53,20 +58,22 @@ async function removeBgimage(imageUrl) {
                     origin: "https://bgeraser.com",
                     referer: "https://bgeraser.com/",
                     "user-agent":
-                        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36"
+                        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
                 }
             }
         );
 
-        if (status.status === "success") {
-            return {
-                jobId: taskId,
-                image: status.downloadUrls[taskId]
-            };
+        if (
+            status &&
+            status.status === "success" &&
+            status.downloadUrls &&
+            status.downloadUrls[taskId]
+        ) {
+            return status.downloadUrls[taskId];
         }
     }
 
-    throw new Error("Timeout, proses remove background gagal.");
+    throw new Error("Timeout menunggu hasil.");
 }
 
 router.get("/", async (req, res) => {
@@ -91,36 +98,36 @@ router.get("/", async (req, res) => {
         if (!url) {
             return res.status(400).json({
                 status: false,
-                message: "Parameter 'url' diperlukan.",
-                example:
-                    "/api/tools/removebg?apikey=arulzxd-keys&url=https://example.com/image.jpg"
+                message: "Parameter 'url' diperlukan."
             });
         }
 
-        const result = await removeBgimage(url);
+        const imageUrl = await removeBgimage(url);
 
-const image = await axios.get(result.image, {
-    responseType: "arraybuffer"
-});
-
-res.setHeader(
-    "Content-Type",
-    image.headers["content-type"] || "image/png"
-);
-
-return res.send(Buffer.from(image.data));
-
-        res.json({
-            status: true,
-            creator: "ArulzXD",
-            result
+        const image = await axios.get(imageUrl, {
+            responseType: "stream",
+            headers: {
+                "User-Agent": "Mozilla/5.0",
+                Referer: "https://bgeraser.com/",
+                Origin: "https://bgeraser.com"
+            }
         });
 
+        res.setHeader(
+            "Content-Type",
+            image.headers["content-type"] || "image/png"
+        );
+
+        return image.data.pipe(res);
+
     } catch (err) {
-        res.status(500).json({
+        console.error(err.response?.data || err.message);
+
+        return res.status(500).json({
             status: false,
             creator: "ArulzXD",
-            message: err.message
+            message: err.message,
+            detail: err.response?.data || null
         });
     }
 });
