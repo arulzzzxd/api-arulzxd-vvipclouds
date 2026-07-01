@@ -1,4 +1,3 @@
-/* =========================================================================
    API-ARULZXD - REST API & UPLOADER INTEGRATION (UPDATED - FULL SVG)
    ========================================================================= */
 
@@ -10,6 +9,7 @@ const axios = require('axios');
 const mime = require('mime-types');
 const https = require('https');
 const http = require('http');
+const nodemailer = require('nodemailer');
 const crypto = require('crypto');
 
 const app = express();
@@ -83,8 +83,73 @@ const playlist = [
   }
 ];
 
-// Endpoint untuk memproses unduhan otomatis gambar lintas domain (Bypass CORS)
-// Endpoint Proxy Download Otomatis - Gaya CommonJS (CJS)
+
+
+// 1. RUTE UNTUK MENAMPILKAN HALAMAN FEEDBACK.HTML
+app.get('/feedback', (req, res) => {
+    res.sendFile(path.join(__dirname, 'feedback.html'));
+});
+
+// 2. RUTE ENDPOINT /api/feedback UNTUK MEMPROSES PENGIRIMAN EMAIL
+app.post('/api/feedback', async (req, res) => {
+    const { name, email, category, message } = req.body;
+
+    // Validasi memastikan semua data terisi
+    if (!name || !email || !category || !message) {
+        return res.status(400).json({ success: false, message: 'Semua kolom wajib diisi!' });
+    }
+
+    // KONFIGURASI SMTP SERVER (Menggunakan Gmail)
+    const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+            user: 'arulzz.xd@gmail.com', // ⚠️ GANTI: Masukkan Email Gmail Anda di sini
+            pass: 'aust bfcc erkz aocs'         // ⚠️ GANTI: Masukkan 16 digit Sandi Aplikasi (App Password) Gmail Anda
+        }
+    });
+
+    // STRUKTUR EMAIL YANG AKAN MASUK KE KOTAK MASUK ANDA
+    const mailOptions = {
+        from: `"${name}" <${email}>`,
+        to: 'arulzz.xd@gmail.com', // ⚠️ GANTI: Email tujuan yang akan menerima pesan feedback ini
+        replyTo: email,
+        subject: `[FEEDBACK API] - ${category} dari ${name}`,
+        html: `
+            <div style="font-family: sans-serif; padding: 20px; background-color: #0f172a; color: #f1f5f9; border-radius: 10px; max-width: 600px;">
+                <h2 style="color: #06b6d4; border-bottom: 2px solid #334155; padding-bottom: 10px; margin-top: 0;">📬 Feedback Masuk Baru</h2>
+                <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+                    <tr>
+                        <td style="padding: 6px 0; font-weight: bold; color: #94a3b8; width: 120px;">Pengirim:</td>
+                        <td style="padding: 6px 0; color: #ffffff;">${name}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 6px 0; font-weight: bold; color: #94a3b8;">Email:</td>
+                        <td style="padding: 6px 0; color: #06b6d4;"><a href="mailto:${email}" style="color: #06b6d4; text-decoration: none;">${email}</a></td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 6px 0; font-weight: bold; color: #94a3b8;">Kategori:</td>
+                        <td style="padding: 6px 0;"><span style="background-color: #1e293b; padding: 4px 8px; border-radius: 4px; font-size: 13px; color: #38bdf8;">${category}</span></td>
+                    </tr>
+                </table>
+                <div style="margin-top: 20px; padding: 15px; background-color: #020617; border-left: 4px solid #06b6d4; border-radius: 4px;">
+                    <p style="margin: 0; font-weight: bold; color: #94a3b8; margin-bottom: 8px;">Pesan / Isi:</p>
+                    <p style="margin: 0; line-height: 1.6; white-space: pre-wrap; color: #e2e8f0;">${message}</p>
+                </div>
+                <hr style="border: 0; border-top: 1px solid #334155; margin: 20px 0;">
+                <p style="font-size: 11px; color: #64748b; margin: 0; text-align: center;">Sistem Otomatis REST-API Feedback Manager</p>
+            </div>
+        `
+    };
+
+    try {
+        await transporter.sendMail(mailOptions);
+        res.status(200).json({ success: true, message: 'Feedback dikirim!' });
+    } catch (error) {
+        console.error('Email error:', error);
+        res.status(500).json({ success: false, message: 'Gagal mengirim email melalui SMTP server.' });
+    }
+});
+
 app.get('/database/download', async (req, res) => {
     // Ambil target url gambar dari query parameter frontend, atau gunakan default jika kosong
     const imageUrl = req.query.url || "https://arulz-uploader.vercel.app/files/CVmlrD.jpg";
@@ -828,11 +893,11 @@ app.get('/', (req, res) => {
 </a>           
             <hr class="border-white/10 my-1 light-mode:border-slate-200">
             
-            <a href="https://wa.me/6285122629940?text=%F0%9F%9A%A8%20%5BSYSTEM%20NOTICE%3A%20BUG%20DETECTED%5D%20%F0%9F%9A%A8%0A----------------------------------------%0AHalo%20Arulz%2C%20saya%20menemukan%20sebuah%20anomali%20%2F%20bug%20pada%20layanan%20REST%20API%20Anda.%20Berikut%20rinciannya%3A%0A%0A%E2%80%A2%20%F0%9F%9B%A0%EF%B8%8F%20Endpoint%20%20%3A%20%5BMasukkan%20nama%2Fpath%20endpoint%2C%20misal%3A%20%2Fapi%2Fdownloader%2Ftiktok%5D%0A%E2%80%A2%20%F0%9F%93%9D%20Masalah%20%20%20%3A%20%5BDeskripsi%20singkat%20bug%2C%20misal%3A%20Response%20error%20500%20%2F%20data%20tidak%20keluar%5D%0A%E2%80%A2%20%F0%9F%94%8D%20Kronologi%20%3A%20%5BKetik%20di%20sini%20bagaimana%20bug%20terjadi%20atau%20parameter%20apa%20yang%20dimasukkan%5D%0A%0AMohon%20bantuannya%20untuk%20dilakukan%20pengecekan%20sistem%20%28system%20maintenance%29.%20Terima%20kasih%20%F0%9F%9A%80%0A----------------------------------------%0A%5BSent%20via%20REST%20API%20Dashboard%20User%5D" target="_blank" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-3 px-2 py-1.5 rounded-lg hover:bg-white/5 text-[11px] opacity-80">
+            <a href="/feedback" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-3 px-2 py-1.5 rounded-lg hover:bg-white/5 text-[11px] opacity-80">
                 <svg class="w-5 h-5 text-cyan-400 text-center" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
                 </svg>
-                BUG REPORT
+                FEEDBACK
             </a>            
 <a href="/privacy" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-3 px-2 py-1.5 rounded-lg hover:bg-white/5">
     <svg class="w-5 h-5 text-cyan-400 text-center" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
