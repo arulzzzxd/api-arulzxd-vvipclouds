@@ -3,9 +3,10 @@
    ========================================================================= */
 
 const express = require('express');
+const rateLimit = require('express-rate-limit');
+const fileUpload = require('express-fileupload');
 const path = require('path');
 const fs = require('fs');
-const fileUpload = require('express-fileupload');
 const axios = require('axios');
 const mime = require('mime-types');
 const https = require('https');
@@ -17,6 +18,25 @@ const PORT = process.env.PORT || 3000;
 app.use(express.static(path.join(__dirname)));
 app.use(express.json());
 
+// 2. Konfigurasi Limiter 100 request / 24 jam (Free API Key)
+const freeApiKeyLimiter = rateLimit({
+    windowMs: 24 * 60 * 60 * 1000, // 24 jam dalam milidetik
+    max: 100, // Maksimal 100 request
+    keyGenerator: (req) => {
+        // Mengambil API key dari query parameter (?apikey=...) atau headers (X-API-KEY)
+        return req.query.apikey || req.headers['x-api-key'] || req.ip; 
+    },
+    handler: (req, res) => {
+        // Respon ketika user mencapai batas limit
+        res.status(429).json({
+            status: false,
+            creator: "ArulzXD",
+            message: "Limit API Key Free Anda telah habis (Maks 100 req/hari). Silakan coba lagi besok atau upgrade ke Premium!"
+        });
+    },
+    standardHeaders: true, // Mengirim info limit di header `RateLimit-*`
+    legacyHeaders: false,  // Menonaktifkan header `X-RateLimit-*` yang lama
+});
 const listNotifikasi = require('./database/notifikasi'); 
 
 // Middleware untuk menangani form file upload (Uploader)
