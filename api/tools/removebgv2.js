@@ -99,6 +99,17 @@ router.get("/", async (req, res) => {
 
         const result = await removeBgimage(url);
 
+const image = await axios.get(result.image, {
+    responseType: "arraybuffer"
+});
+
+res.setHeader(
+    "Content-Type",
+    image.headers["content-type"] || "image/png"
+);
+
+return res.send(Buffer.from(image.data));
+
         res.json({
             status: true,
             creator: "ArulzXD",
