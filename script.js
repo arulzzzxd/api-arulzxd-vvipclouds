@@ -573,8 +573,8 @@ async function executeRequest(e, catIdx, epIdx, method, path, endpointType) {
         const endTime = performance.now();
         const duration = Math.round(endTime - startTime);
 
-        // Handler Error Status (403 / 503)
-        if (response.status === 403 || response.status === 503) {
+        // Handler Error Status (403 / 429 / 503)
+        if (response.status === 403 || response.status === 429 || response.status === 503) {
             const data = await response.json();
             const rawErrText = JSON.stringify(data, null, 2);
             responseContent.innerHTML = `
