@@ -1,3 +1,4 @@
+/* =========================================================================
    API-ARULZXD - REST API & UPLOADER INTEGRATION (UPDATED - FULL SVG)
    ========================================================================= */
 
@@ -9,7 +10,6 @@ const axios = require('axios');
 const mime = require('mime-types');
 const https = require('https');
 const http = require('http');
-const nodemailer = require('nodemailer');
 const crypto = require('crypto');
 
 const app = express();
@@ -83,113 +83,8 @@ const playlist = [
   }
 ];
 
-
-
-// 1. RUTE UNTUK MENAMPILKAN HALAMAN FEEDBACK.HTML
-app.get('/feedback', (req, res) => {
-    res.sendFile(path.join(__dirname, 'feedback.html'));
-});
-
-app.post('/database/feedback', async (req, res) => {
-    // 1. Ambil data dari body secara terpisah
-    const name = req.body.name;
-    const email = req.body.email;
-    const category = req.body.category;
-    const message = req.body.message;
-
-    // 2. Validasi pengecekan eror secara terpisah
-    if (!name) return res.status(400).json({ success: false, message: 'Nama / Username tidak boleh kosong!' });
-    if (!email) return res.status(400).json({ success: false, message: 'Alamat Email tidak boleh kosong!' });
-    if (!category) return res.status(400).json({ success: false, message: 'Kategori feedback harus dipilih!' });
-    if (!message) return res.status(400).json({ success: false, message: 'Isi pesan feedback tidak boleh kosong!' });
-
-    // =========================================================================
-    // PROSES 1: SIMPAN DATA KE FILE LOKAL (/database/feedback.json)
-    // =========================================================================
-    const folderPath = path.join(__dirname, 'database');
-    const filePath = path.join(folderPath, 'feedback.json');
-
-    // Buat folder 'database' otomatis jika belum ada di server
-    if (!fs.existsSync(folderPath)) {
-        fs.mkdirSync(folderPath, { recursive: true });
-    }
-
-    let dataFeedback = [];
-    if (fs.existsSync(filePath)) {
-        try {
-            const fileContent = fs.readFileSync(filePath, 'utf-8');
-            dataFeedback = JSON.parse(fileContent || '[]');
-        } catch (e) {
-            dataFeedback = [];
-        }
-    }
-
-    // Struktur data yang disimpan ke database lokal
-    const newFeedback = {
-        id: Date.now(),
-        name: name,
-        email: email,
-        category: category,
-        message: message,
-        date: new Date().toISOString()
-    };
-
-    dataFeedback.push(newFeedback);
-    fs.writeFileSync(filePath, JSON.stringify(dataFeedback, null, 2), 'utf-8');
-
-    // =========================================================================
-    // PROSES 2: KIRIM DATA LANGSUNG KE EMAIL ADMIN
-    // =========================================================================
-    const transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-            user: 'arulzz.xd@gmail.com', 
-            pass: 'aust bfcc erkz aocs'         
-        }
-    });
-
-    const mailOptions = {
-        from: `"${name}" <${email}>`,
-        to: 'arulzz.xd@gmail.com', 
-        replyTo: email,
-        subject: `[FEEDBACK API] - ${category} dari ${name}`,
-        html: `
-            <div style="font-family: sans-serif; padding: 20px; background-color: #0f172a; color: #f1f5f9; border-radius: 10px; max-width: 600px;">
-                <h2 style="color: #06b6d4; border-bottom: 2px solid #334155; padding-bottom: 10px; margin-top: 0;">📬 Feedback Masuk Baru</h2>
-                <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
-                    <tr>
-                        <td style="padding: 6px 0; font-weight: bold; color: #94a3b8; width: 120px;">Pengirim:</td>
-                        <td style="padding: 6px 0; color: #ffffff;">${name}</td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 6px 0; font-weight: bold; color: #94a3b8;">Email:</td>
-                        <td style="padding: 6px 0; color: #06b6d4;"><a href="mailto:${email}" style="color: #06b6d4; text-decoration: none;">${email}</a></td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 6px 0; font-weight: bold; color: #94a3b8;">Kategori:</td>
-                        <td style="padding: 6px 0;"><span style="background-color: #1e293b; padding: 4px 8px; border-radius: 4px; font-size: 13px; color: #38bdf8;">${category}</span></td>
-                    </tr>
-                </table>
-                <div style="margin-top: 20px; padding: 15px; background-color: #020617; border-left: 4px solid #06b6d4; border-radius: 4px;">
-                    <p style="margin: 0; font-weight: bold; color: #94a3b8; margin-bottom: 8px;">Pesan / Isi:</p>
-                    <p style="margin: 0; line-height: 1.6; white-space: pre-wrap; color: #e2e8f0;">${message}</p>
-                </div>
-                <hr style="border: 0; border-top: 1px solid #334155; margin: 20px 0;">
-                <p style="font-size: 11px; color: #64748b; margin: 0; text-align: center;">Sistem Otomatis REST-API Feedback Manager</p>
-            </div>
-        `
-    };
-
-    try {
-        await transporter.sendMail(mailOptions);
-        res.status(200).json({ success: true, message: 'Feedback berhasil disimpan dan dikirim ke Admin!' });
-    } catch (error) {
-        console.error('Email error:', error);
-        // Tetap kirim respon sukses karena data sudah berhasil tertulis di file lokal json
-        res.status(200).json({ success: true, message: 'Feedback tersimpan di server, namun gagal mengirim notifikasi email.' });
-    }
-});
-
+// Endpoint untuk memproses unduhan otomatis gambar lintas domain (Bypass CORS)
+// Endpoint Proxy Download Otomatis - Gaya CommonJS (CJS)
 app.get('/database/download', async (req, res) => {
     // Ambil target url gambar dari query parameter frontend, atau gunakan default jika kosong
     const imageUrl = req.query.url || "https://arulz-uploader.vercel.app/files/CVmlrD.jpg";
@@ -907,13 +802,13 @@ app.get('/', (req, res) => {
         </div>
 
         <nav class="flex flex-col gap-4 text-xs font-bold tracking-wider uppercase text-gray-300 light-mode:text-slate-700 flex-1 overflow-y-auto scrollbar-hide py-2">
-            <a href="#home" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-3 px-2 py-1.5 rounded-lg hover:bg-white/5">
+            <a href="#api" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-3 px-2 py-1.5 rounded-lg hover:bg-white/5">
                 <svg class="w-5 h-5 text-cyan-400 text-center" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
                 </svg>
                 HOME
             </a>
-            <a href="#doc" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-3 px-2 py-1.5 rounded-lg hover:bg-white/5">
+            <a href="#apiList" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-3 px-2 py-1.5 rounded-lg hover:bg-white/5">
                 <svg class="w-5 h-5 text-cyan-400 text-center" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                 </svg>
@@ -933,12 +828,12 @@ app.get('/', (req, res) => {
 </a>           
             <hr class="border-white/10 my-1 light-mode:border-slate-200">
             
-            <a href="/feedback" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-3 px-2 py-1.5 rounded-lg hover:bg-white/5 text-[11px] opacity-80">
+            <a href="https://wa.me/6285122629940?text=%F0%9F%9A%A8%20%5BSYSTEM%20NOTICE%3A%20BUG%20DETECTED%5D%20%F0%9F%9A%A8%0A----------------------------------------%0AHalo%20Arulz%2C%20saya%20menemukan%20sebuah%20anomali%20%2F%20bug%20pada%20layanan%20REST%20API%20Anda.%20Berikut%20rinciannya%3A%0A%0A%E2%80%A2%20%F0%9F%9B%A0%EF%B8%8F%20Endpoint%20%20%3A%20%5BMasukkan%20nama%2Fpath%20endpoint%2C%20misal%3A%20%2Fapi%2Fdownloader%2Ftiktok%5D%0A%E2%80%A2%20%F0%9F%93%9D%20Masalah%20%20%20%3A%20%5BDeskripsi%20singkat%20bug%2C%20misal%3A%20Response%20error%20500%20%2F%20data%20tidak%20keluar%5D%0A%E2%80%A2%20%F0%9F%94%8D%20Kronologi%20%3A%20%5BKetik%20di%20sini%20bagaimana%20bug%20terjadi%20atau%20parameter%20apa%20yang%20dimasukkan%5D%0A%0AMohon%20bantuannya%20untuk%20dilakukan%20pengecekan%20sistem%20%28system%20maintenance%29.%20Terima%20kasih%20%F0%9F%9A%80%0A----------------------------------------%0A%5BSent%20via%20REST%20API%20Dashboard%20User%5D" target="_blank" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-3 px-2 py-1.5 rounded-lg hover:bg-white/5 text-[11px] opacity-80">
                 <svg class="w-5 h-5 text-cyan-400 text-center" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
-                FEEDBACK
-            </a>
+                BUG REPORT
+            </a>            
 <a href="/privacy" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-3 px-2 py-1.5 rounded-lg hover:bg-white/5">
     <svg class="w-5 h-5 text-cyan-400 text-center" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
