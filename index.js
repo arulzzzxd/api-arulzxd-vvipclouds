@@ -535,6 +535,81 @@ app.use('/api/', freeApiKeyLimiter);
 // 2. Jika lolos limit, baru teruskan ke router utama Anda
 app.use('/api', router);
 
+const nodemailer = require('nodemailer');
+
+// 1. Konfigurasi Transporter SMTP (Contoh menggunakan Gmail)
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: 'supportarulzxd@gmail.com',       // Ganti dengan email Gmail Anda
+        pass: 'zlgzdpiplvhviiue'         // Ganti dengan "App Password" dari Google Akun Anda
+    }
+});
+
+// 2. Endpoint Route POST untuk Feedback
+app.post('/api/feedback', async (req, res) => {
+    // 1. Mengambil data input satu per satu dari req.body
+    const name = req.body.name;
+    const email = req.body.email;
+    const message = req.body.message;
+
+    // 2. Validasi data input secara terpisah satu per satu
+    if (!name) {
+        return res.status(400).json({
+            status: false,
+            message: "Kolom Nama wajib diisi!"
+        });
+    }
+
+    if (!email) {
+        return res.status(400).json({
+            status: false,
+            message: "Kolom Email wajib diisi!"
+        });
+    }
+
+    if (!message) {
+        return res.status(400).json({
+            status: false,
+            message: "Kolom Pesan wajib diisi!"
+        });
+    }
+
+    // Susun format isi email kontainer teks/html
+    const mailOptions = {
+        from: `"${name}" <${email}>`, 
+        to: 'supportarulzxd@gmail.com',         // Email tujuan (tempat Anda menerima feedback)
+        subject: `New Feedback from ${name} [API Dashboard]`,
+        html: `
+            <div style="font-family: sans-serif; padding: 20px; color: #333; border: 1px solid #ddd; border-radius: 8px;">
+                <h2 style="color: #00D4FF; border-b: 2px solid #00D4FF; padding-bottom: 8px;">New Feedback Received!</h2>
+                <p><strong>Nama:</strong> ${name}</p>
+                <p><strong>Email Pengirim:</strong> ${email}</p>
+                <hr style="border: none; border-top: 1px solid #eee;" />
+                <p><strong>Pesan:</strong></p>
+                <blockquote style="background: #f9f9f9; padding: 15px; border-left: 4px solid #00D4FF; margin: 0;">
+                    ${message.replace(/\n/g, '<br>')}
+                </blockquote>
+            </div>
+        `
+    };
+
+    try {
+        // Proses kirim email
+        await transporter.sendMail(mailOptions);
+        res.status(200).json({
+            status: true,
+            message: "Feedback Anda berhasil dikirim! Terima kasih atas dukungannya."
+        });
+    } catch (error) {
+        console.error("Nodemailer Error:", error);
+        res.status(500).json({
+            status: false,
+            message: "Gagal mengirim feedback ke server email. Silakan coba lagi nanti."
+        });
+    }
+});
+
 app.get('/script.js', (req, res) => {
   res.sendFile(path.join(__dirname, 'script.js'));
 });
