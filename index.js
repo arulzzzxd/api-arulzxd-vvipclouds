@@ -529,6 +529,10 @@ router.get('/apilist', (req, res) => {
   res.json({ categories });
 });
 
+// 1. Jalankan limiter terlebih dahulu untuk menyaring request
+app.use('/api/', freeApiKeyLimiter);
+
+// 2. Jika lolos limit, baru teruskan ke router utama Anda
 app.use('/api', router);
 
 app.get('/script.js', (req, res) => {
