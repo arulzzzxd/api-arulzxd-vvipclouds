@@ -90,28 +90,67 @@ app.get('/feedback', (req, res) => {
     res.sendFile(path.join(__dirname, 'feedback.html'));
 });
 
-// 2. RUTE ENDPOINT /api/feedback UNTUK MEMPROSES PENGIRIMAN EMAIL
-app.post('/api/feedback', async (req, res) => {
-    const { name, email, category, message } = req.body;
+app.post('/database/feedback', async (req, res) => {
+    // 1. Ambil data dari body secara terpisah
+    const name = req.body.name;
+    const email = req.body.email;
+    const category = req.body.category;
+    const message = req.body.message;
 
-    // Validasi memastikan semua data terisi
-    if (!name || !email || !category || !message) {
-        return res.status(400).json({ success: false, message: 'Semua kolom wajib diisi!' });
+    // 2. Validasi pengecekan eror secara terpisah
+    if (!name) return res.status(400).json({ success: false, message: 'Nama / Username tidak boleh kosong!' });
+    if (!email) return res.status(400).json({ success: false, message: 'Alamat Email tidak boleh kosong!' });
+    if (!category) return res.status(400).json({ success: false, message: 'Kategori feedback harus dipilih!' });
+    if (!message) return res.status(400).json({ success: false, message: 'Isi pesan feedback tidak boleh kosong!' });
+
+    // =========================================================================
+    // PROSES 1: SIMPAN DATA KE FILE LOKAL (/database/feedback.json)
+    // =========================================================================
+    const folderPath = path.join(__dirname, 'database');
+    const filePath = path.join(folderPath, 'feedback.json');
+
+    // Buat folder 'database' otomatis jika belum ada di server
+    if (!fs.existsSync(folderPath)) {
+        fs.mkdirSync(folderPath, { recursive: true });
     }
 
-    // KONFIGURASI SMTP SERVER (Menggunakan Gmail)
+    let dataFeedback = [];
+    if (fs.existsSync(filePath)) {
+        try {
+            const fileContent = fs.readFileSync(filePath, 'utf-8');
+            dataFeedback = JSON.parse(fileContent || '[]');
+        } catch (e) {
+            dataFeedback = [];
+        }
+    }
+
+    // Struktur data yang disimpan ke database lokal
+    const newFeedback = {
+        id: Date.now(),
+        name: name,
+        email: email,
+        category: category,
+        message: message,
+        date: new Date().toISOString()
+    };
+
+    dataFeedback.push(newFeedback);
+    fs.writeFileSync(filePath, JSON.stringify(dataFeedback, null, 2), 'utf-8');
+
+    // =========================================================================
+    // PROSES 2: KIRIM DATA LANGSUNG KE EMAIL ADMIN
+    // =========================================================================
     const transporter = nodemailer.createTransport({
         service: 'gmail',
         auth: {
-            user: 'arulzz.xd@gmail.com', // ⚠️ GANTI: Masukkan Email Gmail Anda di sini
-            pass: 'aust bfcc erkz aocs'         // ⚠️ GANTI: Masukkan 16 digit Sandi Aplikasi (App Password) Gmail Anda
+            user: 'arulzz.xd@gmail.com', 
+            pass: 'aust bfcc erkz aocs'         
         }
     });
 
-    // STRUKTUR EMAIL YANG AKAN MASUK KE KOTAK MASUK ANDA
     const mailOptions = {
         from: `"${name}" <${email}>`,
-        to: 'arulzz.xd@gmail.com', // ⚠️ GANTI: Email tujuan yang akan menerima pesan feedback ini
+        to: 'arulzz.xd@gmail.com', 
         replyTo: email,
         subject: `[FEEDBACK API] - ${category} dari ${name}`,
         html: `
@@ -143,10 +182,11 @@ app.post('/api/feedback', async (req, res) => {
 
     try {
         await transporter.sendMail(mailOptions);
-        res.status(200).json({ success: true, message: 'Feedback dikirim!' });
+        res.status(200).json({ success: true, message: 'Feedback berhasil disimpan dan dikirim ke Admin!' });
     } catch (error) {
         console.error('Email error:', error);
-        res.status(500).json({ success: false, message: 'Gagal mengirim email melalui SMTP server.' });
+        // Tetap kirim respon sukses karena data sudah berhasil tertulis di file lokal json
+        res.status(200).json({ success: true, message: 'Feedback tersimpan di server, namun gagal mengirim notifikasi email.' });
     }
 });
 
