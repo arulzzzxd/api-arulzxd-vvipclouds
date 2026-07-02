@@ -3,8 +3,8 @@
    ========================================================================= */
 
 const express = require('express');
-const rateLimit = require('express-rate-limit');
 const fileUpload = require('express-fileupload');
+const rateLimit = require('express-rate-limit');
 const path = require('path');
 const fs = require('fs');
 const axios = require('axios');
@@ -18,25 +18,6 @@ const PORT = process.env.PORT || 3000;
 app.use(express.static(path.join(__dirname)));
 app.use(express.json());
 
-// 2. Konfigurasi Limiter 100 request / 24 jam (Free API Key)
-const freeApiKeyLimiter = rateLimit({
-    windowMs: 24 * 60 * 60 * 1000, // 24 jam dalam milidetik
-    max: 100, // Maksimal 100 request
-    keyGenerator: (req) => {
-        // Mengambil API key dari query parameter (?apikey=...) atau headers (X-API-KEY)
-        return req.query.apikey || req.headers['x-api-key'] || req.ip; 
-    },
-    handler: (req, res) => {
-        // Respon ketika user mencapai batas limit
-        res.status(429).json({
-            status: false,
-            creator: "ArulzXD",
-            message: "Limit API Key Free Anda telah habis (Maks 100 req/hari). Silakan coba lagi besok atau upgrade ke Premium!"
-        });
-    },
-    standardHeaders: true, // Mengirim info limit di header `RateLimit-*`
-    legacyHeaders: false,  // Menonaktifkan header `X-RateLimit-*` yang lama
-});
 const listNotifikasi = require('./database/notifikasi'); 
 
 // Middleware untuk menangani form file upload (Uploader)
@@ -103,8 +84,86 @@ const playlist = [
   }
 ];
 
-// Endpoint untuk memproses unduhan otomatis gambar lintas domain (Bypass CORS)
-// Endpoint Proxy Download Otomatis - Gaya CommonJS (CJS)
+
+const freeApiKeyLimiter = rateLimit({
+    windowMs: 24 * 60 * 60 * 1000, // 24 jam
+    max: 100, // Maksimal 100 request
+    keyGenerator: (req) => {
+        // Deteksi apikey dari query (?apikey=) atau header
+        return req.query.apikey || req.headers['x-api-key'] || req.ip; 
+    },
+    // ISI DENGAN INI AGAR PESAN CUSTOM ANDA MUNCUL
+    handler: (req, res) => {
+        res.status(429).json({
+            status: false,
+            creator: "ArulzXD",
+            message: "Limit API Key Free Anda telah habis (Maks 100 req/hari). Silakan coba lagi besok atau upgrade ke Premium!"
+        });
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+const nodemailer = require('nodemailer');
+app.get('/feedback', (req, res) => {
+    res.sendFile(path.join(__dirname, 'feedback.html'));
+});
+app.post('/api/feedback', async (req, res) => {
+    // 1. Data yang dikirim dari user (terpisah)
+    const email = req.body.email;     // Email si pengirim/user
+    const type = req.body.type;       // Tipe (bug/suggestion)
+    const message = req.body.message;   // Isi pesan dari user
+
+    if (!email || !type || !message) {
+        return res.status(400).json({ status: false, message: "Semua data wajib diisi!" });
+    }
+
+    try {
+        // 2. KONFIGURASI SMTP SERVER (Pengirim Sistem)
+        // Disarankan menggunakan App Password Gmail (bukan password utama)
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: 'supportarulzxd@gmail.com', // Email yang digunakan sistem untuk mengirim
+                pass: 'austbfccerkzaocs'         // 16 digit App Password dari Google Akun
+            }
+        });
+
+        // 3. BAGIAN SETTING EMAIL PENERIMAAN (Target Laporan)
+        const mailOptions = {
+            from: `"Sistem API Dashboard" <email-kamu@gmail.com>`, 
+            to: 'supportarulzxd@gmail.com', // <--- TARUH EMAIL KAMU DI SINI (Email Penerima Laporan)
+            subject: `[${type.toUpperCase()}] Laporan Baru dari Dashboard API`,
+            html: `
+                <div style="font-family: sans-serif; padding: 20px; background: #0f172a; color: #f1f5f9; border-radius: 8px;">
+                    <h2 style="color: #00d4ff; border-bottom: 1px solid #334155; padding-bottom: 10px;">Laporan Masuk</h2>
+                    <p><strong>Email Pengirim:</strong> ${email}</p>
+                    <p><strong>Kategori:</strong> <span style="background: #ef4444; padding: 2px 8px; border-radius: 4px; color: white;">${type}</span></p>
+                    <div style="background: #020617; padding: 15px; border-left: 4px solid #00d4ff; margin-top: 15px; border-radius: 4px;">
+                        <p style="margin: 0; white-space: pre-wrap;">${message}</p>
+                    </div>
+                </div>
+            `
+        };
+
+        // 4. Eksekusi pengiriman email
+        await transporter.sendMail(mailOptions);
+
+        // Kirim respon sukses ke frontend jika email berhasil terkirim
+        res.json({ 
+            status: true, 
+            message: "Feedback berhasil dikirim ke email admin!" 
+        });
+
+    } catch (error) {
+        console.error("Gagal mengirim email penerimaan:", error);
+        res.status(500).json({ 
+            status: false, 
+            message: "Terjadi kesalahan pada sistem pengiriman email." 
+        });
+    }
+});
+
 app.get('/database/download', async (req, res) => {
     // Ambil target url gambar dari query parameter frontend, atau gunakan default jika kosong
     const imageUrl = req.query.url || "https://arulz-uploader.vercel.app/files/CVmlrD.jpg";
@@ -535,81 +594,6 @@ app.use('/api/', freeApiKeyLimiter);
 // 2. Jika lolos limit, baru teruskan ke router utama Anda
 app.use('/api', router);
 
-const nodemailer = require('nodemailer');
-
-// 1. Konfigurasi Transporter SMTP (Contoh menggunakan Gmail)
-const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: 'supportarulzxd@gmail.com',       // Ganti dengan email Gmail Anda
-        pass: 'zlgzdpiplvhviiue'         // Ganti dengan "App Password" dari Google Akun Anda
-    }
-});
-
-// 2. Endpoint Route POST untuk Feedback
-app.post('/api/feedback', async (req, res) => {
-    // 1. Mengambil data input satu per satu dari req.body
-    const name = req.body.name;
-    const email = req.body.email;
-    const message = req.body.message;
-
-    // 2. Validasi data input secara terpisah satu per satu
-    if (!name) {
-        return res.status(400).json({
-            status: false,
-            message: "Kolom Nama wajib diisi!"
-        });
-    }
-
-    if (!email) {
-        return res.status(400).json({
-            status: false,
-            message: "Kolom Email wajib diisi!"
-        });
-    }
-
-    if (!message) {
-        return res.status(400).json({
-            status: false,
-            message: "Kolom Pesan wajib diisi!"
-        });
-    }
-
-    // Susun format isi email kontainer teks/html
-    const mailOptions = {
-        from: `"${name}" <${email}>`, 
-        to: 'supportarulzxd@gmail.com',         // Email tujuan (tempat Anda menerima feedback)
-        subject: `New Feedback from ${name} [API Dashboard]`,
-        html: `
-            <div style="font-family: sans-serif; padding: 20px; color: #333; border: 1px solid #ddd; border-radius: 8px;">
-                <h2 style="color: #00D4FF; border-b: 2px solid #00D4FF; padding-bottom: 8px;">New Feedback Received!</h2>
-                <p><strong>Nama:</strong> ${name}</p>
-                <p><strong>Email Pengirim:</strong> ${email}</p>
-                <hr style="border: none; border-top: 1px solid #eee;" />
-                <p><strong>Pesan:</strong></p>
-                <blockquote style="background: #f9f9f9; padding: 15px; border-left: 4px solid #00D4FF; margin: 0;">
-                    ${message.replace(/\n/g, '<br>')}
-                </blockquote>
-            </div>
-        `
-    };
-
-    try {
-        // Proses kirim email
-        await transporter.sendMail(mailOptions);
-        res.status(200).json({
-            status: true,
-            message: "Feedback Anda berhasil dikirim! Terima kasih atas dukungannya."
-        });
-    } catch (error) {
-        console.error("Nodemailer Error:", error);
-        res.status(500).json({
-            status: false,
-            message: "Gagal mengirim feedback ke server email. Silakan coba lagi nanti."
-        });
-    }
-});
-
 app.get('/script.js', (req, res) => {
   res.sendFile(path.join(__dirname, 'script.js'));
 });
@@ -927,12 +911,13 @@ app.get('/', (req, res) => {
 </a>           
             <hr class="border-white/10 my-1 light-mode:border-slate-200">
             
-            <a href="https://wa.me/6285122629940?text=%F0%9F%9A%A8%20%5BSYSTEM%20NOTICE%3A%20BUG%20DETECTED%5D%20%F0%9F%9A%A8%0A----------------------------------------%0AHalo%20Arulz%2C%20saya%20menemukan%20sebuah%20anomali%20%2F%20bug%20pada%20layanan%20REST%20API%20Anda.%20Berikut%20rinciannya%3A%0A%0A%E2%80%A2%20%F0%9F%9B%A0%EF%B8%8F%20Endpoint%20%20%3A%20%5BMasukkan%20nama%2Fpath%20endpoint%2C%20misal%3A%20%2Fapi%2Fdownloader%2Ftiktok%5D%0A%E2%80%A2%20%F0%9F%93%9D%20Masalah%20%20%20%3A%20%5BDeskripsi%20singkat%20bug%2C%20misal%3A%20Response%20error%20500%20%2F%20data%20tidak%20keluar%5D%0A%E2%80%A2%20%F0%9F%94%8D%20Kronologi%20%3A%20%5BKetik%20di%20sini%20bagaimana%20bug%20terjadi%20atau%20parameter%20apa%20yang%20dimasukkan%5D%0A%0AMohon%20bantuannya%20untuk%20dilakukan%20pengecekan%20sistem%20%28system%20maintenance%29.%20Terima%20kasih%20%F0%9F%9A%80%0A----------------------------------------%0A%5BSent%20via%20REST%20API%20Dashboard%20User%5D" target="_blank" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-3 px-2 py-1.5 rounded-lg hover:bg-white/5 text-[11px] opacity-80">
-                <svg class="w-5 h-5 text-cyan-400 text-center" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
-                BUG REPORT
-            </a>            
+            <a href="/feedback" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-3 px-2 py-1.5 rounded-lg hover:bg-white/5">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+    </svg>
+    Bug Report & Feedback
+</a>
+            
 <a href="/privacy" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-3 px-2 py-1.5 rounded-lg hover:bg-white/5">
     <svg class="w-5 h-5 text-cyan-400 text-center" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>

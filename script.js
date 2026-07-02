@@ -1171,46 +1171,6 @@ function initImageLightbox() {
     });
 }
 
-function sendFeedback(event) {
-    event.preventDefault();
-    
-    // Ambil data dari elemen form input HTML Anda
-    const nameInput = document.getElementById('feedback-name').value;
-    const emailInput = document.getElementById('feedback-email').value;
-    const messageInput = document.getElementById('feedback-message').value;
-
-    // Lakukan POST request menggunakan fetch
-    fetch('/api/feedback', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            name: nameInput,
-            email: emailInput,
-            message: messageInput
-        })
-    })
-    .then(async (res) => {
-        const data = await res.json();
-        if (!res.ok) {
-            throw new Error(data.message || "Gagal mengirim pesan.");
-        }
-        return data;
-    })
-    .then(data => {
-        // Jika sukses kirim email
-        showToast(data.message); // Memanfaatkan fungsi showToast bawaan script.js Anda
-        
-        // Reset form jika diperlukan
-        document.getElementById('feedback-form').reset();
-    })
-    .catch(err => {
-        // Jika gagal / error status 400 atau 500
-        showToast(err.message, true);
-    });
-}
-
 document.addEventListener('DOMContentLoaded', () => {
     const savedLang = localStorage.getItem('lang') || 'id';
 
@@ -1277,6 +1237,7 @@ if (notifBtn && notifPopup) {
             window.location.href = '/uploader'; 
         });
     }
+    
 
     fetch('/api/apilist')
         .then(res => res.json())
