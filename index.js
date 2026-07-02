@@ -9,6 +9,7 @@ const path = require('path');
 const fs = require('fs');
 const axios = require('axios');
 const mime = require('mime-types');
+const nodemailer = require('nodemailer');
 const https = require('https');
 const http = require('http');
 const crypto = require('crypto');
@@ -104,7 +105,7 @@ const freeApiKeyLimiter = rateLimit({
     legacyHeaders: false,
 });
 
-const nodemailer = require('nodemailer');
+
 app.get('/feedback', (req, res) => {
     res.sendFile(path.join(__dirname, 'feedback.html'));
 });
@@ -131,12 +132,19 @@ if (!message) {
 
     try {
         const transporter = nodemailer.createTransport({
-            service: 'gmail',
-            auth: {
-                user: 'supportarulzxd@gmail.com', // Email yang digunakan sistem untuk mengirim
-                pass: 'austbfccerkzaocs'         // 16 digit App Password dari Google Akun
-            }
-        });
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true, // true untuk port 465, false untuk port lainnya
+    auth: {
+        user: 'supportarulzxd@gmail.com',
+        pass: 'matsgyapivykobdv' 
+    },
+    tls: {
+        // Mengabaikan error sertifikat jika hosting Anda memblokirnya
+        rejectUnauthorized: false 
+    }
+});
+
 
         const mailOptions = {
             // FIX: Ganti 'email-kamu@gmail.com' menjadi email otentikasi Gmail Anda
