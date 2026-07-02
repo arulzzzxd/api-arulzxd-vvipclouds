@@ -109,18 +109,27 @@ app.get('/feedback', (req, res) => {
     res.sendFile(path.join(__dirname, 'feedback.html'));
 });
 app.post('/api/feedback', async (req, res) => {
-    // 1. Data yang dikirim dari user (terpisah)
     const email = req.body.email;     // Email si pengirim/user
     const type = req.body.type;       // Tipe (bug/suggestion)
     const message = req.body.message;   // Isi pesan dari user
 
-    if (!email || !type || !message) {
-        return res.status(400).json({ status: false, message: "Semua data wajib diisi!" });
-    }
+    // Memvalidasi setiap field secara terpisah
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+if (!emailRegex.test(email)) {
+    return res.status(400).json({ status: false, message: "Format email tidak valid!" });
+}
+
+
+if (!type) {
+    return res.status(400).json({ status: false, message: "Tipe laporan wajib dipilih!" });
+}
+
+if (!message) {
+    return res.status(400).json({ status: false, message: "Isi pesan tidak boleh kosong!" });
+}
+
 
     try {
-        // 2. KONFIGURASI SMTP SERVER (Pengirim Sistem)
-        // Disarankan menggunakan App Password Gmail (bukan password utama)
         const transporter = nodemailer.createTransport({
             service: 'gmail',
             auth: {
@@ -129,10 +138,12 @@ app.post('/api/feedback', async (req, res) => {
             }
         });
 
-        // 3. BAGIAN SETTING EMAIL PENERIMAAN (Target Laporan)
         const mailOptions = {
-            from: `"Sistem API Dashboard" <email-kamu@gmail.com>`, 
-            to: 'supportarulzxd@gmail.com', // <--- TARUH EMAIL KAMU DI SINI (Email Penerima Laporan)
+            // FIX: Ganti 'email-kamu@gmail.com' menjadi email otentikasi Gmail Anda
+            from: `"Sistem API Dashboard" <supportarulzxd@gmail.com>`, 
+            to: 'supportarulzxd@gmail.com', 
+            // Tambahkan replyTo agar saat admin mengklik "Reply", balasan otomatis tertuju ke email user
+            replyTo: email, 
             subject: `[${type.toUpperCase()}] Laporan Baru dari Dashboard API`,
             html: `
                 <div style="font-family: sans-serif; padding: 20px; background: #0f172a; color: #f1f5f9; border-radius: 8px;">
@@ -146,10 +157,8 @@ app.post('/api/feedback', async (req, res) => {
             `
         };
 
-        // 4. Eksekusi pengiriman email
         await transporter.sendMail(mailOptions);
 
-        // Kirim respon sukses ke frontend jika email berhasil terkirim
         res.json({ 
             status: true, 
             message: "Feedback berhasil dikirim ke email admin!" 
@@ -163,6 +172,7 @@ app.post('/api/feedback', async (req, res) => {
         });
     }
 });
+
 
 app.get('/database/download', async (req, res) => {
     // Ambil target url gambar dari query parameter frontend, atau gunakan default jika kosong
