@@ -982,6 +982,12 @@ app.get('/', (req, res) => {
         </div>
 
         <nav class="flex flex-col gap-4 text-xs font-bold tracking-wider uppercase text-gray-300 light-mode:text-slate-700 flex-1 overflow-y-auto scrollbar-hide py-2">
+            <a href="/database/auth/login" class="menu-link text-emerald-400 hover:text-emerald-300 transition-colors flex items-center gap-3 px-2 py-1.5 rounded-lg hover:bg-white/5 border border-emerald-500/20 bg-emerald-500/5">
+        <svg class="w-5 h-5 text-emerald-400 text-center" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+        </svg>
+        LOGIN / SIGN UP
+    </a>
             <a href="#api" class="menu-link hover:text-cyan-400 transition-colors flex items-center gap-3 px-2 py-1.5 rounded-lg hover:bg-white/5">
                 <svg class="w-5 h-5 text-cyan-400 text-center" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
