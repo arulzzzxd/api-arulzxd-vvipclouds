@@ -12,6 +12,15 @@ const JWT_SECRET = process.env.JWT_SECRET || "arulzxd-super-secret-jwt-key";
 // 1. AUTENTIKASI VIA EMAIL & PASSWORD
 // ==========================================
 
+// Di dalam file ./database/auth/index.js
+router.get('/', (req, res) => {
+    res.json({
+        status: true,
+        message: "Auth router is working. Please use specific endpoints like /login or /register."
+    });
+});
+
+
 // Route: Register Akun Baru
 router.post('/register', async (req, res) => {
     const { name, email, password } = req.body;
