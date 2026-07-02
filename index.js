@@ -149,7 +149,7 @@ const subjectTeks = type === 'suggestion' ? 'Saran' : 'Laporan Bug';
 
 
         const mailOptions = {
-            from: `"Api Arulzxd" <${email.toUpperCase()}>`, 
+            from: email, 
             to: 'supportarulzxd@gmail.com', // Ubah ke `email` jika ingin dikirim ke user pengirim
             replyTo: email, 
             subject: `[${type.toUpperCase()}] Laporan Baru dari Dashboard API`,
