@@ -24,9 +24,23 @@ const listNotifikasi = require('./database/notifikasi');
 // Middleware untuk menangani form file upload (Uploader)
 app.use(fileUpload());
 
-/*
-For setting API name etc
-*/
+// ... KODE DEPENDENSI ANDA YANG SUDAH ADA ...
+const passport = require('passport');
+const connectDB = require('./database/mongo');
+
+// Jalankan Koneksi MongoDB
+connectDB();
+
+// Inisialisasi Passport Konfigurasi
+require('./config/passport');
+app.use(passport.initialize());
+
+// ... KODE MIDDLEWARE & ROUTER LAMA ANDA ...
+
+// Daftarkan API Router Auth secara eksplisit sebelum penanganan static web
+const authRouter = require('./database/auth/index');
+app.use('/database/auth', authRouter);
+
 const title = "API-ARULZXD - REST";
 const favicon = "https://api-arulzxd-vvipclouds.vercel.app/files/X1F0Cn.png";
 const logo = "https://api-arulzxd-vvipclouds.vercel.app/files/33s7XJ.png";
@@ -1219,7 +1233,20 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 </script>
+</script>
+document.addEventListener('DOMContentLoaded', () => {
+const urlParams = new URLSearchParams(window.location.search);
+const jwtToken = urlParams.get('token');
+const userApiKey = urlParams.get('apikey');
 
+if (jwtToken && userApiKey) {
+    localStorage.setItem('token', jwtToken);
+    localStorage.setItem('user_apikey', userApiKey);
+    // Hapus query string agar URL kembali bersih tampak profesional
+    window.history.replaceState({}, document.title, "/");
+}
+});
+</script>
 </body>
 </html>
     `);
