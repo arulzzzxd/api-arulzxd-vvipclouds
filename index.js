@@ -132,34 +132,99 @@ if (!message) {
 
     try {
         const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 465,
-    secure: true, // true untuk port 465, false untuk port lainnya
-    auth: {
-        user: 'supportarulzxd@gmail.com',
-        pass: 'matsgyapivykobdv' 
-    },
-    tls: {
-        // Mengabaikan error sertifikat jika hosting Anda memblokirnya
-        rejectUnauthorized: false 
-    }
-});
+            host: 'smtp.gmail.com',
+            port: 465,
+            secure: true, 
+            auth: {
+                user: 'supportarulzxd@gmail.com',
+                pass: 'matsgyapivykobdv' 
+            },
+            tls: {
+                rejectUnauthorized: false 
+            }
+        });
+
+const kategoriTeks = type === 'suggestion' ? 'Saran / Fitur' : 'Laporan Bug';
+const subjectTeks = type === 'suggestion' ? 'Saran' : 'Laporan Bug';
 
 
         const mailOptions = {
-            // FIX: Ganti 'email-kamu@gmail.com' menjadi email otentikasi Gmail Anda
-            from: `"Sistem API Dashboard" <supportarulzxd@gmail.com>`, 
-            to: 'supportarulzxd@gmail.com', 
-            // Tambahkan replyTo agar saat admin mengklik "Reply", balasan otomatis tertuju ke email user
+            from: `"Api Arulzxd" <supportarulzxd@gmail.com>`, 
+            to: 'supportarulzxd@gmail.com', // Ubah ke `email` jika ingin dikirim ke user pengirim
             replyTo: email, 
             subject: `[${type.toUpperCase()}] Laporan Baru dari Dashboard API`,
             html: `
-                <div style="font-family: sans-serif; padding: 20px; background: #0f172a; color: #f1f5f9; border-radius: 8px;">
-                    <h2 style="color: #00d4ff; border-bottom: 1px solid #334155; padding-bottom: 10px;">Laporan Masuk</h2>
-                    <p><strong>Email Pengirim:</strong> ${email}</p>
-                    <p><strong>Kategori:</strong> <span style="background: #ef4444; padding: 2px 8px; border-radius: 4px; color: white;">${type}</span></p>
-                    <div style="background: #020617; padding: 15px; border-left: 4px solid #00d4ff; margin-top: 15px; border-radius: 4px;">
-                        <p style="margin: 0; white-space: pre-wrap;">${message}</p>
+                <div style="background-color: #0f0f11; padding: 30px 15px; font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #e4e4e7;">
+                    <div style="max-w: 600px; margin: 0 auto; background-color: #18181c; border: 1px solid #27272a; border-radius: 16px; overflow: hidden; padding: 30px;">
+                        
+                        <!-- Header Logo -->
+                        <div style="text-align: center; padding-bottom: 20px; border-bottom: 1px solid #27272a;">
+                            <h1 style="margin: 0; font-size: 24px; font-weight: 800; tracking-spacing: 2px; color: #ffffff;">
+                                Arulz<span style="color: #a1a1aa;">XD</span>
+                            </h1>
+                        </div>
+
+                        <!-- Body Content -->
+                        <div style="padding: 30px 0 20px 0;">
+                            <h2 style="margin: 0 0 10px 0; font-size: 26px; font-weight: 700; color: #ffffff; display: flex; align-items: center; gap: 8px;">
+                                Pesan Diterima! ✅
+                            </h2>
+                            
+                            <!-- Action Badge -->
+                            <div style="margin-bottom: 25px;">
+                                <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; background-color: #27272a; color: #a1a1aa; padding: 6px 12px; border-radius: 6px;">
+                                    Action: feedback-received
+                                </span>
+                            </div>
+
+                            <p style="font-size: 15px; color: #d4d4d8; line-height: 1.6; margin: 0 0 20px 0;">
+                                Halo <strong style="color: #ffffff;">Arulzxd</strong>, terima kasih telah menghubungi kami.
+                            </p>
+
+                            <!-- Success Alert Box -->
+                            <div style="background-color: rgba(21, 128, 61, 0.1); border: 1px solid #16a34a; border-radius: 10px; padding: 15px 20px; margin-bottom: 30px; text-align: center;">
+                                <p style="margin: 0; color: #4ade80; font-size: 14px; font-weight: 500;">
+                                    Feedback kamu telah kami terima dan akan segera ditinjau oleh tim kami.
+                                </p>
+                            </div>
+
+                            <!-- Meta Data Table -->
+<div style="border-bottom: 1px solid #27272a; padding-bottom: 12px; margin-bottom: 20px;">
+    <div style="display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 12px;">
+        <span style="color: #a1a1aa;">Kategori</span>
+        <strong style="color: #ffffff; font-family: monospace;">${kategoriTeks}</strong>
+    </div>
+    <div style="display: flex; justify-content: space-between; font-size: 14px;">
+        <span style="color: #a1a1aa;">Subject</span>
+        <strong style="color: #ffffff;">${subjectTeks}</strong>
+    </div>
+</div>
+
+                            <!-- Message Box -->
+                            <div style="background-color: #111113; border: 1px solid #27272a; border-radius: 10px; padding: 20px; margin-top: 15px;">
+                                <p style="margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 14px; color: #e4e4e7; white-space: pre-wrap; line-height: 1.6;">${message}</p>
+                            </div>
+                        </div>
+
+                        <!-- Footer -->
+                        <div style="margin-top: 20px; padding-top: 25px; border-top: 1px solid #27272a; text-align: center;">
+                            <p style="font-size: 12px; color: #71717a; margin: 0 0 20px 0; line-height: 1.5;">
+                                Email ini dikirim otomatis oleh sistem Api Arulz-XD. Jangan balas email ini.
+                            </p>
+                            
+                            <!-- Navigation Links -->
+                            <div style="margin-bottom: 25px; font-size: 13px; font-weight: 600;">
+                                <a href="#" style="color: #ffffff; text-decoration: none; margin: 0 12px;">Home</a>
+                                <a href="#" style="color: #ffffff; text-decoration: none; margin: 0 12px;">Docs</a>
+                                <a href="#" style="color: #ffffff; text-decoration: none; margin: 0 12px;">File Upload</a>
+                                <a href="#" style="color: #ffffff; text-decoration: none; margin: 0 12px;">Pastecode</a>
+                            </div>
+
+                            <p style="font-size: 12px; color: #71717a; margin: 0;">
+                                © 2026 Api ArulzXD. All rights reserved.
+                            </p>
+                        </div>
+
                     </div>
                 </div>
             `
