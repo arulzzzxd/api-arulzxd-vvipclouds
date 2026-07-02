@@ -1233,20 +1233,21 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 </script>
-</script>
+<script>
 document.addEventListener('DOMContentLoaded', () => {
-const urlParams = new URLSearchParams(window.location.search);
-const jwtToken = urlParams.get('token');
-const userApiKey = urlParams.get('apikey');
+    const urlParams = new URLSearchParams(window.location.search);
+    const jwtToken = urlParams.get('token');
+    const userApiKey = urlParams.get('apikey');
 
-if (jwtToken && userApiKey) {
-    localStorage.setItem('token', jwtToken);
-    localStorage.setItem('user_apikey', userApiKey);
-    // Hapus query string agar URL kembali bersih tampak profesional
-    window.history.replaceState({}, document.title, "/");
-}
+    if (jwtToken && userApiKey) {
+        localStorage.setItem('token', jwtToken);
+        localStorage.setItem('user_apikey', userApiKey);
+        // Hapus query string agar URL kembali bersih tampak profesional
+        window.history.replaceState({}, document.title, "/");
+    }
 });
 </script>
+
 </body>
 </html>
     `);
